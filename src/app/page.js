@@ -1,103 +1,318 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import EntryTypeCard from "./components/EntryTypeCard";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import HeroSection from "./components/HeroSection";
+import RecentEntriesSection from "./components/RecentEntriesSection";
+import ToggleSwitch from "./components/ToggleSwitch";
+import FloatingActionButton from "./components/FloatingActionButton";
+import CreateFirstEntryDialog from "./components/CreateFirstEntryDialog";
+import { useAuth } from "../context/AuthContext";
+import databaseUtils from "../lib/database";
+import { FiMessageSquare } from "react-icons/fi";
+import emailjs from '@emailjs/browser';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [viewMode, setViewMode] = useState(1);
+  const [entryCounts, setEntryCounts] = useState({
+    journal: 0,
+    diary: 0,
+    stories: 0,
+    songs: 0,
+    quotes: 0
+  });
+  const [anyEntryExists, setAnyEntryExists] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  
+  // Feedback state
+  const [feedback, setFeedback] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
+  const [sendingFeedback, setSendingFeedback] = useState(false);
+  
+  useEffect(() => {
+    async function loadEntryCounts() {
+      setLoading(true);
+      
+      try {
+        let counts = {
+          journal: 0,
+          diary: 0,
+          stories: 0,
+          songs: 0,
+          quotes: 0
+        };
+        
+        // If user is logged in, get counts from Supabase
+        if (user) {
+          // Get journal entries
+          const journalEntries = await databaseUtils.getJournalEntries(user.id);
+          counts.journal = journalEntries.length;
+          
+          // Get diary entries
+          const diaryEntries = await databaseUtils.getDiaryEntries(user.id);
+          counts.diary = diaryEntries.length;
+        } 
+        // Otherwise fall back to localStorage
+        else if (typeof window !== "undefined") {
+          // Get counts from localStorage
+          const journalEntries = JSON.parse(localStorage.getItem("journalEntries") || "[]");
+          const diaryEntries = JSON.parse(localStorage.getItem("diaryEntries") || "[]");
+          const storyEntries = JSON.parse(localStorage.getItem("storyEntries") || "[]");
+          const songEntries = JSON.parse(localStorage.getItem("poemEntries") || "[]");
+          const quoteEntries = JSON.parse(localStorage.getItem("quoteEntries") || "[]");
+          
+          // Update entry counts
+          counts = {
+            journal: journalEntries.length,
+            diary: diaryEntries.length,
+            stories: storyEntries.length,
+            songs: songEntries.length,
+            quotes: quoteEntries.length
+          };
+        }
+        
+        setEntryCounts(counts);
+        
+        // Check if any entries exist
+        const hasAnyEntry = Object.values(counts).some(count => count > 0);
+        setAnyEntryExists(hasAnyEntry);
+      } catch (error) {
+        console.error("Error loading entry counts:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadEntryCounts();
+  }, [user]);
+  
+  const entryTypes = [
+    {
+      title: "Journals",
+      icon: "📒",
+      description: "Write detailed journal entries with rich formatting",
+      path: "/journal",
+      bgColor: "bg-green-50",
+      entryCount: entryCounts.journal
+    },
+    {
+      title: "Diaries",
+      icon: "📓",
+      description: "Record your daily thoughts and experiences",
+      path: "/diary",
+      bgColor: "bg-blue-50",
+      entryCount: entryCounts.diary
+    },
+    {
+      title: "Original Stories",
+      icon: "✍️",
+      description: "Create and save your original stories",
+      path: "/stories",
+      bgColor: "bg-yellow-50",
+      entryCount: entryCounts.stories
+    },
+    {
+      title: "Songs/Poems",
+      icon: "🎵",
+      description: "Express yourself through songs and poetry",
+      path: "/songs",
+      bgColor: "bg-purple-50",
+      entryCount: entryCounts.songs
+    },
+    {
+      title: "Quotes/Thoughts",
+      icon: "💬",
+      description: "Save inspiring quotes and thoughts",
+      path: "/quotes",
+      bgColor: "bg-pink-50",
+      entryCount: entryCounts.quotes
+    }
+  ];
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Filter entry types with entries
+  const activeEntryTypes = entryTypes.filter(type => type.entryCount > 0);
+
+  // Handle feedback submission
+  const handleFeedbackSubmit = (e) => {
+    e.preventDefault();
+    setSendingFeedback(true);
+    setFeedbackError("");
+    
+    // Get user information
+    const userIdentifier = user ? (user.email || user.user_metadata?.name || user.id || "Anonymous") : "Anonymous";
+    
+    // Prepare template parameters
+    const templateParams = {
+      message: feedback,
+      from_name: userIdentifier,
+      user_info: user ? `User ID: ${user.id}` : "Not logged in"
+    };
+    
+    // Get EmailJS credentials from environment variables
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+    
+    // Send the email using EmailJS
+    emailjs.send(serviceId, templateId, templateParams, publicKey)
+      .then((result) => {
+        console.log('Email sent successfully:', result.text);
+        setSubmitted(true);
+        setSendingFeedback(false);
+        
+        // Reset form after 3 seconds
+        setTimeout(() => {
+          setFeedback("");
+          setSubmitted(false);
+        }, 3000);
+      }, (error) => {
+        console.error('Failed to send email:', error.text);
+        setFeedbackError("Failed to send feedback. Please try again later.");
+        setSendingFeedback(false);
+      });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <Navbar />
+        <main className="max-w-7xl mx-auto pt-24 px-4">
+          <div className="flex justify-center items-center h-64">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 rounded-full bg-primary animate-pulse"></div>
+              <div className="w-4 h-4 rounded-full bg-primary animate-pulse delay-150"></div>
+              <div className="w-4 h-4 rounded-full bg-primary animate-pulse delay-300"></div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <Navbar />
+      
+      {/* Hero Section */}
+      <HeroSection />
+      
+      {/* Toggle Switch */}
+      <div id="content-section">
+        <ToggleSwitch 
+          option1="Recent Entries" 
+          option2="Browse Categories" 
+          onChange={setViewMode}
+        />
+      
+        {/* Content Section (toggleable) */}
+        {viewMode === 1 ? (
+          <RecentEntriesSection />
+        ) : (
+          <div className="py-12">
+            <div className="max-w-7xl mx-auto px-4 md:px-8">
+              <h2 className="text-2xl font-bold mb-8 text-center md:text-left">Browse Categories</h2>
+              
+              {activeEntryTypes.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {entryTypes.map((type) => (
+                    <EntryTypeCard
+                      key={type.title}
+                      title={type.title}
+                      icon={type.icon}
+                      description={type.description}
+                      path={type.path}
+                      bgColor={type.bgColor}
+                      entryCount={type.entryCount}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex justify-center items-center py-16">
+                  <div className="text-center max-w-md mx-auto">
+                    <div className="flex justify-center mb-6">
+                      <CreateFirstEntryDialog />
+                    </div>
+                    <p className="text-gray-400">You don't have any entries yet. Create your first one to get started!</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Feedback Section */}
+      <section className="py-12 bg-gray-900/50">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="flex items-center gap-3 mb-6">
+            <FiMessageSquare size={20} className="text-primary" />
+            <h2 className="text-2xl font-bold">Feedback & Suggestions</h2>
+          </div>
+          
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <p className="text-gray-300 mb-6">
+              We're constantly improving My Journal and would love to hear your thoughts. 
+              Have a feature suggestion or found something that could be better? Let us know!
+            </p>
+            
+            {submitted ? (
+              <div className="bg-green-900/30 border border-green-800 rounded-lg p-4 text-green-400">
+                <p className="font-medium">Thank you for your feedback!</p>
+                <p className="text-sm mt-1">Your message has been sent successfully. We appreciate your input.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="feedback" className="block text-sm font-medium text-gray-300 mb-2">
+                    Your feedback
+                  </label>
+                  <textarea
+                    id="feedback"
+                    rows={4}
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Share your suggestions or report issues..."
+                    className="w-full bg-gray-800 border border-gray-700 rounded p-3 text-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                    required
+                  />
+                </div>
+                
+                {user && (
+                  <div className="text-sm text-gray-500">
+                    Sending as: {user.email || user.user_metadata?.name || "Logged in user"}
+                  </div>
+                )}
+                
+                {feedbackError && (
+                  <div className="text-red-500 text-sm">
+                    {feedbackError}
+                  </div>
+                )}
+                
+                <div>
+                  <button
+                    type="submit"
+                    disabled={sendingFeedback}
+                    className="bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded transition-colors disabled:opacity-70"
+                  >
+                    {sendingFeedback ? "Sending..." : "Send Feedback"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+      
+      <Footer />
+      
+      {/* Only show floating action button if user is logged in */}
+      {user && <FloatingActionButton />}
     </div>
   );
 }

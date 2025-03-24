@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# My Journal Application
+
+A versatile writing platform for all your creative needs - from daily journal entries to poems, stories, and inspirational quotes.
+
+## Features
+
+- **Diary Entries**: Create and manage daily diary entries with a beautiful lined paper design
+- **Journal Entries**: Format your ideas with a rich text editor
+- **User Authentication**: Secure login and signup powered by Supabase
+  - Email/Password authentication
+  - Google OAuth integration
+- **Cloud Storage**: Your entries are securely stored in the cloud
+- **Modern Design**: Clean, intuitive interface with responsive design
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 14.x or later
+- npm or yarn
+- Supabase account (for authentication and database)
+- Google Cloud Platform account (for Google OAuth)
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/your-username/my-journal.git
+cd my-journal
+```
+
+2. Install dependencies
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Set up Supabase
+   - Create a new project on [Supabase](https://supabase.io)
+   - Create the following tables in your Supabase database:
+     - `diary_entries` with columns:
+       - `id` (uuid, primary key)
+       - `user_id` (uuid, foreign key to auth.users)
+       - `title` (text)
+       - `content` (text)
+       - `date` (text)
+       - `time` (text)
+       - `has_manual_title` (boolean)
+       - `created_at` (timestamp with timezone)
+       - `updated_at` (timestamp with timezone)
+     - `journal_entries` with columns:
+       - `id` (uuid, primary key)
+       - `user_id` (uuid, foreign key to auth.users)
+       - `title` (text)
+       - `content` (text)
+       - `date` (text)
+       - `created_at` (timestamp with timezone)
+       - `updated_at` (timestamp with timezone)
+   - Enable Row Level Security (RLS) for both tables
+   - Create RLS policies to allow users to only access their own entries
+
+4. Set up Google OAuth
+   - Go to the [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project
+   - Navigate to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "OAuth Client ID"
+   - Select "Web application" as the application type
+   - Add your domain to "Authorized JavaScript origins" (e.g., http://localhost:3000 for development)
+   - Add your redirect URI to "Authorized redirect URIs". This should be:
+     - `https://[YOUR_SUPABASE_PROJECT_REF].supabase.co/auth/v1/callback` for Supabase
+   - Save and copy your Client ID and Client Secret
+   - In your Supabase dashboard, go to "Authentication" > "Providers"
+   - Enable Google and paste your Client ID and Client Secret
+   - Save the changes
+
+5. Set up environment variables
+   - Copy `.env.local.example` to `.env.local`
+   - Add your Supabase URL and anon key to `.env.local`
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+6. Run the development server
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+7. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Authentication Flow
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Users can sign up or log in using the authentication modal
+   - Email/password authentication
+   - Google OAuth
+2. After successful authentication, users can create and manage their diary and journal entries
+3. All entries are securely stored in the Supabase database
+4. Users can only access their own entries through Row Level Security policies
 
-## Learn More
+## Deployment
 
-To learn more about Next.js, take a look at the following resources:
+This application can be easily deployed on Vercel:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/your-username/my-journal)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is licensed under the MIT License - see the LICENSE file for details.
