@@ -11,11 +11,12 @@
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@supabase/supabase-js": "^2.49.1",
-    "@tinymce/tinymce-react": "^6.0.0",
     "draft-js": "^0.11.7",
     "draftjs-to-html": "^0.9.1",
     "heroicons": "^2.2.0",
     "html-to-draftjs": "^1.5.0",
+    "jodit": "^4.6.1",
+    "jodit-react": "^5.2.18",
     "next": "15.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

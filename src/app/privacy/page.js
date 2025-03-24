@@ -1,12 +1,9 @@
 "use client";
 
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar />
       
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <h1 className="text-3xl font-bold mb-8">Privacy Policy</h1>
@@ -18,7 +15,7 @@ export default function PrivacyPage() {
           
           <h2 className="text-2xl font-semibold mb-4">Our Commitment to Privacy</h2>
           <p className="text-gray-300 mb-6">
-            At My Journal, we take your privacy very seriously. This Privacy Policy outlines how we collect, use, store, and protect your information when you use our service.
+            At Unseen Stories, we take your privacy very seriously. This Privacy Policy outlines how we collect, use, store, and protect your information when you use our service.
           </p>
           
           <h2 className="text-2xl font-semibold mb-4">Information We Collect</h2>
@@ -40,7 +37,7 @@ export default function PrivacyPage() {
           <h2 className="text-2xl font-semibold mb-4">Data Storage</h2>
           <div className="text-gray-300 mb-6">
             <p className="mb-4"><strong>For Registered Users:</strong> Your journal entries are stored in our Supabase database. Each entry is securely linked to your account and cannot be accessed by other users.</p>
-            <p className="mb-4"><strong>For Non-Registered Users:</strong> Your entries are stored in your browser's local storage and are not transmitted to our servers. These entries remain on your device and are not accessible to us.</p>
+            <p className="mb-4"><strong>For Non-Registered Users:</strong> Your entries are stored in your browser&apos;s local storage and are not transmitted to our servers. These entries remain on your device and are not accessible to us.</p>
           </div>
           
           <h2 className="text-2xl font-semibold mb-4">Data Security</h2>
@@ -55,7 +52,6 @@ export default function PrivacyPage() {
         </div>
       </main>
       
-      <Footer />
     </div>
   );
 } 

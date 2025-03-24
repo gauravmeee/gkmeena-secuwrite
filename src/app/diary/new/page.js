@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Navbar from "../../components/Navbar";
+
 import { useRouter } from "next/navigation";
 import { FiSave, FiArrowLeft } from "react-icons/fi";
 import Link from "next/link";
-import Footer from "../../components/Footer";
 import { useAuth } from "../../../context/AuthContext";
 import databaseUtils from "../../../lib/database";
 import supabase from "../../../lib/supabase";
@@ -145,7 +144,6 @@ export default function NewDiaryEntry() {
   
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar />
       
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
@@ -225,9 +223,8 @@ export default function NewDiaryEntry() {
           margin: 0;
           overflow-y: hidden;
         }
-      `}</style>
+      `}</style>      
       
-      <Footer />
     </div>
   );
 } 

@@ -38,7 +38,7 @@ export default function Navbar() {
       <div className="max-w-[var(--content-width)] mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-2xl font-bold">
           <FiBook className="text-primary" />
-          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">My Journal</span>
+          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Unseen Stories</span>
         </Link>
         
         {/* Desktop Navigation */}

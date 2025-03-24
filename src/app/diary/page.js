@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
 import Link from "next/link";
-import { FiCalendar, FiPlus, FiTrash2 } from "react-icons/fi";
-import Footer from "../components/Footer";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import databaseUtils from "../../lib/database";
 
@@ -118,21 +116,18 @@ export default function DiaryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white">
-        <Navbar />
+      <div className="min-h-screen bg-black text-white">       
         <main className="max-w-4xl mx-auto pt-24 px-4">
           <div className="flex justify-center items-center h-64">
             <p className="text-xl">Loading diary entries...</p>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar />
       
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
@@ -261,8 +256,7 @@ export default function DiaryPage() {
           </>
         )}
       </main>
-      
-      <Footer />
+            
       
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&display=swap');

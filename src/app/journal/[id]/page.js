@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Navbar from "../../components/Navbar";
 import Link from "next/link";
 import { FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
 import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
-import Footer from "../../components/Footer";
 import { useAuth } from "../../../context/AuthContext";
 import databaseUtils from "../../../lib/database";
 
@@ -118,7 +116,6 @@ export default function JournalEntryPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <Navbar />
         <main className="max-w-4xl mx-auto pt-24 px-4">
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2">
@@ -128,7 +125,6 @@ export default function JournalEntryPage() {
             </div>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -136,7 +132,6 @@ export default function JournalEntryPage() {
   if (!entry) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <Navbar />
         <main className="max-w-4xl mx-auto pt-24 px-4">
           <div className="flex flex-col justify-center items-center h-64 gap-4">
             <p className="text-xl">Entry not found</p>
@@ -145,14 +140,13 @@ export default function JournalEntryPage() {
             </Link>
           </div>
         </main>
-        <Footer />
+
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar />
 
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
@@ -204,7 +198,6 @@ export default function JournalEntryPage() {
         itemType="journal entry"
       />
 
-      <Footer />
     </div>
   );
 }

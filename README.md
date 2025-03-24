@@ -1,4 +1,4 @@
-# My Journal Application
+# Unseen Stories Application
 
 A versatile writing platform for all your creative needs - from daily journal entries to poems, stories, and inspirational quotes.
 

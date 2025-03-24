@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
 import Link from "next/link";
-import { FiCalendar, FiPlus } from "react-icons/fi";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import databaseUtils from "../../lib/database";
-import Footer from "../components/Footer";
 
 const stripHtml = (html) => {
   if (typeof window === "undefined") return "";
@@ -49,6 +47,8 @@ export default function JournalPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(10);
+  const [selectedEntries, setSelectedEntries] = useState(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
   const { user, toggleAuthModal } = useAuth();
 
   useEffect(() => {
@@ -85,22 +85,44 @@ export default function JournalPage() {
 
   const totalPages = Math.ceil(processedEntries.length / entriesPerPage);
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
+  const handleToggleSelectionMode = () => {
+    setIsSelectionMode(!isSelectionMode);
+    setSelectedEntries(new Set()); // Clear selections when toggling mode
   };
 
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+  const handleDeleteSelected = async () => {
+    if (!user || selectedEntries.size === 0) return;
+    
+    if (confirm(`Are you sure you want to delete ${selectedEntries.size} entries?`)) {
+      try {
+        const entriesToDelete = Array.from(selectedEntries);
+        const success = await databaseUtils.deleteManyJournalEntries(user.id, entriesToDelete);
+        
+        if (success) {
+          setProcessedEntries(entries => 
+            entries.filter(entry => !selectedEntries.has(entry.id))
+          );
+          setSelectedEntries(new Set());
+          setIsSelectionMode(false); // Exit selection mode after successful deletion
+          
+          // Reset current page if it's now out of bounds
+          const newTotalPages = Math.ceil((processedEntries.length - selectedEntries.size) / entriesPerPage);
+          if (currentPage > newTotalPages) {
+            setCurrentPage(newTotalPages || 1);
+          }
+        } else {
+          throw new Error('Failed to delete entries');
+        }
+      } catch (error) {
+        console.error("Error deleting entries:", error);
+        alert("Failed to delete entries. Please try again.");
+      }
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <Navbar />
         <main className="max-w-4xl mx-auto pt-24 px-4">
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2">
@@ -110,28 +132,54 @@ export default function JournalPage() {
             </div>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar />
 
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">My Journal</h1>
+          <h1 className="text-3xl font-bold">Unseen Stories</h1>
 
-          {user && (
-            <Link
-              href="/journal/new"
-              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
-            >
-              <FiPlus size={16} />
-              <span>New Entry</span>
-            </Link>
-          )}
+          <div className="flex gap-2">
+            {user && processedEntries.length > 0 && (
+              <>
+                <button
+                  onClick={handleToggleSelectionMode}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                    isSelectionMode 
+                      ? 'bg-gray-600 text-white hover:bg-gray-700'
+                      : 'bg-red-600 text-white hover:bg-red-700'
+                  }`}
+                >
+                  <FiTrash2 size={18} />
+                  {isSelectionMode ? 'Cancel' : 'Delete Multiple'}
+                </button>
+
+                {isSelectionMode && selectedEntries.size > 0 && (
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    <FiTrash2 size={18} />
+                    Delete ({selectedEntries.size})
+                  </button>
+                )}
+              </>
+            )}
+            
+            {user && (
+              <Link
+                href="/journal/new"
+                className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+              >
+                <FiPlus size={16} />
+                <span>New Entry</span>
+              </Link>
+            )}
+          </div>
         </div>
 
         {processedEntries.length === 0 ? (
@@ -177,12 +225,30 @@ export default function JournalPage() {
                   >
                     <div className="bg-gray-800 border-b border-gray-700 p-4">
                       <div className="flex items-center justify-between">
-                        <Link
-                          href={`/journal/${entry.id}`}
-                          className="text-lg font-semibold text-white hover:underline"
-                        >
-                          {entry.title}
-                        </Link>
+                        <div className="flex items-center gap-3">
+                          {isSelectionMode && (
+                            <input
+                              type="checkbox"
+                              checked={selectedEntries.has(entry.id)}
+                              onChange={(e) => {
+                                const newSelected = new Set(selectedEntries);
+                                if (e.target.checked) {
+                                  newSelected.add(entry.id);
+                                } else {
+                                  newSelected.delete(entry.id);
+                                }
+                                setSelectedEntries(newSelected);
+                              }}
+                              className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                            />
+                          )}
+                          <Link
+                            href={`/journal/${entry.id}`}
+                            className="text-lg font-semibold text-white hover:underline"
+                          >
+                            {entry.title}
+                          </Link>
+                        </div>
                         <div className="flex items-center gap-2 text-gray-400">
                           <span>{entry.dateTime}</span>
                         </div>
@@ -196,48 +262,41 @@ export default function JournalPage() {
             </div>
 
             <Pagination
-                currentPage={currentPage}
-                totalPages={Math.ceil(processedEntries.length / entriesPerPage)}
-                onPageChange={(page) => setCurrentPage(page)}
-              />
+              currentPage={currentPage}
+              totalPages={Math.ceil(processedEntries.length / entriesPerPage)}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
           </>
         )}
       </main>
 
-      <Footer />
     </div>
   );
 }
 
-// Add this helper function to generate page numbers array
+// Pagination component remains the same as in the previous code
 function getPageNumbers(currentPage, totalPages) {
   const pages = [];
   
   if (totalPages <= 7) {
-    // If total pages is 7 or less, show all pages
     for (let i = 1; i <= totalPages; i++) {
       pages.push(i);
     }
   } else {
-    // Always show first page
     pages.push(1);
     
     if (currentPage > 3) {
-      // Add ellipsis if current page is away from start
       pages.push('...');
     }
     
-    // Show pages around current page
     for (let i = Math.max(2, currentPage - 1); i <= Math.min(currentPage + 1, totalPages - 1); i++) {
       pages.push(i);
     }
     
     if (currentPage < totalPages - 2) {
-      // Add ellipsis if current page is away from end
       pages.push('...');
     }
     
-    // Always show last page
     pages.push(totalPages);
   }
   
@@ -289,4 +348,4 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       </button>
     </div>
   );
-} 
+}

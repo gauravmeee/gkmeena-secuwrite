@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Navbar from "../../../components/Navbar";
 import { useRouter, useParams } from "next/navigation";
 import { FiSave, FiArrowLeft } from "react-icons/fi";
 import Link from "next/link";
-import Footer from "../../../components/Footer";
 import { useAuth } from "../../../../context/AuthContext";
 import databaseUtils from "../../../../lib/database";
 
@@ -246,7 +244,6 @@ export default function EditDiaryEntry() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <Navbar />
         <main className="max-w-4xl mx-auto pt-24 px-4">
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2">
@@ -256,15 +253,12 @@ export default function EditDiaryEntry() {
             </div>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
   
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar />
-      
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
           <Link href={isCloudEntry ? `/diary/${entryId}` : `/diary/${params.id}`} className="flex items-center gap-2 text-primary hover:underline">
@@ -374,7 +368,6 @@ export default function EditDiaryEntry() {
         }
       `}</style>
       
-      <Footer />
     </div>
   );
 } 

@@ -160,7 +160,7 @@ export default function RecentEntriesSection() {
               <div className="flex justify-center mb-6">
                 <CreateFirstEntryDialog />
               </div>
-              <p className="text-gray-400">You don't have any entries yet. Create your first one to get started!</p>
+              <p className="text-gray-400">You don&apos;t have any entries yet. Create your first one to get started!</p>
             </div>
           </div>
         </div>

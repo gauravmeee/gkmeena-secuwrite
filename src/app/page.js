@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import EntryTypeCard from "./components/EntryTypeCard";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
 import HeroSection from "./components/HeroSection";
 import RecentEntriesSection from "./components/RecentEntriesSection";
 import ToggleSwitch from "./components/ToggleSwitch";
@@ -179,7 +177,6 @@ export default function Home() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <Navbar />
         <main className="max-w-7xl mx-auto pt-24 px-4">
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2">
@@ -189,15 +186,12 @@ export default function Home() {
             </div>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar />
-      
       {/* Hero Section */}
       <HeroSection />
       
@@ -237,7 +231,7 @@ export default function Home() {
                     <div className="flex justify-center mb-6">
                       <CreateFirstEntryDialog />
                     </div>
-                    <p className="text-gray-400">You don't have any entries yet. Create your first one to get started!</p>
+              <p className="text-gray-400">You don&apos;t have any entries yet. Create your first one to get started!</p>
                   </div>
                 </div>
               )}
@@ -246,70 +240,81 @@ export default function Home() {
         )}
       </div>
       
-      {/* Feedback Section */}
-      <section className="py-12 bg-gray-900/50">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="flex items-center gap-3 mb-6">
-            <FiMessageSquare size={20} className="text-primary" />
-            <h2 className="text-2xl font-bold">Feedback & Suggestions</h2>
-          </div>
-          
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <p className="text-gray-300 mb-6">
-              We're constantly improving My Journal and would love to hear your thoughts. 
-              Have a feature suggestion or found something that could be better? Let us know!
-            </p>
-            
-            {submitted ? (
-              <div className="bg-green-900/30 border border-green-800 rounded-lg p-4 text-green-400">
-                <p className="font-medium">Thank you for your feedback!</p>
-                <p className="text-sm mt-1">Your message has been sent successfully. We appreciate your input.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleFeedbackSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="feedback" className="block text-sm font-medium text-gray-300 mb-2">
-                    Your feedback
-                  </label>
-                  <textarea
-                    id="feedback"
-                    rows={4}
-                    value={feedback}
-                    onChange={(e) => setFeedback(e.target.value)}
-                    placeholder="Share your suggestions or report issues..."
-                    className="w-full bg-gray-800 border border-gray-700 rounded p-3 text-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                    required
-                  />
-                </div>
-                
-                {user && (
-                  <div className="text-sm text-gray-500">
-                    Sending as: {user.email || user.user_metadata?.name || "Logged in user"}
-                  </div>
-                )}
-                
-                {feedbackError && (
-                  <div className="text-red-500 text-sm">
-                    {feedbackError}
-                  </div>
-                )}
-                
-                <div>
-                  <button
-                    type="submit"
-                    disabled={sendingFeedback}
-                    className="bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded transition-colors disabled:opacity-70"
-                  >
-                    {sendingFeedback ? "Sending..." : "Send Feedback"}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
+{/* Feedback Section */}
+<section className="py-12 bg-gray-900/50">
+
+  <div className="max-w-5xl mx-auto px-4 flex justify-between items-start gap-8">
+  <img 
+      src="book.png" 
+      alt="Feedback" 
+      className="w-48 h-48 object-cover rounded-lg  opacity-70"
+    />
+
+    {/* Feedback Form */}
+    <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <FiMessageSquare size={20} className="text-primary" />
+        <h2 className="text-xl font-bold">Feedback & Suggestions</h2>
+      </div>
+
+      {submitted ? (
+        <div className="bg-green-900/30 border border-green-800 rounded-lg p-4 text-green-400">
+          <p className="font-medium">Thank you for your feedback!</p>
+          <p className="text-sm mt-1">Your message has been sent successfully.</p>
         </div>
-      </section>
-      
-      <Footer />
+      ) : (
+        <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+          <textarea
+            id="feedback"
+            rows={3}
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+            placeholder="Share your suggestions..."
+            className="w-full bg-gray-800 border border-gray-700 rounded p-3 text-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+            required
+          />
+
+          {feedbackError && (
+            <div className="text-red-500 text-sm">{feedbackError}</div>
+          )}
+        </form>
+      )}
+    </div>
+
+    {/* Info Section */}
+    <div className="w-1/3 text-gray-300 flex flex-col justify-between h-full">
+      <div>
+        <p className="text-lg font-medium mb-2">Help us improve Unseen Stories!</p>
+        <p className="text-sm leading-relaxed">
+          We value your thoughts and suggestions. Found an issue or have a feature request? Let us know!
+        </p>
+      </div>
+
+      {/* Button and Sending Info */}
+      <div className="mt-6">
+        <button
+          type="submit"
+          disabled={sendingFeedback}
+          onClick={handleFeedbackSubmit}
+          className="bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded transition-colors disabled:opacity-70 w-full"
+        >
+          {sendingFeedback ? "Sending..." : "Send Feedback"}
+        </button>
+
+        {user && (
+          <div className="text-sm text-gray-500 mt-2">
+            Sending as: {user.email || user.user_metadata?.name || "Logged in user"}
+          </div>
+        )}
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+
+    
       
       {/* Only show floating action button if user is logged in */}
       {user && <FloatingActionButton />}

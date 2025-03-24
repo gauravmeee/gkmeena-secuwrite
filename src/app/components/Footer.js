@@ -13,7 +13,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="flex items-center gap-2">
             <FiBook className="text-primary" size={16} />
-            <span className="text-sm font-semibold text-white">My Journal</span>
+            <span className="text-sm font-semibold text-white">Unseen Stories</span>
             <span className="text-xs mx-2">|</span>
             <div className="flex items-center gap-3">
               <a href="https://github.com/gauravmeee" className="text-gray-500 hover:text-primary transition-colors">
@@ -30,7 +30,7 @@ export default function Footer() {
             <Link href="/about" className="text-xs hover:text-primary transition-colors">About</Link>
             <Link href="/privacy" className="text-xs hover:text-primary transition-colors">Privacy</Link>
             <p className="text-xs flex items-center gap-1">
-              <span>Made with</span> <FiHeart size={10} className="text-red-500" /> <span>by Gaurav</span>
+              <span>Made with</span> <FiHeart size={10} className="text-red-500" /> <span>by GKmeena</span>
             </p>
             <p className="text-xs">© {currentYear}</p>
           </div>

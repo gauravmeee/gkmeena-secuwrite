@@ -1,12 +1,10 @@
 "use client";
 
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+
 
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar />
       
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <h1 className="text-3xl font-bold mb-8">Terms and Conditions</h1>
@@ -18,12 +16,12 @@ export default function TermsPage() {
           
           <h2 className="text-2xl font-semibold mb-4">Acceptance of Terms</h2>
           <p className="text-gray-300 mb-6">
-            By accessing or using My Journal, you agree to be bound by these Terms and Conditions and our Privacy Policy. If you do not agree to these Terms, you should not use our service.
+            By accessing or using Unseen Stories, you agree to be bound by these Terms and Conditions and our Privacy Policy. If you do not agree to these Terms, you should not use our service.
           </p>
           
           <h2 className="text-2xl font-semibold mb-4">Description of Service</h2>
           <p className="text-gray-300 mb-6">
-            My Journal is a personal journaling application that allows users to create, edit, and store journal entries, diary notes, and other personal content. We offer both free and premium services with varying features.
+            Unseen Stories is a personal journaling application that allows users to create, edit, and store journal entries, diary notes, and other personal content. We offer both free and premium services with varying features.
           </p>
           
           <h2 className="text-2xl font-semibold mb-4">User Accounts</h2>
@@ -60,8 +58,6 @@ export default function TermsPage() {
           </p>
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 } 
