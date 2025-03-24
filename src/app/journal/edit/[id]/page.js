@@ -177,7 +177,7 @@ export default function EditJournalEntry() {
             className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
           >
             <FiSave size={16} />
-            <span>Save Changes</span>
+            <span className="hidden sm:inline">Save Changes</span>
           </button>
         </div>
         

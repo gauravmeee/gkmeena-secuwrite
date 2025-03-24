@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiX } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import databaseUtils from "../../lib/database";
 
@@ -141,7 +141,7 @@ export default function JournalPage() {
 
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Unseen Stories</h1>
+          <h1 className="text-3xl font-bold">My Journal</h1>
 
           <div className="flex gap-2">
             {user && processedEntries.length > 0 && (
@@ -149,13 +149,15 @@ export default function JournalPage() {
                 <button
                   onClick={handleToggleSelectionMode}
                   className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
-                    isSelectionMode 
-                      ? 'bg-gray-600 text-white hover:bg-gray-700'
-                      : 'bg-red-600 text-white hover:bg-red-700'
+                    isSelectionMode
+                      ? "bg-gray-600 text-white hover:bg-gray-700"
+                      : "bg-red-600 text-white hover:bg-red-700"
                   }`}
                 >
-                  <FiTrash2 size={18} />
-                  {isSelectionMode ? 'Cancel' : 'Delete Multiple'}
+                  {isSelectionMode ? <FiX size={18} /> : <FiTrash2 size={18} />}
+                  <span className="hidden sm:inline">
+                    {isSelectionMode ? "Cancel" : "Delete Multiple"}
+                  </span>
                 </button>
 
                 {isSelectionMode && selectedEntries.size > 0 && (
@@ -164,7 +166,7 @@ export default function JournalPage() {
                     className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
                   >
                     <FiTrash2 size={18} />
-                    Delete ({selectedEntries.size})
+                    <span className="hidden sm:inline">Delete</span> ({selectedEntries.size})
                   </button>
                 )}
               </>
@@ -176,7 +178,7 @@ export default function JournalPage() {
                 className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
               >
                 <FiPlus size={16} />
-                <span>New Entry</span>
+                <span className="hidden sm:inline">New Entry</span>
               </Link>
             )}
           </div>

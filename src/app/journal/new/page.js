@@ -142,7 +142,7 @@ export default function NewJournalEntry() {
             ) : (
               <>
                 <FiSave size={18} />
-                <span>Save Entry</span>
+                <span className="hidden sm:inline">Save Entry</span>
               </>
             )}
           </button>

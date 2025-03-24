@@ -193,14 +193,14 @@ export default function DiaryEntryPage() {
               className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
             >
               <FiEdit2 size={16} />
-              <span>Edit</span>
+              <span className="hidden sm:inline">Edit</span>
             </Link>
             <button
               onClick={() => setIsDeleteModalOpen(true)}
               className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors"
             >
               <FiTrash2 size={16} />
-              <span>Delete</span>
+              <span className="hidden sm:inline">Delete</span>
             </button>
           </div>
         </div>

@@ -242,16 +242,16 @@ export default function Home() {
       
 {/* Feedback Section */}
 <section className="py-12 bg-gray-900/50">
-
-  <div className="max-w-5xl mx-auto px-4 flex justify-between items-start gap-8">
-  <img 
+  <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+    {/* Image Section - Hidden on mobile, visible on md and above */}
+    <img 
       src="book.png" 
       alt="Feedback" 
-      className="w-48 h-48 object-cover rounded-lg  opacity-70"
+      className="hidden md:block w-full h-auto object-cover rounded-lg opacity-70"
     />
 
-    {/* Feedback Form */}
-    <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-6">
+    {/* Feedback Form - Full width on mobile, spans 2 columns on md and above */}
+    <div className="md:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-6">
       <div className="flex items-center gap-3 mb-4">
         <FiMessageSquare size={20} className="text-primary" />
         <h2 className="text-xl font-bold">Feedback & Suggestions</h2>
@@ -281,8 +281,8 @@ export default function Home() {
       )}
     </div>
 
-    {/* Info Section */}
-    <div className="w-1/3 text-gray-300 flex flex-col justify-between h-full">
+    {/* Info Section - Full width on mobile, adjust layout */}
+    <div className="md:col-span-3 text-gray-300 grid md:grid-cols-2 gap-6 items-center">
       <div>
         <p className="text-lg font-medium mb-2">Help us improve Unseen Stories!</p>
         <p className="text-sm leading-relaxed">
@@ -290,8 +290,7 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Button and Sending Info */}
-      <div className="mt-6">
+      <div className="mt-4 md:mt-0">
         <button
           type="submit"
           disabled={sendingFeedback}
@@ -302,13 +301,12 @@ export default function Home() {
         </button>
 
         {user && (
-          <div className="text-sm text-gray-500 mt-2">
+          <div className="text-sm text-gray-500 mt-2 text-center md:text-left">
             Sending as: {user.email || user.user_metadata?.name || "Logged in user"}
           </div>
         )}
       </div>
     </div>
-
   </div>
 </section>
 

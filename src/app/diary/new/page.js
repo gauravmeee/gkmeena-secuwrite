@@ -158,7 +158,7 @@ export default function NewDiaryEntry() {
             className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <FiSave size={16} />
-            <span>{loading ? "Saving..." : "Save Entry"}</span>
+            <span className="hidden sm:inline">{loading ? "Saving..." : "Save Entry"}</span>
           </button>
         </div>
         
