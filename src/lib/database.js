@@ -1,5 +1,36 @@
 import supabase from './supabase';
 
+// Helper function to upload image to Supabase storage
+async function uploadImage(file, userId) {
+  try {
+    if (!file) return null;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}/${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    // Try to upload directly without checking bucket existence
+    const { error: uploadError, data } = await supabase.storage
+      .from('diary-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error('Error uploading image:', uploadError);
+      return null;
+    }
+
+    // Get the public URL for the uploaded image
+    const { data: { publicUrl } } = supabase.storage
+      .from('diary-images')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  } catch (error) {
+    console.error('Error in uploadImage:', error);
+    return null;
+  }
+}
+
 // Diary entry functions
 export async function getDiaryEntries(userId) {
   if (!userId) return [];
@@ -19,72 +50,145 @@ export async function getDiaryEntries(userId) {
 }
 
 export async function createDiaryEntry(userId, entry) {
-  if (!userId) return null;
-  
   try {
+    let imageUrl = null;
+    
+    // If there's an image file, upload it first
+    if (entry.imageFile) {
+      try {
+        imageUrl = await uploadImage(entry.imageFile, userId);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        // Continue without the image if upload fails
+      }
+    }
+
+    // Prepare the entry data
+    const entryData = {
+      user_id: userId,
+      title: entry.title || "",
+      content: entry.content || "",
+      date: entry.date || new Date().toLocaleDateString('en-US', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      }),
+      time: entry.time || new Date().toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      }),
+      has_manual_title: entry.hasManualTitle || false
+    };
+
+    // Only add image_url and entry_type if they exist in the schema
+    if (imageUrl || entry.imageUrl) {
+      entryData.image_url = imageUrl || entry.imageUrl;
+      entryData.entry_type = 'image';
+    } else {
+      entryData.entry_type = 'text';
+    }
+
+    // Insert the entry
     const { data, error } = await supabase
       .from('diary_entries')
-      .insert([
-        {
-          user_id: userId,
-          title: entry.title || "",
-          content: entry.content || "",
-          date: entry.date || new Date().toLocaleDateString('en-US', { 
-            day: 'numeric', 
-            month: 'long', 
-            year: 'numeric' 
-          }),
-          day: entry.day || new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-          time: entry.time || new Date().toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            minute: '2-digit', 
-            hour12: true 
-          }),
-          has_manual_title: entry.hasManualTitle || false
-        }
-      ])
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+      .insert([entryData])
+      .select();
+
+    if (error) {
+      console.error("Error creating diary entry:", error);
+      throw error;
+    }
+
+    return data[0];
   } catch (error) {
-    console.error("Error creating diary entry:", error);
-    return null;
+    console.error("Error in createDiaryEntry:", error);
+    throw error;
   }
 }
 
-export async function updateDiaryEntry(entryId, userId, updates) {
-  if (!userId) return null;
-  
+export async function updateDiaryEntry(entryId, updates, userId) {
   try {
-    const { data, error } = await supabase
+    // Validate inputs
+    if (!entryId || !userId) {
+      console.error("Missing required parameters:", { entryId, userId });
+      return null;
+    }
+
+    console.log("Starting update with:", { entryId, userId, updates });
+
+    // First verify the entry exists and belongs to the user
+    const { data: existingEntry, error: fetchError } = await supabase
       .from('diary_entries')
-      .update({
-        title: updates.title || "",
-        content: updates.content || "",
-        date: updates.date || new Date().toLocaleDateString('en-US', { 
-          day: 'numeric', 
-          month: 'long', 
-          year: 'numeric' 
-        }),
-        day: updates.day || new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-        time: updates.time || new Date().toLocaleTimeString('en-US', { 
-          hour: 'numeric', 
-          minute: '2-digit', 
-          hour12: true 
-        }),
-        has_manual_title: updates.hasManualTitle || false
-      })
+      .select('*')
       .eq('id', entryId)
       .eq('user_id', userId)
-      .select()
       .single();
-    
-    if (error) throw error;
+
+    if (fetchError) {
+      console.error("Error fetching entry:", fetchError);
+      return null;
+    }
+
+    if (!existingEntry) {
+      console.error("Entry not found or doesn't belong to user");
+      return null;
+    }
+
+    console.log("Found existing entry:", existingEntry);
+
+    let imageUrl = existingEntry.image_url;
+
+    // If there's a new image file, upload it
+    if (updates.imageFile) {
+      imageUrl = await uploadImage(updates.imageFile, userId);
+    }
+
+    // Prepare the update data
+    const updateData = {
+      title: updates.title || '',
+      content: updates.content || '',
+      date: updates.date || existingEntry.date || '',
+      time: updates.time || existingEntry.time || '',
+      has_manual_title: updates.hasManualTitle || false,
+      image_url: imageUrl || updates.imageUrl || existingEntry.image_url,
+      entry_type: updates.imageFile || updates.imageUrl ? 'image' : (updates.content ? 'text' : existingEntry.entry_type),
+      updated_at: new Date().toISOString()
+    };
+
+    console.log("Prepared update data:", updateData);
+
+    // Perform the update
+    const { data, error } = await supabase
+      .from('diary_entries')
+      .update(updateData)
+      .eq('id', entryId)
+      .eq('user_id', userId)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error("Supabase update error:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      return null;
+    }
+
+    if (!data) {
+      console.error("No data returned from update");
+      return null;
+    }
+
+    console.log("Update successful:", data);
     return data;
   } catch (error) {
-    console.error("Error updating diary entry:", error);
+    console.error("Error in updateDiaryEntry:", {
+      message: error.message,
+      stack: error.stack
+    });
     return null;
   }
 }

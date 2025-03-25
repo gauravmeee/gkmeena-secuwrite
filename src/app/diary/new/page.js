@@ -1,27 +1,42 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 
-import { useRouter } from "next/navigation";
-import { FiSave, FiArrowLeft } from "react-icons/fi";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FiSave, FiArrowLeft, FiUpload, FiX } from "react-icons/fi";
 import Link from "next/link";
 import { useAuth } from "../../../context/AuthContext";
 import databaseUtils from "../../../lib/database";
-import supabase from "../../../lib/supabase";
+import { supabase } from "../../../lib/supabase";
 
-export default function NewDiaryEntry() {
+// Create a separate component for the form content
+function NewDiaryEntryForm() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [entryType, setEntryType] = useState('text');
   const router = useRouter();
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   
   // Add authentication check
   useEffect(() => {
     if (!user) {
       router.push('/');
     }
-  }, [user, router]);
+
+    // If it's an image entry from URL parameter, show file picker immediately
+    const typeFromUrl = searchParams.get('type');
+    if (typeFromUrl === 'image') {
+      setEntryType('image');
+      const input = document.getElementById('image-upload');
+      if (input) {
+        input.click();
+      }
+    }
+  }, [user, router, searchParams]);
 
   // If not logged in, show loading state
   if (!user) {
@@ -70,18 +85,46 @@ export default function NewDiaryEntry() {
   // Format for display
   const formattedDate = `${ordinalDay} ${month} ${year}`;
   
-  // Handle save with Supabase or localStorage
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        alert("Image size should be less than 5MB");
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        alert("Please upload an image file");
+        return;
+      }
+
+      setImageFile(file);
+      setEntryType('image');
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setEntryType('text');
+  };
+
   const handleSave = async () => {
-    if (!content.trim()) {
+    if (entryType === 'text' && !content.trim()) {
       alert("Please write something before saving");
       return;
     }
 
-    if (!user) {
-      alert("Please log in to save your diary entry");
+    if (entryType === 'image' && !imageFile && !imagePreview) {
+      alert("Please upload an image before saving");
       return;
     }
-    
+
     try {
       setLoading(true);
       
@@ -92,6 +135,8 @@ export default function NewDiaryEntry() {
         time: formattedTime,
         day: weekday,
         content: content,
+        imageFile: imageFile || null,
+        imageUrl: imagePreview || null,
         timestamp: new Date().getTime()
       };
       
@@ -110,7 +155,9 @@ export default function NewDiaryEntry() {
         const minimalEntry = {
           user_id: user.id,
           title: title || "",
-          content: content || ""
+          content: content || "",
+          imageFile: imageFile || null,
+          imageUrl: imagePreview || null
         };
         
         console.log("Trying direct insert with:", minimalEntry);
@@ -151,7 +198,6 @@ export default function NewDiaryEntry() {
   
   return (
     <div className="min-h-screen bg-black text-white">
-      
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
           <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
@@ -169,8 +215,7 @@ export default function NewDiaryEntry() {
           </button>
         </div>
         
-        {/* Lined paper style for diary */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
+        <div className={`bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden ${entryType === 'image' ? 'pb-6' : ''}`}>
           <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
             <input
               type="text"
@@ -181,7 +226,7 @@ export default function NewDiaryEntry() {
             />
           </div>
           
-          <div className="lined-paper p-8 min-h-[70vh] bg-white">
+          <div className={entryType === 'image' ? 'bg-white p-8' : 'lined-paper p-8 min-h-[70vh] bg-white'}>
             <div className="mb-6 text-left">
               <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">{formattedDate}</div>
               <div className="text-xl font-handwriting text-gray-800 mb-1">{weekday}</div>
@@ -190,14 +235,58 @@ export default function NewDiaryEntry() {
             
             <div className="font-serif text-lg text-gray-800">
               <div className="mt-10 font-handwriting text-xl">Dear Diary,</div>
-              <textarea 
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="w-full h-[calc(70vh-180px)] bg-transparent border-none outline-none resize-none font-handwriting text-xl text-gray-800 line-height-loose"
-                placeholder="Write your thoughts here..."
-                autoFocus
-              />
+              
+              {entryType === 'text' && (
+                <textarea 
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  className="w-full h-[calc(70vh-180px)] bg-transparent border-none outline-none resize-none font-handwriting text-xl text-gray-800 line-height-loose"
+                  placeholder="Write your thoughts here..."
+                  autoFocus
+                />
+              )}
             </div>
+
+            {entryType === 'image' && (
+              <div className="mt-6 flex flex-col items-center justify-center border-t border-gray-200 pt-6">
+                {!imagePreview ? (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="image-upload"
+                    />
+                    <label
+                      htmlFor="image-upload"
+                      className="flex flex-col items-center gap-4 w-full p-8 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary transition-colors"
+                    >
+                      <FiUpload size={40} className="text-gray-400" />
+                      <div className="text-center">
+                        <p className="text-gray-600 font-medium">Click to upload an image</p>
+                        <p className="text-gray-500 text-sm mt-1">or drag and drop</p>
+                        <p className="text-gray-400 text-xs mt-2">Maximum file size: 5MB</p>
+                      </div>
+                    </label>
+                  </>
+                ) : (
+                  <div className="relative w-full">
+                    <img
+                      src={imagePreview}
+                      alt="Diary entry"
+                      className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
+                    />
+                    <button
+                      onClick={removeImage}
+                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                    >
+                      <FiX size={20} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -223,15 +312,28 @@ export default function NewDiaryEntry() {
           line-height: 2rem;
           padding-top: 0.5rem;
         }
-        
-        textarea {
-          display: block;
-          padding: 0;
-          margin: 0;
-          overflow-y: hidden;
-        }
       `}</style>      
-      
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function NewDiaryEntry() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black text-white">
+        <main className="max-w-4xl mx-auto pt-24 px-4">
+          <div className="flex justify-center items-center h-64">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    }>
+      <NewDiaryEntryForm />
+    </Suspense>
   );
 } 

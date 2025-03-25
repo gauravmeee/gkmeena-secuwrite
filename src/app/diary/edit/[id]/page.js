@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { FiSave, FiArrowLeft } from "react-icons/fi";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { FiSave, FiArrowLeft, FiUpload, FiX } from "react-icons/fi";
 import Link from "next/link";
 import { useAuth } from "../../../../context/AuthContext";
 import databaseUtils from "../../../../lib/database";
+import { supabase } from "../../../../lib/supabase";
 
 export default function EditDiaryEntry() {
   const [title, setTitle] = useState("");
@@ -18,10 +19,22 @@ export default function EditDiaryEntry() {
   const [hasManualTitle, setHasManualTitle] = useState(false);
   const [entryId, setEntryId] = useState(null);
   const [isCloudEntry, setIsCloudEntry] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [entryType, setEntryType] = useState('text');
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   
+  useEffect(() => {
+    // If it's an image entry from URL parameter, update the type
+    const typeFromUrl = searchParams.get('type');
+    if (typeFromUrl === 'image') {
+      setEntryType('image');
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     async function loadEntry() {
       setLoading(true);
@@ -33,8 +46,6 @@ export default function EditDiaryEntry() {
             const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id);
             
             if (isUuid) {
-              // Remove table structure check that's causing errors
-              
               // Fetch all entries and find the one with matching ID
               const entries = await databaseUtils.getDiaryEntries(user.id);
               console.log("All Supabase entries:", entries);
@@ -50,37 +61,29 @@ export default function EditDiaryEntry() {
                 setOriginalDay(foundEntry.day || "");
                 setOriginalTime(foundEntry.time || "");
                 setEntryId(foundEntry.id);
-                
-                // In Supabase it's has_manual_title (snake_case)
                 setHasManualTitle(foundEntry.has_manual_title || false);
                 setIsCloudEntry(true);
                 
-                // Add missing day field if needed
-                if (!foundEntry.day && foundEntry.date) {
-                  try {
-                    // Parse date like "23rd March 2025"
-                    const dateParts = foundEntry.date.split(' ');
-                    if (dateParts.length >= 3) {
-                      const day = parseInt(dateParts[0]);
-                      const month = dateParts[1];
-                      const year = parseInt(dateParts[2]);
-                      
-                      if (!isNaN(day) && !isNaN(year)) {
-                        const monthMap = {
-                          'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5,
-                          'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11
-                        };
-                        
-                        if (month in monthMap) {
-                          const date = new Date(year, monthMap[month], day);
-                          const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
-                          setOriginalDay(weekday);
-                        }
-                      }
-                    }
-                  } catch (e) {
-                    console.error("Error reconstructing day:", e);
+                // Handle image entry
+                if (foundEntry.image_url) {
+                  console.log("Found image URL:", foundEntry.image_url);
+                  const imageUrl = foundEntry.image_url;
+                  
+                  // If the image URL is a base64 string, use it directly
+                  if (imageUrl.startsWith('data:image/')) {
+                    setImagePreview(imageUrl);
+                  } 
+                  // If it's a Supabase storage URL, construct the full URL
+                  else if (imageUrl.startsWith('diary-images/')) {
+                    const { data: { publicUrl } } = supabase
+                      .storage
+                      .from('diary-images')
+                      .getPublicUrl(imageUrl);
+                    setImagePreview(publicUrl);
                   }
+                  setEntryType('image');
+                } else {
+                  setEntryType('text');
                 }
                 
                 setLoading(false);
@@ -110,6 +113,15 @@ export default function EditDiaryEntry() {
               setOriginalTimestamp(entry.timestamp);
               setHasManualTitle(entry.hasManualTitle || false);
               setIsCloudEntry(false);
+              
+              // Handle image entry in localStorage
+              if (entry.imageUrl) {
+                console.log("Found localStorage image:", entry.imageUrl);
+                setImagePreview(entry.imageUrl);
+                setEntryType('image');
+              } else {
+                setEntryType('text');
+              }
               
               // Add missing day field if needed
               if (!entry.day && entry.date) {
@@ -157,18 +169,57 @@ export default function EditDiaryEntry() {
     loadEntry();
   }, [params.id, user]);
   
-  // Handle save
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        alert("Image size should be less than 5MB");
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        alert("Please upload an image file");
+        return;
+      }
+
+      setImageFile(file);
+      setEntryType('image');
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setEntryType('text');
+  };
+
   const handleSave = async () => {
-    if (!content.trim()) {
+    if (entryType === 'text' && !content.trim()) {
       alert("Please write something before saving");
+      return;
+    }
+
+    if (entryType === 'image' && !imageFile && !imagePreview) {
+      alert("Please upload an image before saving");
       return;
     }
     
     try {
       // If it's a cloud entry and user is logged in
       if (isCloudEntry && user && entryId) {
-        console.log("Saving cloud entry:", { entryId, isCloudEntry });
-        console.log("User:", user.id);
+        console.log("Starting save operation:", { 
+          entryId, 
+          isCloudEntry,
+          userId: user.id,
+          hasContent: !!content.trim(),
+          hasTitle: !!title.trim(),
+          hasImage: !!imageFile || !!imagePreview
+        });
         
         if (!user.id) {
           console.error("User ID is missing");
@@ -185,28 +236,32 @@ export default function EditDiaryEntry() {
         
         // Update in Supabase
         const updates = {
-          title: title || "", // Ensure not null
-          content: content || "", // Ensure not null
+          title: title || "",
+          content: content || "",
           date: originalDate || "",
-          day: originalDay || "",
           time: originalTime || "",
-          hasManualTitle: hasManualTitle || false
+          hasManualTitle: hasManualTitle || false,
+          imageFile: imageFile || null,
+          imageUrl: imagePreview || null
         };
         
-        console.log("Updates to send:", updates);
+        console.log("Preparing update with data:", updates);
         
         try {
           const result = await databaseUtils.updateDiaryEntry(entryId, updates, user.id);
-          console.log("Update result:", result);
           
           if (result) {
+            console.log("Update successful, redirecting to:", `/diary/${entryId}`);
             router.push(`/diary/${entryId}`);
           } else {
-            console.error("Update failed - null result returned");
+            console.error("Update failed - null result returned from databaseUtils.updateDiaryEntry");
             alert("Failed to save changes. Please try again or check your connection.");
           }
         } catch (updateError) {
-          console.error("Exception during update:", updateError);
+          console.error("Exception during update:", {
+            message: updateError.message,
+            stack: updateError.stack
+          });
           alert("An error occurred while updating. Please try again later.");
         }
         return;
@@ -226,7 +281,9 @@ export default function EditDiaryEntry() {
           date: originalDate,
           day: originalDay,
           time: originalTime,
-          timestamp: originalTimestamp || new Date().getTime()
+          timestamp: originalTimestamp || new Date().getTime(),
+          entryType: entryType,
+          imageUrl: imagePreview || null
         };
         
         // Save to localStorage
@@ -236,7 +293,10 @@ export default function EditDiaryEntry() {
         router.push(`/diary/${entryIndex}`);
       }
     } catch (error) {
-      console.error("Error saving entry:", error);
+      console.error("Error in handleSave:", {
+        message: error.message,
+        stack: error.stack
+      });
       alert("Could not save entry. Please try again.");
     }
   };
@@ -275,8 +335,7 @@ export default function EditDiaryEntry() {
           </button>
         </div>
         
-        {/* Lined paper style for diary */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
+        <div className={`bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden ${entryType === 'image' ? 'pb-6' : ''}`}>
           <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
             <input
               type="text"
@@ -287,53 +346,95 @@ export default function EditDiaryEntry() {
             />
           </div>
           
-          <div className="lined-paper p-8 min-h-[70vh] bg-white">
-          <div className="mb-6 text-left">
-  <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">
-    {originalDate || (() => {
-      const now = new Date();
-      const day = now.getDate();
-      
-      // Function to add ordinal suffix
-      const getOrdinalSuffix = (d) => {
-        if (d > 3 && d < 21) return 'th';
-        switch (d % 10) {
-          case 1: return 'st';
-          case 2: return 'nd';
-          case 3: return 'rd';
-          default: return 'th';
-        }
-      };
-      
-      return `${day}${getOrdinalSuffix(day)} ${now.toLocaleDateString('en-US', { 
-        month: 'long', 
-        year: 'numeric' 
-      }).split(' ')[0]} ${now.getFullYear()}`;
-    })()}
-  </div>
-  <div className="text-xl font-handwriting text-gray-800 mb-1">
-    {originalDay || new Date().toLocaleDateString('en-US', { weekday: 'long' })}
-  </div>
-  <div className="text-xl font-handwriting text-gray-800">
-    {originalTime || new Date().toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit', 
-      hour12: true 
-    })}
-  </div>
-</div>
+          <div className={entryType === 'image' ? 'bg-white p-8' : 'lined-paper p-8 min-h-[70vh] bg-white'}>
+            <div className="mb-6 text-left">
+              <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">
+                {originalDate || (() => {
+                  const now = new Date();
+                  const day = now.getDate();
+                  
+                  // Function to add ordinal suffix
+                  const getOrdinalSuffix = (d) => {
+                    if (d > 3 && d < 21) return 'th';
+                    switch (d % 10) {
+                      case 1: return 'st';
+                      case 2: return 'nd';
+                      case 3: return 'rd';
+                      default: return 'th';
+                    }
+                  };
+                  
+                  return `${day}${getOrdinalSuffix(day)} ${now.toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                  }).split(' ')[0]} ${now.getFullYear()}`;
+                })()}
+              </div>
+              <div className="text-xl font-handwriting text-gray-800 mb-1">
+                {originalDay || new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+              </div>
+              <div className="text-xl font-handwriting text-gray-800">
+                {originalTime || new Date().toLocaleTimeString('en-US', { 
+                  hour: 'numeric', 
+                  minute: '2-digit', 
+                  hour12: true 
+                })}
+              </div>
+            </div>
 
-            
-            
             <div className="font-serif text-lg text-gray-800">
               <div className="mt-10 font-handwriting text-xl">Dear Diary,</div>
-              <textarea 
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="w-full h-[calc(70vh-180px)] bg-transparent border-none outline-none resize-none font-handwriting text-xl text-gray-800 line-height-loose"
-                placeholder="Write your thoughts here..."
-              />
+              
+              {entryType === 'text' && (
+                <textarea 
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  className="w-full h-[calc(70vh-180px)] bg-transparent border-none outline-none resize-none font-handwriting text-xl text-gray-800 line-height-loose"
+                  placeholder="Write your thoughts here..."
+                />
+              )}
             </div>
+
+            {entryType === 'image' && (
+              <div className="mt-6 flex flex-col items-center justify-center border-t border-gray-200 pt-6">
+                {!imagePreview ? (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="image-upload"
+                    />
+                    <label
+                      htmlFor="image-upload"
+                      className="flex flex-col items-center gap-4 w-full p-8 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary transition-colors"
+                    >
+                      <FiUpload size={40} className="text-gray-400" />
+                      <div className="text-center">
+                        <p className="text-gray-600 font-medium">Click to upload an image</p>
+                        <p className="text-gray-500 text-sm mt-1">or drag and drop</p>
+                        <p className="text-gray-400 text-xs mt-2">Maximum file size: 5MB</p>
+                      </div>
+                    </label>
+                  </>
+                ) : (
+                  <div className="relative w-full">
+                    <img
+                      src={imagePreview}
+                      alt="Diary entry"
+                      className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
+                    />
+                    <button
+                      onClick={removeImage}
+                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                    >
+                      <FiX size={20} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -359,15 +460,7 @@ export default function EditDiaryEntry() {
           line-height: 2rem;
           padding-top: 0.5rem;
         }
-        
-        textarea {
-          display: block;
-          padding: 0;
-          margin: 0;
-          overflow-y: hidden;
-        }
       `}</style>
-      
     </div>
   );
 } 

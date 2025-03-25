@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiPlus, FiTrash2, FiX } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiX, FiCamera } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import databaseUtils from "../../lib/database";
+import { supabase } from "../../lib/supabase";
 
 // Function to strip HTML tags for preview
 const stripHtml = (html) => {
@@ -23,6 +24,66 @@ export default function DiaryPage() {
   const { user, toggleAuthModal } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(10);
+  const [imageUrls, setImageUrls] = useState({});
+
+  // Function to get signed URL for an image
+  const getSignedUrl = async (imageUrl) => {
+    if (!imageUrl || imageUrl.startsWith('data:image/')) {
+      return imageUrl;
+    }
+
+    try {
+      // Extract the path from the full URL if it's a full Supabase URL
+      let path = imageUrl;
+      if (imageUrl.includes('diary-images/')) {
+        path = imageUrl.split('diary-images/')[1];
+      }
+
+      console.log('Attempting to get signed URL for path:', path);
+
+      const { data, error } = await supabase
+        .storage
+        .from('diary-images')
+        .createSignedUrl(path, 3600);
+
+      if (error) {
+        console.error('Error getting signed URL:', error);
+        // If the error is "Object not found", try using the full URL
+        if (error.message.includes('Object not found')) {
+          console.log('Object not found, trying with full URL');
+          return imageUrl;
+        }
+        return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
+      }
+
+      if (!data?.signedUrl) {
+        console.error('No signed URL returned from Supabase');
+        return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
+      }
+
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Error getting signed URL:', error);
+      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
+    }
+  };
+
+  // Load signed URLs for all images
+  useEffect(() => {
+    async function loadSignedUrls() {
+      if (!user) return;
+
+      const urls = {};
+      for (const entry of processedEntries) {
+        if (entry.image_url && !entry.image_url.startsWith('data:image/')) {
+          urls[entry.id] = await getSignedUrl(entry.image_url);
+        }
+      }
+      setImageUrls(urls);
+    }
+
+    loadSignedUrls();
+  }, [processedEntries, user]);
 
   useEffect(() => {
     async function loadEntries() {
@@ -180,13 +241,22 @@ export default function DiaryPage() {
             )}
 
             {user && (
-              <Link
-                href="/diary/new"
-                className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
-              >
-                <FiPlus size={16} />
-                <span className="hidden sm:inline">New Entry</span>
-              </Link>
+              <div className="flex items-center bg-primary rounded-md overflow-hidden">
+                <Link
+                  href="/diary/new?type=text"
+                  className="flex items-center gap-2 text-white px-4 py-2 hover:bg-primary/90 transition-colors"
+                >
+                  <FiPlus size={16} />
+                  <span className="hidden sm:inline">New Entry</span>
+                </Link>
+                <div className="h-6 w-px bg-white/30"></div>
+                <Link
+                  href="/diary/new?type=image"
+                  className="flex items-center gap-2 text-white px-4 py-2 hover:bg-primary/90 transition-colors"
+                >
+                  <FiCamera size={16} />
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -266,9 +336,31 @@ export default function DiaryPage() {
                           href={`/diary/${entry.id || entry.timestamp}`}
                           className="block"
                         >
-                          <p className="pt-2 font-handwriting text-xl">
-                            {entry.preview}
-                          </p>
+                          {entry.image_url ? (
+                            <div className="space-y-4">
+                              <img
+                                src={imageUrls[entry.id] || entry.image_url}
+                                alt="Diary entry"
+                                className="w-full max-h-48 object-cover rounded-lg shadow-sm"
+                                onError={(e) => {
+                                  console.warn('Image loading error:', {
+                                    src: e.target.src,
+                                    originalUrl: entry.image_url
+                                  });
+                                  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
+                                }}
+                              />
+                              {entry.preview && (
+                                <p className="pt-2 font-handwriting text-xl">
+                                  {entry.preview}
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="pt-2 font-handwriting text-xl">
+                              {entry.preview}
+                            </p>
+                          )}
                         </Link>
                       </div>
                     </div>

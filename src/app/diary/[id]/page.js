@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FiArrowLeft, FiEdit2, FiTrash2, FiCamera } from "react-icons/fi";
 import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
 import { useAuth } from "../../../context/AuthContext";
 import databaseUtils from "../../../lib/database";
+import { supabase } from "../../../lib/supabase";
 
 export default function DiaryEntryPage() {
   const params = useParams();
@@ -15,6 +16,61 @@ export default function DiaryEntryPage() {
   const [loading, setLoading] = useState(true);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const { user } = useAuth();
+  const [imageUrl, setImageUrl] = useState(null);
+
+  // Function to get signed URL for an image
+  const getSignedUrl = async (imageUrl) => {
+    if (!imageUrl || imageUrl.startsWith('data:image/')) {
+      return imageUrl;
+    }
+
+    try {
+      // Extract the path from the full URL if it's a full Supabase URL
+      let path = imageUrl;
+      if (imageUrl.includes('diary-images/')) {
+        path = imageUrl.split('diary-images/')[1];
+      }
+
+      console.log('Attempting to get signed URL for path:', path);
+
+      const { data, error } = await supabase
+        .storage
+        .from('diary-images')
+        .createSignedUrl(path, 3600);
+
+      if (error) {
+        console.error('Error getting signed URL:', error);
+        // If the error is "Object not found", try using the full URL
+        if (error.message.includes('Object not found')) {
+          console.log('Object not found, trying with full URL');
+          return imageUrl;
+        }
+        return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
+      }
+
+      if (!data?.signedUrl) {
+        console.error('No signed URL returned from Supabase');
+        return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
+      }
+
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Error getting signed URL:', error);
+      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
+    }
+  };
+
+  // Load signed URL when entry changes
+  useEffect(() => {
+    async function loadSignedUrl() {
+      if (entry?.image_url) {
+        const signedUrl = await getSignedUrl(entry.image_url);
+        setImageUrl(signedUrl);
+      }
+    }
+
+    loadSignedUrl();
+  }, [entry]);
 
   useEffect(() => {
     async function loadEntry() {
@@ -192,8 +248,17 @@ export default function DiaryEntryPage() {
               href={`/diary/edit/${entry.id || params.id}`}
               className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
             >
-              <FiEdit2 size={16} />
-              <span className="hidden sm:inline">Edit</span>
+              {entry.image_url ? (
+                <>
+                  <FiCamera size={16} />
+                  <span className="hidden sm:inline">Change</span>
+                </>
+              ) : (
+                <>
+                  <FiEdit2 size={16} />
+                  <span className="hidden sm:inline">Edit</span>
+                </>
+              )}
             </Link>
             <button
               onClick={() => setIsDeleteModalOpen(true)}
@@ -205,51 +270,75 @@ export default function DiaryEntryPage() {
           </div>
         </div>
         
-        {/* Lined paper style for diary display */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
           <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
             <h1 className="text-xl font-serif text-gray-800">{entry.title}</h1>
           </div>
           
-          <div className="lined-paper p-8 min-h-[70vh] bg-white">
+          <div className="bg-white p-8 min-h-[70vh]">
             <div className="mb-6 text-left">
-            <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">
-  {entry.date || (() => {
-    const now = new Date();
-    const day = now.getDate();
-    
-    // Function to add ordinal suffix
-    const getOrdinalSuffix = (d) => {
-      if (d > 3 && d < 21) return 'th';
-      switch (d % 10) {
-        case 1: return 'st';
-        case 2: return 'nd';
-        case 3: return 'rd';
-        default: return 'th';
-      }
-    };
-    
-    return `${day}${getOrdinalSuffix(day)} ${now.toLocaleDateString('en-US', { 
-      month: 'long', 
-      year: 'numeric' 
-    }).split(' ')[0]} ${now.getFullYear()}`;
-  })()}
-</div>
-<div className="text-xl font-handwriting text-gray-800 mb-1">
-  {entry.day || new Date().toLocaleDateString('en-US', { weekday: 'long' })}
-</div>
-<div className="text-xl font-handwriting text-gray-800">
-  {entry.time || new Date().toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
-    minute: '2-digit', 
-    hour12: true 
-  })}
-</div>
+              <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">
+                {entry.date || (() => {
+                  const now = new Date();
+                  const day = now.getDate();
+                  
+                  // Function to add ordinal suffix
+                  const getOrdinalSuffix = (d) => {
+                    if (d > 3 && d < 21) return 'th';
+                    switch (d % 10) {
+                      case 1: return 'st';
+                      case 2: return 'nd';
+                      case 3: return 'rd';
+                      default: return 'th';
+                    }
+                  };
+                  
+                  return `${day}${getOrdinalSuffix(day)} ${now.toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                  }).split(' ')[0]} ${now.getFullYear()}`;
+                })()}
+              </div>
+              <div className="text-xl font-handwriting text-gray-800 mb-1">
+                {entry.day || new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+              </div>
+              <div className="text-xl font-handwriting text-gray-800">
+                {entry.time || new Date().toLocaleTimeString('en-US', { 
+                  hour: 'numeric', 
+                  minute: '2-digit', 
+                  hour12: true 
+                })}
+              </div>
             </div>
-            
+
             <div className="font-serif text-lg text-gray-800">
               <div className="mt-10 font-handwriting text-xl">Dear Diary,</div>
-              <div className="whitespace-pre-wrap line-height-loose font-handwriting text-xl">{entry.content}</div>
+              
+              {entry.image_url ? (
+                <div className="mt-6">
+                  <img
+                    src={imageUrl || entry?.image_url}
+                    alt="Diary entry"
+                    className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
+                    onError={(e) => {
+                      console.warn('Image loading error:', {
+                        src: e.target.src,
+                        originalUrl: entry?.image_url
+                      });
+                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
+                    }}
+                  />
+                  {entry.content && (
+                    <div className="mt-6 whitespace-pre-wrap line-height-loose font-handwriting text-xl">
+                      {entry.content}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="whitespace-pre-wrap line-height-loose font-handwriting text-xl">
+                  {entry.content}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -260,16 +349,6 @@ export default function DiaryEntryPage() {
         
         .font-handwriting {
           font-family: 'Caveat', 'Dancing Script', cursive;
-        }
-        
-        .lined-paper {
-          background-color: white;
-          background-image: 
-            linear-gradient(90deg, transparent 39px, #d6aed6 39px, #d6aed6 41px, transparent 41px),
-            linear-gradient(#e5e7eb 1px, transparent 1px);
-          background-size: 100% 2rem;
-          line-height: 2rem;
-          padding-left: 45px !important;
         }
         
         .line-height-loose {
