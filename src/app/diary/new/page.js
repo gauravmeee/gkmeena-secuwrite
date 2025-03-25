@@ -7,10 +7,10 @@ import { FiSave, FiArrowLeft, FiUpload, FiX } from "react-icons/fi";
 import Link from "next/link";
 import { useAuth } from "../../../context/AuthContext";
 import databaseUtils from "../../../lib/database";
-import { supabase } from "../../../lib/supabase";
+import supabase from "../../../lib/supabase";
 
-// Create a separate component for the form content
-function NewDiaryEntryForm() {
+// Create a new component to use searchParams
+function NewDiaryEntryContent() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState(null);
@@ -205,13 +205,45 @@ function NewDiaryEntryForm() {
             <span>Back to Diary</span>
           </Link>
           
-          <button 
+          <button
             onClick={handleSave}
             disabled={loading}
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+            className={`flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg transition-all duration-300 ${
+              loading
+                ? "bg-opacity-70 cursor-not-allowed"
+                : "hover:bg-primary/90"
+            }`}
           >
-            <FiSave size={16} />
-            <span className="hidden sm:inline">{loading ? "Saving..." : "Save Entry"}</span>
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  ></path>
+                </svg>
+                <span className="hidden sm:inline">Saving...</span>
+              </div>
+            ) : (
+              <>
+                <FiSave size={18} />
+                <span className="hidden sm:inline">Save Entry</span>
+              </>
+            )}
           </button>
         </div>
         
@@ -333,7 +365,7 @@ export default function NewDiaryEntry() {
         </main>
       </div>
     }>
-      <NewDiaryEntryForm />
+      <NewDiaryEntryContent />
     </Suspense>
   );
 } 

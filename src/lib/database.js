@@ -323,6 +323,35 @@ export async function deleteManyJournalEntries(userId, entryIds) {
   return true;
 }
 
+export async function getJournalEntry(entryId, userId) {
+  try {
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .eq('id', entryId)
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error getting journal entry:', error);
+      return null;
+    }
+
+    // Ensure content is properly returned
+    if (data && typeof data.content === 'string') {
+      return {
+        ...data,
+        content: data.content
+      };
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error getting journal entry:', error);
+    return null;
+  }
+}
+
 // Helper function to check table structure
 // Removing this function since the RPC doesn't exist
 // export async function checkTableStructure() {
@@ -356,6 +385,7 @@ const databaseUtils = {
   updateJournalEntry,
   deleteJournalEntry,
   deleteManyJournalEntries,
+  getJournalEntry,
   // Removing this since the function is removed
   // checkTableStructure
 };

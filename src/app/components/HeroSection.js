@@ -52,7 +52,7 @@ export default function HeroSection() {
   };
   
   return (
-    <div className="pt-20 pb-8 sm:pb-6 md:pb-4 lg:pb-4 min-h-[60vh] sm:min-h-[55vh] md:min-h-[60vh] lg:min-h-[70vh] flex flex-col md:items-center">
+    <div className="pt-30 pb-8 sm:pb-6 md:pb-4 lg:pb-4 min-h-[60vh] sm:min-h-[55vh] md:min-h-[60vh] lg:min-h-[70vh] flex flex-col md:items-center">
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 w-full">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 sm:gap-6 md:gap-6 lg:gap-8">
           {/* Mobile Preview - Only shown on mobile */}

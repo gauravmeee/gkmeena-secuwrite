@@ -2,15 +2,43 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiPlus, FiTrash2, FiX } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiX, FiEdit2 } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import databaseUtils from "../../lib/database";
 
 const stripHtml = (html) => {
   if (typeof window === "undefined") return "";
   if (!html) return "";
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  return doc.body.textContent || "";
+
+  try {
+    // Create a temporary div to properly parse HTML content
+    const tempDiv = document.createElement('div');
+    // Set the HTML content
+    tempDiv.innerHTML = html;
+
+    // Remove any script tags for security
+    const scripts = tempDiv.getElementsByTagName('script');
+    for (const script of Array.from(scripts)) {
+      script.remove();
+    }
+
+    // Get the text content and preserve line breaks
+    const text = tempDiv.textContent || tempDiv.innerText || "";
+    
+    // Split into lines and filter out empty lines
+    const lines = text.split(/\n/).filter(line => line.trim());
+    
+    // Take only first 2 lines
+    const previewLines = lines.slice(0, 2);
+    
+    // Join with line breaks and add ellipsis if there are more lines
+    const preview = previewLines.join('\n');
+    return preview + (lines.length > 2 ? '...' : '');
+  } catch (error) {
+    console.error('Error parsing HTML:', error);
+    // Fallback: remove HTML tags and normalize whitespace
+    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
 };
 
 const getOrdinalSuffix = (day) => {
@@ -64,13 +92,21 @@ export default function JournalPage() {
           entries = JSON.parse(localStorage.getItem("journalEntries") || "[]");
         }
 
-        const processed = entries.map((entry) => ({
-          ...entry,
-          preview:
-            stripHtml(entry.content).substring(0, 150) +
-            (stripHtml(entry.content).length > 150 ? "..." : ""),
-          dateTime: formatDateTime(entry.timestamp || entry.date || Date.now()),
-        }));
+        const processed = entries.map((entry) => {
+          // Get clean text content from HTML
+          const cleanContent = stripHtml(entry.content);
+          
+          // Create preview with proper length
+          const preview = cleanContent.length > 250 
+            ? `${cleanContent.substring(0, 250)}...`
+            : cleanContent;
+
+          return {
+            ...entry,
+            preview,
+            dateTime: formatDateTime(entry.timestamp || entry.date || Date.now()),
+          };
+        });
 
         setProcessedEntries(processed);
       } catch (error) {
@@ -185,31 +221,35 @@ export default function JournalPage() {
         </div>
 
         {processedEntries.length === 0 ? (
-          <div className="bg-gray-900 rounded-xl shadow-sm border border-gray-800 p-8 text-center">
-            <h2 className="text-xl font-medium mb-4">No Journal Entries Yet</h2>
-            <p className="text-gray-400 mb-6">
-              Start documenting your thoughts with rich text formatting.
-            </p>
-            {user ? (
-              <Link
-                href="/journal/new"
-                className="inline-flex items-center gap-2 bg-primary text-white px-4 py-3 rounded-md hover:bg-primary/90 transition-colors"
-              >
-                <FiPlus size={16} />
-                <span>Create Your First Entry</span>
-              </Link>
-            ) : (
-              <button
-                onClick={toggleAuthModal}
-                className="inline-flex items-center gap-2 bg-primary text-white px-4 py-3 rounded-md hover:bg-primary/90 transition-colors"
-              >
-                <FiPlus size={16} />
-                <span>Sign In to Create Entry</span>
-              </button>
-            )}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gray-800 border-b border-gray-700 p-8 text-center">
+              <h2 className="text-xl font-medium mb-4 text-white">
+                No Journal Entries Yet
+              </h2>
+              <p className="text-gray-300 mb-6">
+                Start documenting your thoughts with rich text formatting.
+              </p>
+              {user ? (
+                <Link
+                  href="/journal/new"
+                  className="inline-flex items-center gap-2 bg-primary text-white px-4 py-3 rounded-md hover:bg-primary/90 transition-colors"
+                >
+                  <FiPlus size={16} />
+                  <span>Create Your First Entry</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={toggleAuthModal}
+                  className="inline-flex items-center gap-2 bg-primary text-white px-4 py-3 rounded-md hover:bg-primary/90 transition-colors"
+                >
+                  <FiPlus size={16} />
+                  <span>Sign In to Create Entry</span>
+                </button>
+              )}
+            </div>
           </div>
         ) : (
-          <div>
+          <>
             <div className="grid grid-cols-1 gap-5">
               {processedEntries
                 .slice(
@@ -219,9 +259,9 @@ export default function JournalPage() {
                 .map((entry) => (
                   <div
                     key={entry.id || entry.timestamp}
-                    className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden"
+                    className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
                   >
-                    <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
+                    <div className="bg-gray-800 border-b border-gray-700 p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           {isSelectionMode && (
@@ -242,66 +282,41 @@ export default function JournalPage() {
                           )}
                           <Link
                             href={`/journal/${entry.id}`}
-                            className="text-xl font-semibold hover:text-primary transition-colors text-gray-800"
+                            className="text-lg font-semibold text-white hover:underline"
                           >
                             {entry.title}
                           </Link>
                         </div>
-                        <div className="font-handwriting text-gray-800">
-                          {entry.dateTime}
+                        <div className="flex items-center gap-2 text-gray-400">
+                          <Link
+                            href={`/journal/edit/${entry.id}`}
+                            className="text-gray-400 hover:text-white transition-colors"
+                          >
+                            <FiEdit2 size={16} />
+                          </Link>
+                          <span>{entry.dateTime}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-start justify-between gap-4 p-5 lined-paper bg-white">
-                      <div className="flex-1 text-gray-800">
-                        <Link
-                          href={`/journal/${entry.id || entry.timestamp}`}
-                          className="block"
-                        >
-                          <p className="pt-2 font-handwriting text-xl">
-                            {entry.preview}
-                          </p>
-                        </Link>
-                      </div>
+                    <div className="p-4">
+                      <div 
+                        className="text-gray-700 prose prose-sm max-w-none line-clamp-2"
+                        dangerouslySetInnerHTML={{ __html: entry.content }}
+                      />
                     </div>
                   </div>
                 ))}
             </div>
 
-            {processedEntries.length > entriesPerPage && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={Math.ceil(processedEntries.length / entriesPerPage)}
-                onPageChange={(page) => setCurrentPage(page)}
-              />
-            )}
-          </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(processedEntries.length / entriesPerPage)}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
+          </>
         )}
       </main>
 
-      <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&display=swap");
-
-        .font-handwriting {
-          font-family: "Caveat", "Dancing Script", cursive;
-        }
-
-        .lined-paper {
-          background-color: white;
-          background-image: linear-gradient(
-              90deg,
-              transparent 39px,
-              #d6aed6 39px,
-              #d6aed6 41px,
-              transparent 41px
-            ),
-            linear-gradient(#e5e7eb 1px, transparent 1px);
-          background-size: 100% 2rem;
-          background-position: 0 0;
-          line-height: 2rem;
-          padding-left: 45px !important;
-        }
-      `}</style>
     </div>
   );
 }

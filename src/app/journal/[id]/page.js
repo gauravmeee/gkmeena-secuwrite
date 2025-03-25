@@ -6,7 +6,7 @@ import Link from "next/link";
 import { FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
 import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
 import { useAuth } from "../../../context/AuthContext";
-import databaseUtils from "../../../lib/database";
+import { supabase } from "../../../lib/supabase";
 
 // Function to format the date
 const formatDateTime = (dateString) => {
@@ -52,21 +52,21 @@ export default function JournalEntryPage() {
       setLoading(true);
       try {
         if (user) {
-          try {
-            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id);
+          const { data: entry, error } = await supabase
+            .from('journal_entries')
+            .select('*')
+            .eq('id', params.id)
+            .eq('user_id', user.id)
+            .single();
 
-            if (isUuid) {
-              const entries = await databaseUtils.getJournalEntries(user.id);
-              const foundEntry = entries.find((e) => e.id === params.id);
+          if (error) {
+            throw error;
+          }
 
-              if (foundEntry) {
-                setEntry(foundEntry);
-                setLoading(false);
-                return;
-              }
-            }
-          } catch (error) {
-            console.error("Error loading from Supabase:", error);
+          if (entry) {
+            setEntry(entry);
+            setLoading(false);
+            return;
           }
         }
 
@@ -91,13 +91,18 @@ export default function JournalEntryPage() {
   const handleDelete = async () => {
     try {
       if (user && entry?.id) {
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entry.id);
+        const { error } = await supabase
+          .from('journal_entries')
+          .delete()
+          .eq('id', entry.id)
+          .eq('user_id', user.id);
 
-        if (isUuid) {
-          await databaseUtils.deleteJournalEntry(entry.id, user.id);
-          router.push("/journal");
-          return;
+        if (error) {
+          throw error;
         }
+
+        router.push("/journal");
+        return;
       }
 
       const entries = JSON.parse(localStorage.getItem("journalEntries") || "[]");
@@ -140,14 +145,12 @@ export default function JournalEntryPage() {
             </Link>
           </div>
         </main>
-
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
-
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
           <Link href="/journal" className="flex items-center gap-2 text-primary hover:underline">
@@ -157,7 +160,7 @@ export default function JournalEntryPage() {
 
           <div className="flex items-center gap-3">
             <Link
-              href={`/diary/edit/${entry.id || params.id}`}
+              href={`/journal/edit/${entry.id}`}
               className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
             >
               <FiEdit2 size={16} />
@@ -178,7 +181,7 @@ export default function JournalEntryPage() {
           <div className="bg-gray-800 border-b border-gray-700 p-4">
             <div className="flex items-center justify-between">
               <h1 className="text-xl font-semibold text-white">{entry.title}</h1>
-              <div className="text-gray-300 text-sm">{formatDateTime(entry.date)}</div>
+              <div className="text-gray-300 text-sm">{formatDateTime(entry.created_at || entry.date)}</div>
             </div>
           </div>
 
@@ -197,7 +200,6 @@ export default function JournalEntryPage() {
         onConfirm={handleDelete}
         itemType="journal entry"
       />
-
     </div>
   );
 }

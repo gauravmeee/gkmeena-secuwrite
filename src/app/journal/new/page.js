@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FiSave, FiArrowLeft } from "react-icons/fi";
 import Link from "next/link";
 import { useAuth } from "../../../context/AuthContext";
-import databaseUtils from "../../../lib/database";
+import { supabase } from "../../../lib/supabase";
 import dynamic from "next/dynamic";
 
 // Dynamically import JoditEditor for SSR compatibility
@@ -18,6 +18,7 @@ export default function NewJournalEntry() {
   const router = useRouter();
   const { user } = useAuth();
   const mounted = useRef(false);
+  const editorRef = useRef(null);
 
   // Add authentication check
   useEffect(() => {
@@ -51,7 +52,15 @@ export default function NewJournalEntry() {
   }
 
   const handleSave = async () => {
-    if (!content.trim()) return;
+    // Check if content is empty or only contains whitespace/HTML tags
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    const textContent = tempDiv.textContent || tempDiv.innerText;
+    
+    if (!textContent || !textContent.trim()) {
+      alert("Please write something before saving");
+      return;
+    }
 
     if (!user) {
       alert("Please log in to save your journal entry");
@@ -61,20 +70,52 @@ export default function NewJournalEntry() {
     try {
       setLoading(true);
 
+      // Get the content directly from the editor instance
+      const editorContent = editorRef.current?.value || content;
+      console.log("Saving content:", editorContent); // Debug log
+
+      // Create the entry object with all necessary fields
       const newEntry = {
         title: title.trim() || "Untitled",
-        content,
-        date: new Date().toISOString().split("T")[0],
-        timestamp: Date.now(),
+        content: editorContent, // Use the editor content
+        user_id: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        date: new Date().toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric'
+        }),
+        day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+        time: new Date().toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        })
       };
 
-      await databaseUtils.createJournalEntry(user.id, newEntry);
+      // Insert into Supabase
+      const { data, error } = await supabase
+        .from('journal_entries')
+        .insert(newEntry)
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error("Error saving journal entry:", error);
+        throw error;
+      }
+
+      console.log("Journal entry saved successfully:", data);
       router.push("/journal");
+
     } catch (error) {
       console.error("Error saving entry:", error);
-      alert("Could not save entry. Please try again.");
+      alert(error.message || "Could not save entry. Please try again.");
     } finally {
-      setLoading(false);
+      if (mounted.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -86,8 +127,8 @@ export default function NewJournalEntry() {
     showWordsCounter: false,
     showXPathInStatusbar: false,
     spellcheck: true,
-    minHeight: 600,  
-    height: "calc(100vh - 250px)",  
+    minHeight: 600,
+    height: "calc(100vh - 250px)",
     buttons: [
       "bold",
       "italic",
@@ -116,6 +157,20 @@ export default function NewJournalEntry() {
       "selectall",
       "source",
     ],
+    // Add these configurations
+    statusbar: false,
+    removeButtons: ['source', 'fullsize', 'about'],
+    uploader: {
+      insertImageAsBase64URI: true
+    },
+    events: {
+      afterInit: function(editor) {
+        editorRef.current = editor;
+        if (content) {
+          editor.value = content;
+        }
+      }
+    }
   };
 
   return (
@@ -159,7 +214,7 @@ export default function NewJournalEntry() {
                     d="M4 12a8 8 0 018-8v8H4z"
                   ></path>
                 </svg>
-                Saving...
+                <span className="hidden sm:inline">Saving...</span>
               </div>
             ) : (
               <>
@@ -170,7 +225,6 @@ export default function NewJournalEntry() {
           </button>
         </div>
 
-        {/* Journal Form */}
         <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 p-8">
           {/* Title Input */}
           <div className="relative w-full mb-6">
@@ -200,6 +254,7 @@ export default function NewJournalEntry() {
               onChange={setContent}
               config={editorConfig}
               tabIndex={1}
+              ref={editorRef}
             />
           </div>
         </div>

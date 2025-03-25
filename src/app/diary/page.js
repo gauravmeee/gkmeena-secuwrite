@@ -6,6 +6,7 @@ import { FiPlus, FiTrash2, FiX, FiCamera } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import databaseUtils from "../../lib/database";
 import { supabase } from "../../lib/supabase";
+import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 
 // Function to strip HTML tags for preview
 const stripHtml = (html) => {
@@ -21,6 +22,7 @@ export default function DiaryPage() {
   const [loading, setLoading] = useState(true);
   const [selectedEntries, setSelectedEntries] = useState(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { user, toggleAuthModal } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(10);
@@ -164,32 +166,162 @@ export default function DiaryPage() {
 
   const handleDeleteSelected = async () => {
     if (!user || selectedEntries.size === 0) return;
+    setShowDeleteModal(true);
+  };
 
-    if (
-      confirm(
-        `Are you sure you want to delete ${selectedEntries.size} entries?`
-      )
-    ) {
-      try {
-        const entriesToDelete = Array.from(selectedEntries);
-        const success = await databaseUtils.deleteManyDiaryEntries(
-          user.id,
-          entriesToDelete
-        );
+  const confirmDeleteSelected = async () => {
+    try {
+      const entriesToDelete = Array.from(selectedEntries);
+      const selectedEntriesData = processedEntries.filter(entry => selectedEntries.has(entry.id));
 
-        if (success) {
-          setProcessedEntries((entries) =>
-            entries.filter((entry) => !selectedEntries.has(entry.id))
-          );
-          setSelectedEntries(new Set());
-          setIsSelectionMode(false); // Exit selection mode after successful deletion
-        } else {
-          throw new Error("Failed to delete entries");
+      // Delete images from Supabase storage first
+      for (const entry of selectedEntriesData) {
+        if (entry.image_url && !entry.image_url.startsWith('data:image/')) {
+          try {
+            // Extract the path from the full URL if it's a full Supabase URL
+            let path = entry.image_url;
+            if (entry.image_url.includes('diary-images/')) {
+              path = entry.image_url.split('diary-images/')[1];
+            } else if (entry.image_url.includes('storage.googleapis.com')) {
+              // Extract path from full Supabase URL
+              const urlParts = entry.image_url.split('/');
+              path = urlParts.slice(urlParts.indexOf('diary-images') + 1).join('/');
+            }
+
+            console.log('Attempting to delete image from storage:', path);
+            
+            // First check if the file exists
+            const { data: exists } = await supabase
+              .storage
+              .from('diary-images')
+              .list(path.split('/').slice(0, -1).join('/'));
+
+            if (exists) {
+              const { error: storageError } = await supabase
+                .storage
+                .from('diary-images')
+                .remove([path]);
+
+              if (storageError) {
+                console.error('Error deleting image from storage:', storageError);
+                // Try alternative path format
+                const altPath = path.replace(/^[^/]+\//, '');
+                console.log('Trying alternative path:', altPath);
+                const { error: altError } = await supabase
+                  .storage
+                  .from('diary-images')
+                  .remove([altPath]);
+
+                if (altError) {
+                  console.error('Error deleting image with alternative path:', altError);
+                }
+              }
+            } else {
+              console.log('Image file not found in storage:', path);
+            }
+          } catch (error) {
+            console.error('Error deleting image from storage:', error);
+            // Continue with entry deletion even if image deletion fails
+          }
         }
-      } catch (error) {
-        console.error("Error deleting entries:", error);
-        alert("Failed to delete entries. Please try again.");
       }
+
+      // Delete entries from Supabase
+      const success = await databaseUtils.deleteManyDiaryEntries(user.id, entriesToDelete);
+
+      if (success) {
+        setProcessedEntries((entries) =>
+          entries.filter((entry) => !selectedEntries.has(entry.id))
+        );
+        setSelectedEntries(new Set());
+        setIsSelectionMode(false); // Exit selection mode after successful deletion
+      } else {
+        throw new Error("Failed to delete entries");
+      }
+    } catch (error) {
+      console.error("Error deleting entries:", error);
+      alert("Failed to delete entries. Please try again.");
+    } finally {
+      setShowDeleteModal(false);
+    }
+  };
+
+  const handleDelete = async (entryId) => {
+    try {
+      if (user) {
+        // Check if this is a UUID (Supabase ID)
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entryId);
+        
+        if (isUuid) {
+          // Find the entry to get its image URL
+          const entryToDelete = processedEntries.find(e => e.id === entryId);
+          
+          // Delete image from Supabase storage if it exists
+          if (entryToDelete?.image_url && !entryToDelete.image_url.startsWith('data:image/')) {
+            try {
+              // Extract the path from the full URL if it's a full Supabase URL
+              let path = entryToDelete.image_url;
+              if (entryToDelete.image_url.includes('diary-images/')) {
+                path = entryToDelete.image_url.split('diary-images/')[1];
+              } else if (entryToDelete.image_url.includes('storage.googleapis.com')) {
+                // Extract path from full Supabase URL
+                const urlParts = entryToDelete.image_url.split('/');
+                path = urlParts.slice(urlParts.indexOf('diary-images') + 1).join('/');
+              }
+
+              console.log('Attempting to delete image from storage:', path);
+              
+              // First check if the file exists
+              const { data: exists } = await supabase
+                .storage
+                .from('diary-images')
+                .list(path.split('/').slice(0, -1).join('/'));
+
+              if (exists) {
+                const { error: storageError } = await supabase
+                  .storage
+                  .from('diary-images')
+                  .remove([path]);
+
+                if (storageError) {
+                  console.error('Error deleting image from storage:', storageError);
+                  // Try alternative path format
+                  const altPath = path.replace(/^[^/]+\//, '');
+                  console.log('Trying alternative path:', altPath);
+                  const { error: altError } = await supabase
+                    .storage
+                    .from('diary-images')
+                    .remove([altPath]);
+
+                  if (altError) {
+                    console.error('Error deleting image with alternative path:', altError);
+                  }
+                }
+              } else {
+                console.log('Image file not found in storage:', path);
+              }
+            } catch (error) {
+              console.error('Error deleting image from storage:', error);
+              // Continue with entry deletion even if image deletion fails
+            }
+          }
+
+          // Delete entry from Supabase
+          await databaseUtils.deleteDiaryEntry(entryId, user.id);
+          
+          // Update local state
+          setProcessedEntries((entries) => entries.filter(e => e.id !== entryId));
+          return;
+        }
+      }
+      
+      // Fall back to localStorage
+      const updatedEntries = processedEntries.filter(e => e.id !== entryId);
+      localStorage.setItem("diaryEntries", JSON.stringify(updatedEntries));
+      setProcessedEntries(updatedEntries);
+    } catch (error) {
+      console.error("Error deleting entry:", error);
+      alert("Could not delete entry. Please try again.");
     }
   };
 
@@ -207,6 +339,12 @@ export default function DiaryPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      <DeleteConfirmationModal 
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDeleteSelected}
+        itemType={`${selectedEntries.size} diary ${selectedEntries.size === 1 ? 'entry' : 'entries'}`}
+      />
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">My Diary</h1>
@@ -341,7 +479,7 @@ export default function DiaryPage() {
                               <img
                                 src={imageUrls[entry.id] || entry.image_url}
                                 alt="Diary entry"
-                                className="w-full max-h-48 object-cover rounded-lg shadow-sm"
+                                className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"
                                 onError={(e) => {
                                   console.warn('Image loading error:', {
                                     src: e.target.src,
@@ -368,13 +506,11 @@ export default function DiaryPage() {
                 ))}
             </div>
 
-            {processedEntries.length > entriesPerPage && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={Math.ceil(processedEntries.length / entriesPerPage)}
-                onPageChange={(page) => setCurrentPage(page)}
-              />
-            )}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(processedEntries.length / entriesPerPage)}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
           </>
         )}
       </main>
@@ -406,48 +542,38 @@ export default function DiaryPage() {
   );
 }
 
-// Add this helper function to generate page numbers array
+// Add Pagination component
 function getPageNumbers(currentPage, totalPages) {
   const pages = [];
-
+  
   if (totalPages <= 7) {
-    // If total pages is 7 or less, show all pages
     for (let i = 1; i <= totalPages; i++) {
       pages.push(i);
     }
   } else {
-    // Always show first page
     pages.push(1);
-
+    
     if (currentPage > 3) {
-      // Add ellipsis if current page is away from start
-      pages.push("...");
+      pages.push('...');
     }
-
-    // Show pages around current page
-    for (
-      let i = Math.max(2, currentPage - 1);
-      i <= Math.min(currentPage + 1, totalPages - 1);
-      i++
-    ) {
+    
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(currentPage + 1, totalPages - 1); i++) {
       pages.push(i);
     }
-
+    
     if (currentPage < totalPages - 2) {
-      // Add ellipsis if current page is away from end
-      pages.push("...");
+      pages.push('...');
     }
-
-    // Always show last page
+    
     pages.push(totalPages);
   }
-
+  
   return pages;
 }
 
 function Pagination({ currentPage, totalPages, onPageChange }) {
   const pages = getPageNumbers(currentPage, totalPages);
-
+  
   return (
     <div className="flex justify-center items-center gap-2 mt-8 mb-4">
       <button
@@ -457,10 +583,10 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       >
         Previous
       </button>
-
+      
       <div className="flex gap-1">
-        {pages.map((page, index) =>
-          page === "..." ? (
+        {pages.map((page, index) => (
+          page === '...' ? (
             <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-400">
               ...
             </span>
@@ -471,16 +597,16 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
               disabled={page === currentPage}
               className={`px-3 py-2 rounded-md transition-colors ${
                 page === currentPage
-                  ? "bg-primary text-white"
-                  : "bg-gray-900 text-white hover:bg-gray-800"
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-900 text-white hover:bg-gray-800'
               }`}
             >
               {page}
             </button>
           )
-        )}
+        ))}
       </div>
-
+      
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { FiArrowLeft, FiEdit2, FiTrash2, FiCamera } from "react-icons/fi";
+import { FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
 import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
 import { useAuth } from "../../../context/AuthContext";
 import databaseUtils from "../../../lib/database";
@@ -179,7 +179,57 @@ export default function DiaryEntryPage() {
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entry.id);
         
         if (isUuid) {
-          // Delete from Supabase
+          // Delete image from Supabase storage if it exists
+          if (entry.image_url && !entry.image_url.startsWith('data:image/')) {
+            try {
+              // Extract the path from the full URL if it's a full Supabase URL
+              let path = entry.image_url;
+              if (entry.image_url.includes('diary-images/')) {
+                path = entry.image_url.split('diary-images/')[1];
+              } else if (entry.image_url.includes('storage.googleapis.com')) {
+                // Extract path from full Supabase URL
+                const urlParts = entry.image_url.split('/');
+                path = urlParts.slice(urlParts.indexOf('diary-images') + 1).join('/');
+              }
+
+              console.log('Attempting to delete image from storage:', path);
+              
+              // First check if the file exists
+              const { data: exists } = await supabase
+                .storage
+                .from('diary-images')
+                .list(path.split('/').slice(0, -1).join('/'));
+
+              if (exists) {
+                const { error: storageError } = await supabase
+                  .storage
+                  .from('diary-images')
+                  .remove([path]);
+
+                if (storageError) {
+                  console.error('Error deleting image from storage:', storageError);
+                  // Try alternative path format
+                  const altPath = path.replace(/^[^/]+\//, '');
+                  console.log('Trying alternative path:', altPath);
+                  const { error: altError } = await supabase
+                    .storage
+                    .from('diary-images')
+                    .remove([altPath]);
+
+                  if (altError) {
+                    console.error('Error deleting image with alternative path:', altError);
+                  }
+                }
+              } else {
+                console.log('Image file not found in storage:', path);
+              }
+            } catch (error) {
+              console.error('Error deleting image from storage:', error);
+              // Continue with entry deletion even if image deletion fails
+            }
+          }
+
+          // Delete entry from Supabase
           await databaseUtils.deleteDiaryEntry(entry.id, user.id);
           router.push("/diary");
           return;
@@ -248,17 +298,11 @@ export default function DiaryEntryPage() {
               href={`/diary/edit/${entry.id || params.id}`}
               className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
             >
-              {entry.image_url ? (
-                <>
-                  <FiCamera size={16} />
-                  <span className="hidden sm:inline">Change</span>
-                </>
-              ) : (
                 <>
                   <FiEdit2 size={16} />
                   <span className="hidden sm:inline">Edit</span>
                 </>
-              )}
+
             </Link>
             <button
               onClick={() => setIsDeleteModalOpen(true)}

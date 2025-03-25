@@ -22,6 +22,7 @@ export default function EditDiaryEntry() {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [entryType, setEntryType] = useState('text');
+  const [saving, setSaving] = useState(false);
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -210,6 +211,7 @@ export default function EditDiaryEntry() {
     }
     
     try {
+      setSaving(true);
       // If it's a cloud entry and user is logged in
       if (isCloudEntry && user && entryId) {
         console.log("Starting save operation:", { 
@@ -298,6 +300,8 @@ export default function EditDiaryEntry() {
         stack: error.stack
       });
       alert("Could not save entry. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
   
@@ -321,17 +325,50 @@ export default function EditDiaryEntry() {
     <div className="min-h-screen bg-black text-white">
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
-          <Link href={isCloudEntry ? `/diary/${entryId}` : `/diary/${params.id}`} className="flex items-center gap-2 text-primary hover:underline">
+          <Link href={`/diary/${params.id}`} className="flex items-center gap-2 text-primary hover:underline">
             <FiArrowLeft size={16} />
             <span>Back to Entry</span>
           </Link>
           
-          <button 
+          <button
             onClick={handleSave}
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+            disabled={saving || loading}
+            className={`flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg transition-all duration-300 ${
+              saving || loading
+                ? "bg-opacity-70 cursor-not-allowed"
+                : "hover:bg-primary/90"
+            }`}
           >
-            <FiSave size={16} />
-            <span className="hidden sm:inline">Save Changes</span>
+            {saving ? (
+              <div className="flex items-center gap-2">
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  ></path>
+                </svg>
+                <span className="hidden sm:inline">Saving...</span>
+              </div>
+            ) : (
+              <>
+                <FiSave size={18} />
+                <span className="hidden sm:inline">Save Changes</span>
+              </>
+            )}
           </button>
         </div>
         
