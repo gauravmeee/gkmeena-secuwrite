@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 import supabase from '../../../lib/supabase';
 
-export default function AuthCallback() {
+function AuthCallbackContent() {
   const router = useRouter();
   const { user } = useAuth();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -60,5 +59,21 @@ export default function AuthCallback() {
         <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
       </div>
     </div>
+  );
+}
+
+export default function AuthCallback() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
+          <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
+          <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
+        </div>
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
   );
 } 
