@@ -19,6 +19,13 @@ export default function NewJournalEntry() {
   const { user } = useAuth();
   const mounted = useRef(false);
 
+  // Add authentication check
+  useEffect(() => {
+    if (!user) {
+      router.push('/');
+    }
+  }, [user, router]);
+
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -26,8 +33,30 @@ export default function NewJournalEntry() {
     };
   }, []);
 
+  // If not logged in, show loading state
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white">
+        <main className="max-w-6xl mx-auto pt-24 px-6">
+          <div className="flex justify-center items-center h-64">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   const handleSave = async () => {
     if (!content.trim()) return;
+
+    if (!user) {
+      alert("Please log in to save your journal entry");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -39,14 +68,7 @@ export default function NewJournalEntry() {
         timestamp: Date.now(),
       };
 
-      if (user) {
-        await databaseUtils.createJournalEntry(user.id, newEntry);
-      } else {
-        const existingEntries = JSON.parse(localStorage.getItem("journalEntries") || "[]");
-        existingEntries.unshift(newEntry);
-        localStorage.setItem("journalEntries", JSON.stringify(existingEntries));
-      }
-
+      await databaseUtils.createJournalEntry(user.id, newEntry);
       router.push("/journal");
     } catch (error) {
       console.error("Error saving entry:", error);

@@ -9,8 +9,9 @@ import FloatingActionButton from "./components/FloatingActionButton";
 import CreateFirstEntryDialog from "./components/CreateFirstEntryDialog";
 import { useAuth } from "../context/AuthContext";
 import databaseUtils from "../lib/database";
-import { FiMessageSquare } from "react-icons/fi";
+import { FiMessageSquare, FiChevronRight } from "react-icons/fi";
 import emailjs from '@emailjs/browser';
+import Link from "next/link";
 
 export default function Home() {
   const [viewMode, setViewMode] = useState(1);
@@ -23,7 +24,7 @@ export default function Home() {
   });
   const [anyEntryExists, setAnyEntryExists] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, toggleAuthModal } = useAuth();
   
   // Feedback state
   const [feedback, setFeedback] = useState("");
@@ -195,43 +196,85 @@ export default function Home() {
       {/* Hero Section */}
       <HeroSection />
       
-      {/* Toggle Switch */}
-      <div id="content-section">
-        <ToggleSwitch 
-          option1="Recent Entries" 
-          option2="Browse Categories" 
-          onChange={setViewMode}
-        />
+      {/* Main Content Section */}
+      <div id="content-section" className="relative">
+        {/* Toggle Switch with improved positioning and styling */}
+        <div className="sticky top-20 z-20 bg-black/80 backdrop-blur-sm py-1 border-b border-gray-800">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8">
+            <ToggleSwitch 
+              option1="Recent Entries" 
+              option2="Categories" 
+              onChange={setViewMode}
+            />
+          </div>
+        </div>
       
         {/* Content Section (toggleable) */}
         {viewMode === 1 ? (
           <RecentEntriesSection />
         ) : (
-          <div className="py-12">
-            <div className="max-w-7xl mx-auto px-4 md:px-8">
-              <h2 className="text-2xl font-bold mb-8 text-center md:text-left">Browse Categories</h2>
-              
-              {activeEntryTypes.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {entryTypes.map((type) => (
-                    <EntryTypeCard
-                      key={type.title}
-                      title={type.title}
-                      icon={type.icon}
-                      description={type.description}
-                      path={type.path}
-                      bgColor={type.bgColor}
-                      entryCount={type.entryCount}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="flex justify-center items-center py-16">
-                  <div className="text-center max-w-md mx-auto">
-                    <div className="flex justify-center mb-6">
-                      <CreateFirstEntryDialog />
+          <div className="py-6 sm:py-12">
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8">
+              {user ? (
+                <>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 sm:mb-8 gap-2 sm:gap-4">
+                    <div>
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">Category-wise Entries</h2>
+                      <p className="text-gray-400 text-xs sm:text-sm">Browse your entries by category</p>
                     </div>
-              <p className="text-gray-400">You don&apos;t have any entries yet. Create your first one to get started!</p>
+                    <div className="flex flex-wrap gap-2 sm:gap-4">
+                      <Link 
+                        href="/journal" 
+                        className="text-primary hover:text-primary/90 flex items-center gap-1 transition-colors group text-xs sm:text-sm"
+                      >
+                        <span>View all journals</span>
+                        <FiChevronRight size={12} className="transition-transform group-hover:translate-x-1" />
+                      </Link>
+                      <Link 
+                        href="/diary" 
+                        className="text-primary hover:text-primary/90 flex items-center gap-1 transition-colors group text-xs sm:text-sm"
+                      >
+                        <span>View all diaries</span>
+                        <FiChevronRight size={12} className="transition-transform group-hover:translate-x-1" />
+                      </Link>
+                    </div>
+                  </div>
+                  
+                  {activeEntryTypes.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                      {activeEntryTypes.map((type) => (
+                        <EntryTypeCard
+                          key={type.title}
+                          title={type.title}
+                          icon={type.icon}
+                          description={type.description}
+                          path={type.path}
+                          bgColor={type.bgColor}
+                          entryCount={type.entryCount}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex justify-center items-center py-8 sm:py-16">
+                      <div className="text-center max-w-md mx-auto">
+                        <div className="flex justify-center mb-4 sm:mb-6">
+                          <CreateFirstEntryDialog />
+                        </div>
+                        <p className="text-gray-400 text-sm sm:text-base">You don&apos;t have any entries yet. Create your first one to get started!</p>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex justify-center items-center py-8 sm:py-16">
+                  <div className="text-center max-w-md mx-auto">
+                    <button
+                      onClick={toggleAuthModal}
+                      className="text-primary hover:text-primary/90 text-base sm:text-lg font-medium transition-colors"
+                    >
+                      Sign in to view your entries
+                    </button>
+                    <p className="text-gray-400 text-xs sm:text-sm mt-2 sm:mt-4">Create and manage your personal entries securely</p>
                   </div>
                 </div>
               )}
@@ -240,81 +283,78 @@ export default function Home() {
         )}
       </div>
       
-{/* Feedback Section */}
-<section className="py-12 bg-gray-900/50">
-  <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-    {/* Image Section - Hidden on mobile, visible on md and above */}
-    <img 
-      src="book.png" 
-      alt="Feedback" 
-      className="hidden md:block w-full h-auto object-cover rounded-lg opacity-70"
-    />
+      {/* Feedback Section with improved styling */}
+      <section className="py-8 sm:py-16 bg-gray-900/50 border-t border-gray-800">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
+            {/* Image Section */}
+            <div className="hidden md:block relative">
+              <img 
+                src="book2.png" 
+                alt="Feedback" 
+                className="w-full h-full object-cover rounded-lg opacity-70"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-lg"></div>
+            </div>
 
-    {/* Feedback Form - Full width on mobile, spans 2 columns on md and above */}
-    <div className="md:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-6">
-      <div className="flex items-center gap-3 mb-4">
-        <FiMessageSquare size={20} className="text-primary" />
-        <h2 className="text-xl font-bold">Feedback & Suggestions</h2>
-      </div>
+            {/* Feedback Form */}
+            <div className="md:col-span-2 space-y-4 sm:space-y-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <FiMessageSquare size={20} className="text-primary sm:text-2xl" />
+                <h2 className="text-xl sm:text-2xl font-bold">Feedback & Suggestions</h2>
+              </div>
 
-      {submitted ? (
-        <div className="bg-green-900/30 border border-green-800 rounded-lg p-4 text-green-400">
-          <p className="font-medium">Thank you for your feedback!</p>
-          <p className="text-sm mt-1">Your message has been sent successfully.</p>
-        </div>
-      ) : (
-        <form onSubmit={handleFeedbackSubmit} className="space-y-4">
-          <textarea
-            id="feedback"
-            rows={3}
-            value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Share your suggestions..."
-            className="w-full bg-gray-800 border border-gray-700 rounded p-3 text-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-            required
-          />
+              {submitted ? (
+                <div className="bg-green-900/30 border border-green-800 rounded-lg p-3 sm:p-4 text-green-400">
+                  <p className="font-medium text-sm sm:text-base">Thank you for your feedback!</p>
+                  <p className="text-xs sm:text-sm mt-1">Your message has been sent successfully.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleFeedbackSubmit} className="space-y-3 sm:space-y-4">
+                  <textarea
+                    id="feedback"
+                    rows={3}
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Share your suggestions..."
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 sm:p-4 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                    required
+                  />
 
-          {feedbackError && (
-            <div className="text-red-500 text-sm">{feedbackError}</div>
-          )}
-        </form>
-      )}
-    </div>
+                  {feedbackError && (
+                    <div className="text-red-500 text-xs sm:text-sm">{feedbackError}</div>
+                  )}
 
-    {/* Info Section - Full width on mobile, adjust layout */}
-    <div className="md:col-span-3 text-gray-300 grid md:grid-cols-2 gap-6 items-center">
-      <div>
-        <p className="text-lg font-medium mb-2">Help us improve Unseen Stories!</p>
-        <p className="text-sm leading-relaxed">
-          We value your thoughts and suggestions. Found an issue or have a feature request? Let us know!
-        </p>
-      </div>
+                  <div className="flex flex-col md:flex-row md:items-center gap-3 sm:gap-4">
+                    <button
+                      type="submit"
+                      disabled={sendingFeedback}
+                      className="bg-primary hover:bg-primary/90 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
+                    >
+                      {sendingFeedback ? (
+                        <>
+                          <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                          <span>Sending...</span>
+                        </>
+                      ) : (
+                        "Send Feedback"
+                      )}
+                    </button>
 
-      <div className="mt-4 md:mt-0">
-        <button
-          type="submit"
-          disabled={sendingFeedback}
-          onClick={handleFeedbackSubmit}
-          className="bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded transition-colors disabled:opacity-70 w-full"
-        >
-          {sendingFeedback ? "Sending..." : "Send Feedback"}
-        </button>
-
-        {user && (
-          <div className="text-sm text-gray-500 mt-2 text-center md:text-left">
-            Sending as: {user.email || user.user_metadata?.name || "Logged in user"}
+                    {user && (
+                      <div className="text-xs sm:text-sm text-gray-500">
+                        Sending as: {user.email || user.user_metadata?.name || "Logged in user"}
+                      </div>
+                    )}
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
-        )}
-      </div>
-    </div>
-  </div>
-</section>
-
-
-
-    
+        </div>
+      </section>
       
-      {/* Only show floating action button if user is logged in */}
+      {/* Floating Action Button */}
       {user && <FloatingActionButton />}
     </div>
   );

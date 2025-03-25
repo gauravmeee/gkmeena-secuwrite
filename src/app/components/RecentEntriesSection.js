@@ -18,7 +18,7 @@ export default function RecentEntriesSection() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [anyEntryExists, setAnyEntryExists] = useState(false);
-  const { user } = useAuth();
+  const { user, toggleAuthModal } = useAuth();
 
   useEffect(() => {
     async function loadEntries() {
@@ -157,10 +157,24 @@ export default function RecentEntriesSection() {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex justify-center items-center h-64">
             <div className="text-center max-w-md">
-              <div className="flex justify-center mb-6">
-                <CreateFirstEntryDialog />
-              </div>
-              <p className="text-gray-400">You don&apos;t have any entries yet. Create your first one to get started!</p>
+              {user ? (
+                <>
+                  <div className="flex justify-center mb-6">
+                    <CreateFirstEntryDialog />
+                  </div>
+                  <p className="text-gray-400">You don&apos;t have any entries yet. Create your first one to get started!</p>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <button
+                    onClick={toggleAuthModal}
+                    className="text-primary hover:text-primary/90 text-lg font-medium transition-colors"
+                  >
+                    Sign in to view your entries
+                  </button>
+                  <p className="text-gray-400 text-sm">Create and manage your personal entries securely</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

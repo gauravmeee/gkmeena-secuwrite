@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { useRouter } from "next/navigation";
 import { FiSave, FiArrowLeft } from "react-icons/fi";
@@ -15,6 +15,30 @@ export default function NewDiaryEntry() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
+  
+  // Add authentication check
+  useEffect(() => {
+    if (!user) {
+      router.push('/');
+    }
+  }, [user, router]);
+
+  // If not logged in, show loading state
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <main className="max-w-4xl mx-auto pt-24 px-4">
+          <div className="flex justify-center items-center h-64">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
   
   // Get current date and time
   const now = new Date();
@@ -52,11 +76,15 @@ export default function NewDiaryEntry() {
       alert("Please write something before saving");
       return;
     }
+
+    if (!user) {
+      alert("Please log in to save your diary entry");
+      return;
+    }
     
     try {
       setLoading(true);
       
-      // Create new entry object
       const newEntry = {
         title: title || "",
         hasManualTitle: !!title,
@@ -67,73 +95,52 @@ export default function NewDiaryEntry() {
         timestamp: new Date().getTime()
       };
       
-      // If user is logged in, save to Supabase
-      if (user) {
-        console.log("Trying to save with user:", user.id);
+      console.log("Trying to save with user:", user.id);
+      
+      try {
+        // First check if we can even query the table
+        const { data: tableCheck, error: tableError } = await supabase
+          .from('diary_entries')
+          .select('id')
+          .limit(1);
         
-        try {
-          // First check if we can even query the table
-          const { data: tableCheck, error: tableError } = await supabase
-            .from('diary_entries')
-            .select('id')
-            .limit(1);
-          
-          console.log("Table check:", { data: tableCheck, error: tableError });
-          
-          // Try direct insert with minimal data
-          const minimalEntry = {
-            user_id: user.id,
-            title: title || "",
-            content: content || ""
-          };
-          
-          console.log("Trying direct insert with:", minimalEntry);
-          
-          const { data: directData, error: directError } = await supabase
-            .from('diary_entries')
-            .insert([minimalEntry])
-            .select();
-          
-          console.log("Direct insert result:", { data: directData, error: directError });
-          
-          if (!directError && directData && directData.length > 0) {
-            console.log("Direct insert worked! Redirecting...");
-            router.push("/diary");
-            return;
-          }
-          
-          // Fall back to our utility function
-          console.log("Direct insert failed, trying utility function");
-          const result = await databaseUtils.createDiaryEntry(user.id, newEntry);
-          console.log("Create result:", result);
-          
-          if (!result) {
-            console.error("Failed to create entry");
-            alert("Failed to save entry. Please try again.");
-            setLoading(false);
-            return;
-          }
-        } catch (e) {
-          console.error("Exception during save:", e);
-          alert("An error occurred while saving. Please try again.");
-          setLoading(false);
+        console.log("Table check:", { data: tableCheck, error: tableError });
+        
+        // Try direct insert with minimal data
+        const minimalEntry = {
+          user_id: user.id,
+          title: title || "",
+          content: content || ""
+        };
+        
+        console.log("Trying direct insert with:", minimalEntry);
+        
+        const { data: directData, error: directError } = await supabase
+          .from('diary_entries')
+          .insert([minimalEntry])
+          .select();
+        
+        console.log("Direct insert result:", { data: directData, error: directError });
+        
+        if (!directError && directData && directData.length > 0) {
+          console.log("Direct insert worked! Redirecting...");
+          router.push("/diary");
           return;
         }
-      } 
-      // Otherwise save to localStorage as fallback
-      else {
-        // Get existing entries or initialize empty array
-        const existingEntries = JSON.parse(localStorage.getItem("diaryEntries") || "[]");
         
-        // Add new entry at the beginning of the array
-        const updatedEntries = [newEntry, ...existingEntries];
+        // Fall back to our utility function
+        console.log("Direct insert failed, trying utility function");
+        const result = await databaseUtils.createDiaryEntry(user.id, newEntry);
         
-        // Save to localStorage
-        localStorage.setItem("diaryEntries", JSON.stringify(updatedEntries));
+        if (result) {
+          router.push("/diary");
+        } else {
+          throw new Error("Failed to save entry");
+        }
+      } catch (error) {
+        console.error("Error saving to Supabase:", error);
+        throw error;
       }
-      
-      // Redirect to diary page
-      router.push("/diary");
     } catch (error) {
       console.error("Error saving entry:", error);
       alert("Could not save entry. Please try again.");

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FiPlus, FiX, FiChevronRight } from 'react-icons/fi';
+import { FiPlus, FiX, FiChevronRight, FiLogIn } from 'react-icons/fi';
+import { useAuth } from '../../context/AuthContext';
 
 export default function CreateFirstEntryDialog() {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, toggleAuthModal } = useAuth();
   
   // Handle escape key press to close dialog
   useEffect(() => {
@@ -77,6 +79,20 @@ export default function CreateFirstEntryDialog() {
       hoverBg: "group-hover:bg-pink-400/20"
     }
   ];
+  
+  if (!user) {
+    return (
+      <div className="text-center">
+        <button
+          onClick={toggleAuthModal}
+          className="text-primary hover:text-primary/90 text-lg font-medium transition-colors"
+          aria-label="Sign in to create entries"
+        >
+          Sign in to create entries
+        </button>
+      </div>
+    );
+  }
   
   return (
     <>

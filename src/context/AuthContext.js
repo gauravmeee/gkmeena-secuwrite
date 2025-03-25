@@ -71,12 +71,20 @@ export function AuthProvider({ children }) {
   // Sign in with Google
   const signInWithGoogle = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined
+          redirectTo: typeof window !== 'undefined' 
+            ? `${window.location.origin}/auth/callback`
+            : undefined,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          skipBrowserRedirect: false
         }
       });
+      
       if (error) throw error;
       return { success: true };
     } catch (error) {
