@@ -1,22 +1,45 @@
 import { useState } from "react";
 import { FiMessageSquare } from "react-icons/fi";
+import emailjs from '@emailjs/browser';
+import { useAuth } from "../../context/AuthContext";
 
 export default function FeedbackSection() {
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [error, setError] = useState("");
+  const { user } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus(null);
+    setError("");
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Get user information
+      const userIdentifier = user ? (user.email || user.user_metadata?.name || user.id || "Anonymous") : "Anonymous";
+      
+      // Prepare template parameters
+      const templateParams = {
+        message: feedback,
+        from_name: userIdentifier,
+        user_info: user ? `User ID: ${user.id}` : "Not logged in"
+      };
+      
+      // Get EmailJS credentials from environment variables
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+      
+      // Send the email using EmailJS
+      await emailjs.send(serviceId, templateId, templateParams, publicKey);
+      
       setSubmitStatus("success");
       setFeedback("");
     } catch (error) {
+      console.error('Failed to send feedback:', error);
+      setError("Failed to send feedback. Please try again later.");
       setSubmitStatus("error");
     } finally {
       setIsSubmitting(false);
@@ -45,12 +68,18 @@ export default function FeedbackSection() {
                 placeholder="Share your suggestions..."
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 sm:p-4 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                 required
+                maxLength={500}
               />
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <p className="text-xs sm:text-sm text-gray-500">
                   {feedback.length}/500 characters
                 </p>
+                {error && (
+                  <p className="text-xs sm:text-sm text-red-400">
+                    {error}
+                  </p>
+                )}
                 <button
                   type="submit"
                   disabled={isSubmitting || !feedback.trim()}

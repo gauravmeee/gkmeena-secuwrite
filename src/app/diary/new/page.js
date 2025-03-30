@@ -247,8 +247,8 @@ function NewDiaryEntryContent() {
           </button>
         </div>
         
-        <div className={`bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden ${entryType === 'image' ? 'pb-6' : ''}`}>
-          <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
+        <div className={`bg-white rounded-xl shadow-sm border border-gray-800 overflow-hidden ${entryType === 'image' ? 'pb-6' : ''}`}>
+          <div className="bg-gradient-to-r from-primary/5 to-secondary/5 p-4 border-b border-gray-800">
             <input
               type="text"
               value={title}

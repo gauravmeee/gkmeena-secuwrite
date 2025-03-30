@@ -225,15 +225,15 @@ export default function NewJournalEntry() {
           </button>
         </div>
 
-        <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 p-8">
+        <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 p-4 sm:p-6">
           {/* Title Input */}
-          <div className="relative w-full mb-6">
+          <div className="relative w-full mb-4">
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Untitled"
-              className="w-full text-3xl font-semibold p-4 pr-36 rounded-lg border border-gray-700 bg-transparent text-white focus:outline-none focus:border-primary transition-all"
+              className="w-full text-3xl font-semibold p-2 pr-36 rounded-lg border border-gray-700 bg-transparent text-white focus:outline-none focus:border-primary transition-all"
             />
             <span className="absolute right-4 top-4 text-gray-400 text-sm">
               {new Date().toLocaleDateString("en-US", {
@@ -246,15 +246,17 @@ export default function NewJournalEntry() {
 
           {/* Editor */}
           <div
-            className="bg-white rounded-md text-black overflow-hidden shadow-md"
-            style={{ height: "calc(100vh - 300px)" }}
+            className="bg-gray-900 rounded-md text-gray-800 overflow-hidden shadow-md"
+            style={{ height: "calc(100vh - 250px)" }}
           >
             <JoditEditor
               value={content}
-              onChange={setContent}
               config={editorConfig}
-              tabIndex={1}
-              ref={editorRef}
+              onChange={(newContent) => {
+                if (mounted.current) {
+                  setContent(newContent);
+                }
+              }}
             />
           </div>
         </div>

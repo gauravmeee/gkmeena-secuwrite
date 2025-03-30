@@ -230,9 +230,15 @@ export default function EntriesSection({ viewMode, entryTypes }) {
   const getEntryTypeColor = (type) => {
     switch(type) {
       case 'diary':
-        return 'bg-blue-400';
+        return 'bg-secondary';
       case 'journal':
-        return 'bg-green-400';
+        return 'bg-primary';
+      case 'stories':
+        return 'bg-accent';
+      case 'songs':
+        return 'bg-secondary';
+      case 'quotes':
+        return 'bg-accent';
       default:
         return 'bg-primary';
     }

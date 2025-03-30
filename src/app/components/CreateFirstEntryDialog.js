@@ -38,45 +38,45 @@ export default function CreateFirstEntryDialog() {
       description: "Write a detailed journal entry with rich formatting",
       path: "/journal/new",
       icon: "📒",
-      bgColor: "bg-green-400/10",
-      borderColor: "border-green-400/30",
-      hoverBg: "group-hover:bg-green-400/20"
+      bgColor: "bg-primary/10",
+      borderColor: "border-primary/30",
+      hoverBg: "group-hover:bg-primary/20"
     },
     {
       title: "Diary Entry",
       description: "Record your daily thoughts and experiences",
       path: "/diary/new",
       icon: "📓",
-      bgColor: "bg-blue-400/10",
-      borderColor: "border-blue-400/30",
-      hoverBg: "group-hover:bg-blue-400/20"
+      bgColor: "bg-secondary/10",
+      borderColor: "border-secondary/30",
+      hoverBg: "group-hover:bg-secondary/20"
     },
     {
       title: "Story",
       description: "Create an original story",
       path: "/stories/new",
       icon: "✍️",
-      bgColor: "bg-yellow-400/10",
-      borderColor: "border-yellow-400/30",
-      hoverBg: "group-hover:bg-yellow-400/20"
+      bgColor: "bg-accent/10",
+      borderColor: "border-accent/30",
+      hoverBg: "group-hover:bg-accent/20"
     },
     {
       title: "Song/Poem",
       description: "Express yourself through songs and poetry",
       path: "/songs/new",
       icon: "🎵",
-      bgColor: "bg-purple-400/10",
-      borderColor: "border-purple-400/30",
-      hoverBg: "group-hover:bg-purple-400/20"
+      bgColor: "bg-secondary/10",
+      borderColor: "border-secondary/30",
+      hoverBg: "group-hover:bg-secondary/20"
     },
     {
       title: "Quote/Thought",
       description: "Save an inspiring quote or thought",
       path: "/quotes/new",
       icon: "💬",
-      bgColor: "bg-pink-400/10", 
-      borderColor: "border-pink-400/30",
-      hoverBg: "group-hover:bg-pink-400/20"
+      bgColor: "bg-accent/10",
+      borderColor: "border-accent/30",
+      hoverBg: "group-hover:bg-accent/20"
     }
   ];
   

@@ -286,7 +286,6 @@ export default function Home() {
       
       {/* Feedback Section with improved styling */}
       <section className="mt-16">
-        <h2 className="text-2xl font-bold mb-6">Feedback</h2>
         <FeedbackSection />
       </section>
       
