@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import databaseUtils from "../../lib/database";
 import { supabase } from "../../lib/supabase";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
+import NoEntriesState from "../components/NoEntriesState";
 
 // Function to strip HTML tags for preview
 const stripHtml = (html) => {
@@ -400,29 +401,7 @@ export default function DiaryPage() {
         </div>
 
         {processedEntries.length === 0 ? (
-          <div className="bg-gray-900 rounded-xl shadow-sm border border-gray-800 p-8 text-center">
-            <h2 className="text-xl font-medium mb-4">No Diary Entries Yet</h2>
-            <p className="text-gray-400 mb-6">
-              Start recording your daily thoughts and experiences.
-            </p>
-            {user ? (
-              <Link
-                href="/diary/new"
-                className="inline-flex items-center gap-2 bg-primary text-white px-4 py-3 rounded-md hover:bg-primary/90 transition-colors"
-              >
-                <FiPlus size={16} />
-                <span>Create Your First Entry</span>
-              </Link>
-            ) : (
-              <button
-                onClick={toggleAuthModal}
-                className="inline-flex items-center gap-2 bg-primary text-white px-4 py-3 rounded-md hover:bg-primary/90 transition-colors"
-              >
-                <FiPlus size={16} />
-                <span>Sign In to Create Entry</span>
-              </button>
-            )}
-          </div>
+          <NoEntriesState type="Diary" />
         ) : (
           <>
             <div className="grid grid-cols-1 gap-5">

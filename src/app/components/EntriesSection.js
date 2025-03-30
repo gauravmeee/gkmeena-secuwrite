@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FiCalendar, FiBook, FiEdit3, FiClock, FiChevronRight } from "react-icons/fi";
 import CreateFirstEntryDialog from "./CreateFirstEntryDialog";
+import EntryTypeCard from "./EntryTypeCard";
 import { useAuth } from "../../context/AuthContext";
 import databaseUtils from "../../lib/database";
 
@@ -14,7 +15,7 @@ const stripHtml = (html) => {
   return doc.body.textContent || '';
 };
 
-export default function RecentEntriesSection() {
+export default function EntriesSection({ viewMode, entryTypes }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [anyEntryExists, setAnyEntryExists] = useState(false);
@@ -137,8 +138,8 @@ export default function RecentEntriesSection() {
 
   if (loading) {
     return (
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8">
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
@@ -153,8 +154,8 @@ export default function RecentEntriesSection() {
 
   if (entries.length === 0) {
     return (
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8">
           <div className="flex justify-center items-center h-64">
             <div className="text-center max-w-md">
               {user ? (
@@ -183,16 +184,16 @@ export default function RecentEntriesSection() {
   }
   
   // Get the appropriate icon for each entry type
-  const getEntryIcon = (type) => {
-    switch(type) {
-      case 'diary':
-        return <FiBook className="text-blue-400" />;
-      case 'journal':
-        return <FiEdit3 className="text-green-400" />;
-      default:
-        return <FiCalendar className="text-primary" />;
-    }
-  };
+//   const getEntryIcon = (type) => {
+//     switch(type) {
+//       case 'diary':
+//         return <FiBook className="text-blue-400" />;
+//       case 'journal':
+//         return <FiEdit3 className="text-green-400" />;
+//       default:
+//         return <FiCalendar className="text-primary" />;
+//     }
+//   };
   
   // Get the appropriate link for each entry type
   const getEntryLink = (entry, index) => {
@@ -238,85 +239,81 @@ export default function RecentEntriesSection() {
   };
 
   return (
-    <div className="py-12">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <h2 className="text-2xl md:text-3xl font-bold">Recent Entries</h2>
-          <div className="flex gap-4">
-            <Link 
-              href="/journal" 
-              className="text-primary hover:text-primary/90 flex items-center gap-1 transition-colors group"
-            >
-              <span>View all journals</span>
-              <FiChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
-            </Link>
-            <Link 
-              href="/diary" 
-              className="text-primary hover:text-primary/90 flex items-center gap-1 transition-colors group"
-            >
-              <span>View all diaries</span>
-              <FiChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
-            </Link>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {entries.map((entry, index) => {
-            const entryLink = getEntryLink(entry, index);
-            const typeColor = getEntryTypeColor(entry.type);
-            
-            return (
-              <Link 
-                key={entry.id || entry.timestamp} 
-                href={entryLink}
-                className="group"
-              >
-                <div className="bg-gray-900/70 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800 p-6 h-full 
-                  hover:border-primary/30 hover:shadow-lg transition-all duration-200 group-hover:translate-y-[-2px]">
-                  <div className="flex items-start flex-col h-full">
-                    <div className="flex w-full items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${typeColor}`}></span>
-                        <span className="text-sm uppercase tracking-wider text-gray-400 font-medium">
-                          {getEntryTypeLabel(entry.type)}
-                        </span>
+    <>
+        {viewMode === 1 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+            {entries.map((entry, index) => {
+              const entryLink = getEntryLink(entry, index);
+              const typeColor = getEntryTypeColor(entry.type);
+              
+              return (
+                <Link 
+                  key={entry.id || entry.timestamp} 
+                  href={entryLink}
+                  className="group"
+                >
+                  <div className="bg-gray-900/70 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800 p-6 h-full 
+                    hover:border-primary/30 hover:shadow-lg transition-all duration-200 group-hover:translate-y-[-2px]">
+                    <div className="flex items-start flex-col h-full">
+                      <div className="flex w-full items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${typeColor}`}></span>
+                          <span className="text-sm uppercase tracking-wider text-gray-400 font-medium">
+                            {getEntryTypeLabel(entry.type)}
+                          </span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <FiClock size={12} className="mr-1" />
+                          <span>
+                            {entry.date && `${entry.date}`}
+                            {entry.time && ` | ${entry.time}`}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <FiClock size={12} className="mr-1" />
-                        <span>
-                          {entry.date && `${entry.date}`}
-                          {entry.time && ` | ${entry.time}`}
-                        </span>
+                      
+                      {entry.hasManualTitle && entry.title ? (
+                        <h3 className="text-lg font-semibold mb-3 group-hover:text-primary transition-colors line-clamp-2">
+                          {entry.title}
+                        </h3>
+                      ) : entry.title ? (
+                        <h3 className="text-lg font-semibold mb-3 group-hover:text-primary transition-colors line-clamp-2">
+                          {entry.title}
+                        </h3>
+                      ) : (
+                        <div className="h-6 mb-2"></div> 
+                      )}
+                      
+                      <p className="font-handwriting italic text-gray-400 text-sm line-clamp-3 mb-4 flex-grow">
+                        {entry.preview}
+                      </p>
+                      
+                      <div className="flex items-center gap-1 text-primary text-sm mt-auto pt-2 group-hover:underline">
+                        <span>Read more</span>
+                        <FiChevronRight size={14} className="transition-transform group-hover:translate-x-1" />
                       </div>
-                    </div>
-                    
-                    {entry.hasManualTitle && entry.title ? (
-                      <h3 className="text-lg font-semibold mb-3 group-hover:text-primary transition-colors line-clamp-2">
-                        {entry.title}
-                      </h3>
-                    ) : entry.title ? (
-                      <h3 className="text-lg font-semibold mb-3 group-hover:text-primary transition-colors line-clamp-2">
-                        {entry.title}
-                      </h3>
-                    ) : (
-                      <div className="h-6 mb-2"></div> 
-                    )}
-                    
-                    <p className="font-handwriting italic text-gray-400 text-sm line-clamp-3 mb-4 flex-grow">
-                      {entry.preview}
-                    </p>
-                    
-                    <div className="flex items-center gap-1 text-primary text-sm mt-auto pt-2 group-hover:underline">
-                      <span>Read more</span>
-                      <FiChevronRight size={14} className="transition-transform group-hover:translate-x-1" />
                     </div>
                   </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+            {entryTypes
+              .filter(type => type.entryCount > 0)
+              .map((type) => (
+                <EntryTypeCard
+                  key={type.title}
+                  title={type.title}
+                  icon={type.icon}
+                  description={type.description}
+                  path={type.path}
+                  bgColor={type.bgColor}
+                  entryCount={type.entryCount}
+                />
+              ))}
+          </div>
+        )}
+      </>
   );
 } 

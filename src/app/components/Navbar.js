@@ -33,7 +33,9 @@ export default function Navbar() {
   
   return (
     <nav className={`w-full px-4 py-4 fixed top-0 left-0 z-10 transition-all duration-300 ${
-      scrolled ? "glass-effect" : "bg-transparent"
+      scrolled 
+        ? "bg-black/80 backdrop-blur-md border-b border-gray-800/50" 
+        : "bg-transparent border-b border-transparent"
     }`}>
       <div className="max-w-[var(--content-width)] mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-2xl font-bold">
@@ -65,7 +67,7 @@ export default function Navbar() {
                 <FiChevronDown size={16} className="text-primary transition-transform duration-200 group-hover:rotate-180" />
               </button>
               
-              <div className="absolute right-0 top-full mt-2 w-48 glass-effect rounded-lg shadow-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 border border-gray-800/30">
+              <div className="absolute right-0 top-full mt-2 w-48 bg-black/90 backdrop-blur-md rounded-lg shadow-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 border border-gray-800/30">
                 <div className="p-3 border-b border-gray-700/30">
                   <p className="text-sm text-gray-300 truncate">{user.email}</p>
                 </div>
@@ -104,21 +106,21 @@ export default function Navbar() {
         <div className="md:hidden fixed inset-0 top-[72px] bg-black/95 backdrop-blur-lg p-4 animate-fadeIn z-50">
           <div className="flex flex-col gap-4 mt-8">
             <Link href="/" 
-              className={`flex items-center gap-3 p-4 rounded-lg ${pathname === '/' ? 'glass-effect border border-primary/30' : 'hover:glass-effect'}`}
+              className={`flex items-center gap-3 p-4 rounded-lg ${pathname === '/' ? 'bg-gray-800/50 border border-primary/30' : 'hover:bg-gray-800/30'}`}
               onClick={closeMobileMenu}
             >
               <FiHome size={22} className={pathname === '/' ? 'text-primary' : ''} />
               <span className="text-lg">{pathname === '/' ? <span className="gradient-text font-medium">Home</span> : 'Home'}</span>
             </Link>
             <Link href="/diary" 
-              className={`flex items-center gap-3 p-4 rounded-lg ${pathname === '/diary' ? 'glass-effect border border-primary/30' : 'hover:glass-effect'}`}
+              className={`flex items-center gap-3 p-4 rounded-lg ${pathname === '/diary' ? 'bg-gray-800/50 border border-primary/30' : 'hover:bg-gray-800/30'}`}
               onClick={closeMobileMenu}
             >
               <FiEdit size={22} className={pathname === '/diary' ? 'text-primary' : ''} />
               <span className="text-lg">{pathname === '/diary' ? <span className="gradient-text font-medium">Diary</span> : 'Diary'}</span>
             </Link>
             <Link href="/journal" 
-              className={`flex items-center gap-3 p-4 rounded-lg ${pathname === '/journal' ? 'glass-effect border border-primary/30' : 'hover:glass-effect'}`}
+              className={`flex items-center gap-3 p-4 rounded-lg ${pathname === '/journal' ? 'bg-gray-800/50 border border-primary/30' : 'hover:bg-gray-800/30'}`}
               onClick={closeMobileMenu}
             >
               <FiBook size={22} className={pathname === '/journal' ? 'text-primary' : ''} />
@@ -127,7 +129,7 @@ export default function Navbar() {
             
             {user ? (
               <div className="mt-4 border-t border-gray-800/30 pt-4">
-                <div className="px-4 py-3 text-sm text-gray-400 glass-effect rounded-lg">
+                <div className="px-4 py-3 text-sm text-gray-400 bg-gray-800/50 rounded-lg">
                   {user.email}
                 </div>
                 <button 
@@ -135,7 +137,7 @@ export default function Navbar() {
                     signOut();
                     closeMobileMenu();
                   }}
-                  className="w-full flex items-center gap-3 p-4 rounded-lg mt-3 hover:glass-effect"
+                  className="w-full flex items-center gap-3 p-4 rounded-lg mt-3 hover:bg-gray-800/30"
                 >
                   <FiLogOut size={22} />
                   <span className="text-lg">Sign Out</span>
