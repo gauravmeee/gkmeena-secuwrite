@@ -6,6 +6,7 @@ import { FiPlus, FiTrash2, FiX } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import databaseUtils from "../../lib/database";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
+import NoEntriesState from "../components/NoEntriesState";
 
 const stripHtml = (html) => {
   if (typeof window === "undefined") return "";
@@ -195,33 +196,7 @@ export default function JournalPage() {
         </div>
 
         {processedEntries.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-gray-800 border-b border-gray-700 p-8 text-center">
-              <h2 className="text-xl font-medium mb-4 text-white">
-                No Journal Entries Yet
-              </h2>
-              <p className="text-gray-300 mb-6">
-                Start documenting your thoughts with rich text formatting.
-              </p>
-              {user ? (
-                <Link
-                  href="/journal/new"
-                  className="inline-flex items-center gap-2 bg-primary text-white px-4 py-3 rounded-md hover:bg-primary/90 transition-colors"
-                >
-                  <FiPlus size={16} />
-                  <span>Create Your First Entry</span>
-                </Link>
-              ) : (
-                <button
-                  onClick={toggleAuthModal}
-                  className="inline-flex items-center gap-2 bg-primary text-white px-4 py-3 rounded-md hover:bg-primary/90 transition-colors"
-                >
-                  <FiPlus size={16} />
-                  <span>Sign In to Create Entry</span>
-                </button>
-              )}
-            </div>
-          </div>
+          <NoEntriesState type="Journal" />
         ) : (
           <>
             <div className="grid grid-cols-1 gap-5">
