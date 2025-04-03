@@ -174,11 +174,6 @@ export default function EditJournalEntry() {
         if (content) {
           editor.value = content;
         }
-      },
-      change: function(editor) {
-        if (mounted.current) {
-          setContent(editor.value);
-        }
       }
     }
   };
@@ -279,17 +274,10 @@ export default function EditJournalEntry() {
             >
               <JoditEditor
                 value={content}
+                onChange={setContent}
                 config={editorConfig}
-                onChange={(newContent) => {
-                  if (mounted.current) {
-                    setContent(newContent);
-                  }
-                }}
-                onBlur={(newContent) => {
-                  if (mounted.current) {
-                    setContent(newContent);
-                  }
-                }}
+                tabIndex={1}
+                ref={editorRef}
               />
             </div>
           </div>

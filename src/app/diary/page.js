@@ -441,12 +441,14 @@ export default function DiaryPage() {
                           </Link>
                         </div>
 
-                        <div className="font-handwriting text-gray-800">
-                          {entry.date} | {entry.time}
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="font-handwriting text-gray-800">
+                            {entry.date} | {entry.time}
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div className={entryType === 'image' ? 'bg-white p-8' : 'lined-paper flex items-start justify-between gap-4 p-5 bg-white'}>
+                    <div className={entry.image_url ? 'bg-white p-8' : 'lined-paper flex items-start justify-between gap-4 p-5 bg-white'}>
                       <div className="flex-1 text-gray-800">
                         <Link
                           href={`/diary/${entry.id || entry.timestamp}`}

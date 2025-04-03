@@ -83,7 +83,7 @@ export default function FeedbackSection() {
                 <button
                   type="submit"
                   disabled={isSubmitting || !feedback.trim()}
-                  className="bg-primary hover:bg-primary/90 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
+                  className="bg-primary hover:bg-primary/90 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>
