@@ -171,7 +171,7 @@ export default function Home() {
     return (
       <div className="py-6 sm:py-12">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 sm:mb-8 gap-2 sm:gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 sm:mb-8 gap-2 sm:gap-4 relative z-0">
             <div>
               <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">
                 {viewMode === 1 ? "Recent Entries" : "Category-wise Entries"}
@@ -270,7 +270,7 @@ export default function Home() {
       {/* Main Content Section */}
       <div id="content-section" className="relative">
         {/* Toggle Switch with improved positioning and styling */}
-        <div className="sticky top-20 z-20 bg-black/80 backdrop-blur-sm py-1 border-b border-gray-800">
+        <div className="bg-black/80 backdrop-blur-sm py-1 border-b border-gray-800">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8">
             <ToggleSwitch 
               option1="Recent Entries" 
