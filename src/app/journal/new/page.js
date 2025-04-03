@@ -174,9 +174,9 @@ export default function NewJournalEntry() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      <main className="max-w-6xl mx-auto pt-24 px-6 pb-20">
+      <main className="max-w-6xl mx-auto pt-24 px-4 pb-20">
         {/* Header Section */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <Link href="/journal" className="flex items-center gap-2 text-primary hover:underline">
             <FiArrowLeft size={18} />
             <span>Back to Journal</span>
@@ -185,7 +185,7 @@ export default function NewJournalEntry() {
           <button
             onClick={handleSave}
             disabled={loading}
-            className={`flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg transition-all duration-300${
+            className={`flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg transition-all duration-300${
               loading
                 ? "bg-opacity-70 cursor-not-allowed"
                 : "hover:bg-primary/90 cursor-pointer"
@@ -244,7 +244,7 @@ export default function NewJournalEntry() {
           </div>
 
           {/* Editor */}
-          <div className="bg-gray-900 rounded-md text-gray-800 overflow-hidden shadow-md">
+          <div className="bg-white rounded-md text-black overflow-hidden shadow-md">
             <JoditEditor
               value={content}
               config={editorConfig}

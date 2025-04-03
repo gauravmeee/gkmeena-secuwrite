@@ -196,9 +196,9 @@ export default function EditJournalEntry() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      <main className="max-w-6xl mx-auto pt-24 px-6 pb-20">
+      <main className="max-w-6xl mx-auto pt-24 px-4 pb-20">
         {/* Header Section */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <Link href={`/journal/${params.id}`} className="flex items-center gap-2 text-primary hover:underline">
             <FiArrowLeft size={18} />
             <span>Back to Entry</span>
@@ -207,7 +207,7 @@ export default function EditJournalEntry() {
           <button
             onClick={handleSave}
             disabled={saving || loading}
-            className={`flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg transition-all duration-300${
+            className={`flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg transition-all duration-300${
               saving || loading
                 ? "bg-opacity-70 cursor-not-allowed"
                 : "hover:bg-primary/90 cursor-pointer"
@@ -255,15 +255,15 @@ export default function EditJournalEntry() {
             </div>
           </div>
         ) : (
-          <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 p-8">
+          <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 p-4 sm:p-6">
             {/* Title Input */}
-            <div className="relative w-full mb-6">
+            <div className="relative w-full mb-4">
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Untitled"
-                className="w-full text-3xl font-semibold p-4 pr-36 rounded-lg border border-gray-700 bg-transparent text-white focus:outline-none focus:border-primary transition-all"
+                className="w-full text-3xl font-semibold p-2 pr-36 rounded-lg border border-gray-700 bg-transparent text-white focus:outline-none focus:border-primary transition-all"
               />
             </div>
 

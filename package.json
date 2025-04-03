@@ -20,6 +20,7 @@
     "jodit-react": "^5.2.18",
     "lodash": "^4.17.21",
     "next": "15.2.3",
+    "next-pwa": "^5.6.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-draft-wysiwyg": "^1.15.0",
