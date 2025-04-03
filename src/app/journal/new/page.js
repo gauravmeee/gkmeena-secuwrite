@@ -186,10 +186,10 @@ export default function NewJournalEntry() {
           <button
             onClick={handleSave}
             disabled={loading}
-            className={`flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg transition-all duration-300 ${
+            className={`flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg transition-all duration-300${
               loading
                 ? "bg-opacity-70 cursor-not-allowed"
-                : "hover:bg-primary/90"
+                : "hover:bg-primary/90 cursor-pointer"
             }`}
           >
             {loading ? (

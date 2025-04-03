@@ -168,7 +168,7 @@ export default function JournalEntryPage() {
             </Link>
             <button
               onClick={() => setIsDeleteModalOpen(true)}
-              className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors"
+              className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors cursor-pointer"
             >
               <FiTrash2 size={16} />
               <span className="hidden sm:inline">Delete</span>

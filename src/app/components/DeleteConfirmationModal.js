@@ -16,7 +16,7 @@ export default function DeleteConfirmationModal({ isOpen, onClose, onConfirm, it
               <h3 className="text-xl font-semibold text-white">Delete {itemType}</h3>
               <button 
                 onClick={onClose}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white cursor-pointer"
               >
                 <FiX size={20} />
               </button>
@@ -31,13 +31,13 @@ export default function DeleteConfirmationModal({ isOpen, onClose, onConfirm, it
         <div className="flex justify-end gap-3 mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors cursor-pointer"
           >
             Delete
           </button>

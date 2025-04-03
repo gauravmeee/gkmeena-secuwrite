@@ -17,6 +17,7 @@ export default function DiaryEntryPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const { user } = useAuth();
   const [imageUrl, setImageUrl] = useState(null);
+  const [entryType, setEntryType] = useState('text');
 
   // Function to get signed URL for an image
   const getSignedUrl = async (imageUrl) => {
@@ -88,6 +89,8 @@ export default function DiaryEntryPage() {
               const foundEntry = entries.find(e => e.id === params.id);
               
               if (foundEntry) {
+                // Set entry type based on content
+                setEntryType(foundEntry.image_url ? 'image' : 'text');
                 // Add missing day field if needed
                 if (!foundEntry.day && foundEntry.date) {
                   // Try to reconstruct the day from the date
@@ -171,6 +174,13 @@ export default function DiaryEntryPage() {
     
     loadEntry();
   }, [params.id, user]);
+
+  useEffect(() => {
+    // Update entryType when entry changes
+    if (entry) {
+      setEntryType(entry.image_url ? 'image' : 'text');
+    }
+  }, [entry]);
 
   const handleDelete = async () => {
     try {
@@ -306,7 +316,7 @@ export default function DiaryEntryPage() {
             </Link>
             <button
               onClick={() => setIsDeleteModalOpen(true)}
-              className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors"
+              className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors cursor-pointer"
             >
               <FiTrash2 size={16} />
               <span className="hidden sm:inline">Delete</span>
@@ -319,7 +329,7 @@ export default function DiaryEntryPage() {
             <h1 className="text-xl font-serif text-gray-800">{entry.title}</h1>
           </div>
           
-          <div className="bg-white p-8 min-h-[70vh]">
+          <div className={entryType === 'image' ? 'bg-white p-8' : 'lined-paper p-8 min-h-[70vh] bg-white'}>
             <div className="mb-6 text-left">
               <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">
                 {entry.date || (() => {
@@ -394,9 +404,20 @@ export default function DiaryEntryPage() {
         .font-handwriting {
           font-family: 'Caveat', 'Dancing Script', cursive;
         }
+
+        .lined-paper {
+          background-color: white;
+          background-image: 
+            linear-gradient(90deg, transparent 39px, #d6aed6 39px, #d6aed6 41px, transparent 41px),
+            linear-gradient(#e5e7eb 1px, transparent 1px);
+          background-size: 100% 2rem;
+          line-height: 2rem;
+          padding-left: 45px !important;
+        }
         
         .line-height-loose {
           line-height: 2rem;
+          padding-top: 0.5rem;
         }
       `}</style>
       

@@ -146,6 +146,7 @@ export default function DiaryPage() {
                 minute: "2-digit",
                 hour12: true,
               }),
+            entryType: entry.image_url ? 'image' : 'text'
           };
         });
 
@@ -355,7 +356,7 @@ export default function DiaryPage() {
               <>
                 <button
                   onClick={handleToggleSelectionMode}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors cursor-pointer ${
                     isSelectionMode
                       ? "bg-gray-600 text-white hover:bg-gray-700"
                       : "bg-red-600 text-white hover:bg-red-700"
@@ -370,7 +371,7 @@ export default function DiaryPage() {
                 {isSelectionMode && selectedEntries.size > 0 && (
                   <button
                     onClick={handleDeleteSelected}
-                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors cursor-pointer"
                   >
                     <FiTrash2 size={18} />
                     <span className="hidden sm:inline">Delete</span> ({selectedEntries.size})
@@ -446,8 +447,7 @@ export default function DiaryPage() {
                         </div>
                       </div>
                     </div>
-
-                    <div className="flex items-start justify-between gap-4 p-5 lined-paper bg-white">
+                    <div className={entry.entryType === 'image' ? 'bg-white p-8' : 'lined-paper flex items-start justify-between gap-4 p-5 bg-white'}>
                       <div className="flex-1 text-gray-800">
                         <Link
                           href={`/diary/${entry.id || entry.timestamp}`}
