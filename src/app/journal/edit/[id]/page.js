@@ -133,8 +133,8 @@ export default function EditJournalEntry() {
     showWordsCounter: false,
     showXPathInStatusbar: false,
     spellcheck: true,
-    minHeight: 600,
-    height: "calc(100vh - 250px)",
+    minHeight: 400,
+    height: "auto",
     buttons: [
       "bold",
       "italic",
@@ -268,10 +268,7 @@ export default function EditJournalEntry() {
             </div>
 
             {/* Editor */}
-            <div
-              className="bg-white rounded-md text-black overflow-hidden shadow-md"
-              style={{ height: "calc(100vh - 300px)" }}
-            >
+            <div className="bg-white rounded-md text-black overflow-hidden shadow-md">
               <JoditEditor
                 value={content}
                 onChange={setContent}

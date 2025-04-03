@@ -44,6 +44,49 @@ const formatDateTime = (dateInput) => {
   return `${ordinalDay} ${month} ${year} | ${time}`;
 };
 
+// Function to strip HTML and format preview
+const generatePreview = (content) => {
+  if (!content) return { text: "", imageUrl: null };
+  
+  // Create a temporary div to parse HTML
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = content;
+  
+  // Remove script and style elements
+  const scripts = tempDiv.getElementsByTagName('script');
+  const styles = tempDiv.getElementsByTagName('style');
+  while(scripts[0]) scripts[0].parentNode.removeChild(scripts[0]);
+  while(styles[0]) styles[0].parentNode.removeChild(styles[0]);
+  
+  // Add size constraints to images
+  const images = tempDiv.getElementsByTagName('img');
+  for (let img of images) {
+    img.style.maxWidth = '150px';
+    img.style.maxHeight = '100px';
+    img.style.objectFit = 'cover';
+    img.style.margin = '0.5rem 0';
+  }
+  
+  // Get text content
+  let textContent = tempDiv.textContent || tempDiv.innerText;
+  
+  // Handle videos
+  const videos = tempDiv.getElementsByTagName('video');
+  if (videos.length > 0) {
+    textContent = `[${videos.length} video${videos.length > 1 ? 's' : ''}] ${textContent}`;
+  }
+  
+  // Split into lines and take first 5
+  const lines = textContent.split('\n').filter(line => line.trim());
+  const previewLines = lines.slice(0, 5);
+  
+  // Join lines with proper spacing
+  return {
+    text: previewLines.join('\n'),
+    content: tempDiv.innerHTML // Keep the HTML content for proper image rendering
+  };
+};
+
 export default function JournalPage() {
   const [processedEntries, setProcessedEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,9 +112,7 @@ export default function JournalPage() {
 
         const processed = entries.map((entry) => ({
           ...entry,
-          preview:
-            stripHtml(entry.content).substring(0, 150) +
-            (stripHtml(entry.content).length > 150 ? "..." : ""),
+          preview: generatePreview(entry.content),
           dateTime: formatDateTime(entry.timestamp || entry.date || Date.now()),
         }));
 
@@ -242,7 +283,12 @@ export default function JournalPage() {
                       </div>
                     </div>
                     <div className="p-4">
-                      <p className="text-gray-700">{entry.preview}</p>
+                      <div className="prose prose-gray max-w-none text-gray-800">
+                        <div
+                          className="line-clamp-5 [&_img]:max-w-[200px] [&_img]:max-h-[150px] [&_img]:object-cover [&_img]:my-2"
+                          dangerouslySetInnerHTML={{ __html: entry.preview.content }}
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}

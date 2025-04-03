@@ -127,8 +127,8 @@ export default function NewJournalEntry() {
     showWordsCounter: false,
     showXPathInStatusbar: false,
     spellcheck: true,
-    minHeight: 600,
-    height: "calc(100vh - 250px)",
+    minHeight: 400,
+    height: "auto",
     buttons: [
       "bold",
       "italic",
@@ -157,7 +157,6 @@ export default function NewJournalEntry() {
       "selectall",
       "source",
     ],
-    // Add these configurations
     statusbar: false,
     removeButtons: ['source', 'fullsize', 'about'],
     uploader: {
@@ -245,10 +244,7 @@ export default function NewJournalEntry() {
           </div>
 
           {/* Editor */}
-          <div
-            className="bg-gray-900 rounded-md text-gray-800 overflow-hidden shadow-md"
-            style={{ height: "calc(100vh - 250px)" }}
-          >
+          <div className="bg-gray-900 rounded-md text-gray-800 overflow-hidden shadow-md">
             <JoditEditor
               value={content}
               config={editorConfig}
