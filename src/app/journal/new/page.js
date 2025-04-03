@@ -157,7 +157,6 @@ export default function NewJournalEntry() {
       "selectall",
       "source",
     ],
-    // Add these configurations
     statusbar: false,
     removeButtons: ['source', 'fullsize', 'about'],
     uploader: {
@@ -168,6 +167,11 @@ export default function NewJournalEntry() {
         editorRef.current = editor;
         if (content) {
           editor.value = content;
+        }
+      },
+      change: function(editor) {
+        if (mounted.current) {
+          setContent(editor.value);
         }
       }
     }
@@ -253,6 +257,11 @@ export default function NewJournalEntry() {
               value={content}
               config={editorConfig}
               onChange={(newContent) => {
+                if (mounted.current) {
+                  setContent(newContent);
+                }
+              }}
+              onBlur={(newContent) => {
                 if (mounted.current) {
                   setContent(newContent);
                 }
