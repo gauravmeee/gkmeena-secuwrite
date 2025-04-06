@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { FiBook, FiEdit, FiHome, FiUser, FiLogOut, FiMenu, FiX, FiChevronDown } from "react-icons/fi";
+import { FiBook, FiEdit, FiHome, FiUser, FiLogOut, FiMenu, FiX, FiChevronDown, FiExternalLink } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Navbar() {
@@ -11,6 +11,7 @@ export default function Navbar() {
   const { user, signOut, toggleAuthModal } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [resourcesOpen, setResourcesOpen] = useState(false);
   
   useEffect(() => {
     const handleScroll = () => {
@@ -26,7 +27,7 @@ export default function Navbar() {
       ? "text-primary font-medium relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary after:rounded-full" 
       : "text-foreground/70 hover:text-white relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:rounded-full hover:after:w-full after:transition-all after:duration-300";
   };
-  
+
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
   };
@@ -35,11 +36,11 @@ export default function Navbar() {
     <nav className={`w-full px-4 py-4 fixed top-0 left-0 z-10 transition-all duration-300 ${
       scrolled 
         ? "bg-black/80 backdrop-blur-md border-b border-gray-800/50" 
-        : "bg-transparent border-b border-transparent"
+        : "md:bg-transparent md:border-b md:border-transparent bg-black/80 backdrop-blur-md border-b border-gray-800/50"
     }`}>
       <div className="max-w-[var(--content-width)] mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-2xl font-bold">
-          <img src="/favicon.png" alt="Unseen Stories Logo" className="w-16 h-16" />
+          <img src="/favicon.png" alt="Unseen Stories Logo" className="w-12 h-12" />
           <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Unseen Stories</span>
         </Link>
         
@@ -57,6 +58,48 @@ export default function Navbar() {
             <FiBook size={18} />
             <span>Journal</span>
           </Link>
+
+          {/* More Resources Dropdown */}
+          <div className="relative group">
+            <button 
+              className={`flex items-center gap-1.5 py-2 transition-colors duration-200 ${isActive('/resources')}`}
+              onClick={() => setResourcesOpen(!resourcesOpen)}
+            >
+              <span>More Resources</span>
+              <FiChevronDown size={16} className="text-primary transition-transform duration-200 group-hover:rotate-180" />
+            </button>
+            
+            <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 backdrop-blur-md rounded-lg shadow-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 border border-gray-800/30">
+              <a 
+                href="https://mycodebank.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col gap-1 p-4 hover:bg-gray-700/30 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <img 
+                    src="https://mycodebank.vercel.app/favicon.png" 
+                    alt="CodeBank Logo" 
+                    className="w-5 h-5 rounded"
+                  />
+                  <span className="font-medium">CodeBank</span>
+                  <FiExternalLink size={14} className="text-primary" />
+                </div>
+                <p className="text-sm text-gray-400">Your ultimate platform for contests, job posts, Resources and more!</p>
+              </a>
+            </div>
+          </div>
+
+          {/* Know Me Link */}
+          <a 
+            href="https://gkmeena.netlify.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 py-2 text-foreground/70 hover:text-white transition-colors duration-200"
+          >
+            <span>Know me</span>
+            <FiExternalLink size={14} className="text-primary" />
+          </a>
           
           {user ? (
             <div className="relative group">
@@ -90,20 +133,20 @@ export default function Navbar() {
             </button>
           )}
         </div>
-        
+
         {/* Mobile Menu Button */}
         <button 
-          className="md:hidden flex items-center justify-center p-2 rounded-full text-gray-300 hover:text-white hover:bg-gray-800/50" 
+          className="md:hidden flex items-center justify-center p-2 rounded-full text-gray-300 hover:text-white bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm" 
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
           {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
         </button>
       </div>
-      
+
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-[72px] bg-black/95 backdrop-blur-lg p-4 animate-fadeIn z-50">
+        <div className="md:hidden absolute top-full left-0 w-full bg-black/95 backdrop-blur-lg p-4 animate-fadeIn z-40">
           <div className="flex flex-col gap-4 mt-8">
             <Link href="/" 
               className={`flex items-center gap-3 p-4 rounded-lg ${pathname === '/' ? 'bg-gray-800/50 border border-primary/30' : 'hover:bg-gray-800/30'}`}
@@ -126,6 +169,43 @@ export default function Navbar() {
               <FiBook size={22} className={pathname === '/journal' ? 'text-primary' : ''} />
               <span className="text-lg">{pathname === '/journal' ? <span className="gradient-text font-medium">Journal</span> : 'Journal'}</span>
             </Link>
+
+            {/* Mobile More Resources */}
+            <div className="flex flex-col gap-2 p-4 rounded-lg hover:bg-gray-800/30">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">More Resources</span>
+              </div>
+              <a 
+                href="https://mycodebank.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col gap-1"
+                onClick={closeMobileMenu}
+              >
+                <div className="flex items-center gap-2">
+                  <img 
+                    src="https://mycodebank.vercel.app/favicon.png" 
+                    alt="CodeBank Logo" 
+                    className="w-5 h-5 rounded"
+                  />
+                  <span className="font-medium">CodeBank</span>
+                  <FiExternalLink size={14} className="text-primary" />
+                </div>
+                <p className="text-sm text-gray-400">Your ultimate platform for contests, job posts, Resources and more!</p>
+              </a>
+            </div>
+
+            {/* Mobile Know Me Link */}
+            <a 
+              href="https://gkmeena.netlify.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-4 rounded-lg hover:bg-gray-800/30"
+              onClick={closeMobileMenu}
+            >
+              <span className="text-lg">Know me</span>
+              <FiExternalLink size={14} className="text-primary" />
+            </a>
             
             {user ? (
               <div className="mt-4 border-t border-gray-800/30 pt-4">
