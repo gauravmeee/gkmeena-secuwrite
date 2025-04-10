@@ -168,6 +168,13 @@ export default function NewJournalEntry() {
         if (content) {
           editor.value = content;
         }
+        // Let the editor handle its own focus
+      },
+      change: function(editor) {
+        // Ensure content is updated in state when editor changes
+        if (mounted.current) {
+          setContent(editor.value);
+        }
       }
     }
   };
@@ -246,13 +253,12 @@ export default function NewJournalEntry() {
           {/* Editor */}
           <div className="bg-white rounded-md text-black overflow-hidden shadow-md">
             <JoditEditor
+              key="new-journal-editor"
               value={content}
+              onChange={setContent}
               config={editorConfig}
-              onChange={(newContent) => {
-                if (mounted.current) {
-                  setContent(newContent);
-                }
-              }}
+              tabIndex={1}
+              ref={editorRef}
             />
           </div>
         </div>

@@ -174,6 +174,13 @@ export default function EditJournalEntry() {
         if (content) {
           editor.value = content;
         }
+        // Let the editor handle its own focus
+      },
+      change: function(editor) {
+        // Ensure content is updated in state when editor changes
+        if (mounted.current) {
+          setContent(editor.value);
+        }
       }
     }
   };
@@ -270,6 +277,7 @@ export default function EditJournalEntry() {
             {/* Editor */}
             <div className="bg-white rounded-md text-black overflow-hidden shadow-md">
               <JoditEditor
+                key="edit-journal-editor"
                 value={content}
                 onChange={setContent}
                 config={editorConfig}
