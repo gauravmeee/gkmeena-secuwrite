@@ -13,7 +13,6 @@ const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 export default function EditJournalEntry() {
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
@@ -21,6 +20,7 @@ export default function EditJournalEntry() {
   const { user } = useAuth();
   const mounted = useRef(false);
   const editorRef = useRef(null);
+  const initialContentRef = useRef("");
 
   // Add authentication check
   useEffect(() => {
@@ -55,10 +55,9 @@ export default function EditJournalEntry() {
 
         if (entry) {
           setTitle(entry.title || "");
-          // Ensure content is properly set, handling both string and HTML content
-          const contentToSet = entry.content || "";
-          console.log("Loading content:", contentToSet); // Debug log
-          setContent(contentToSet);
+          // Store the initial content in ref to set it once editor is initialized
+          initialContentRef.current = entry.content || "";
+          console.log("Loading content:", initialContentRef.current); // Debug log
         } else {
           console.error("Entry not found");
           router.push("/journal");
@@ -76,9 +75,12 @@ export default function EditJournalEntry() {
   }, [params.id, user, router]);
 
   const handleSave = async () => {
+    // Get content directly from the editor
+    const editorContent = editorRef.current?.value || "";
+    
     // Check if content is empty or only contains whitespace/HTML tags
     const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = content;
+    tempDiv.innerHTML = editorContent;
     const textContent = tempDiv.textContent || tempDiv.innerText;
     
     if (!textContent || !textContent.trim()) {
@@ -94,13 +96,11 @@ export default function EditJournalEntry() {
     try {
       setSaving(true);
 
-      // Get the content directly from the editor instance
-      const editorContent = editorRef.current?.value || content;
       console.log("Saving content:", editorContent); // Debug log
 
       const updatedEntry = {
         title: title.trim() || "Untitled",
-        content: editorContent, // Use the editor content
+        content: editorContent,
         updated_at: new Date().toISOString()
       };
 
@@ -171,15 +171,9 @@ export default function EditJournalEntry() {
     events: {
       afterInit: function(editor) {
         editorRef.current = editor;
-        if (content) {
-          editor.value = content;
-        }
-        // Let the editor handle its own focus
-      },
-      change: function(editor) {
-        // Ensure content is updated in state when editor changes
-        if (mounted.current) {
-          setContent(editor.value);
+        // Set initial content from ref after editor is initialized
+        if (initialContentRef.current) {
+          editor.value = initialContentRef.current;
         }
       }
     }
@@ -278,8 +272,6 @@ export default function EditJournalEntry() {
             <div className="bg-white rounded-md text-black overflow-hidden shadow-md">
               <JoditEditor
                 key="edit-journal-editor"
-                value={content}
-                onChange={setContent}
                 config={editorConfig}
                 tabIndex={1}
                 ref={editorRef}
@@ -290,4 +282,4 @@ export default function EditJournalEntry() {
       </main>
     </div>
   );
-} 
+}

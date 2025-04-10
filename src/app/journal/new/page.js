@@ -13,7 +13,6 @@ const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 export default function NewJournalEntry() {
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
@@ -52,9 +51,12 @@ export default function NewJournalEntry() {
   }
 
   const handleSave = async () => {
+    // Get content directly from the editor
+    const editorContent = editorRef.current?.value || "";
+    
     // Check if content is empty or only contains whitespace/HTML tags
     const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = content;
+    tempDiv.innerHTML = editorContent;
     const textContent = tempDiv.textContent || tempDiv.innerText;
     
     if (!textContent || !textContent.trim()) {
@@ -70,14 +72,12 @@ export default function NewJournalEntry() {
     try {
       setLoading(true);
 
-      // Get the content directly from the editor instance
-      const editorContent = editorRef.current?.value || content;
       console.log("Saving content:", editorContent); // Debug log
 
       // Create the entry object with all necessary fields
       const newEntry = {
         title: title.trim() || "Untitled",
-        content: editorContent, // Use the editor content
+        content: editorContent,
         user_id: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -165,16 +165,6 @@ export default function NewJournalEntry() {
     events: {
       afterInit: function(editor) {
         editorRef.current = editor;
-        if (content) {
-          editor.value = content;
-        }
-        // Let the editor handle its own focus
-      },
-      change: function(editor) {
-        // Ensure content is updated in state when editor changes
-        if (mounted.current) {
-          setContent(editor.value);
-        }
       }
     }
   };
@@ -254,8 +244,6 @@ export default function NewJournalEntry() {
           <div className="bg-white rounded-md text-black overflow-hidden shadow-md">
             <JoditEditor
               key="new-journal-editor"
-              value={content}
-              onChange={setContent}
               config={editorConfig}
               tabIndex={1}
               ref={editorRef}
