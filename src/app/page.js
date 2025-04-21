@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import EntryTypeCard from "./components/EntryTypeCard";
 import HeroSection from "./components/HeroSection";
 import EntriesSection from "./components/EntriesSection";
@@ -13,6 +13,14 @@ import { FiMessageSquare, FiChevronRight } from "react-icons/fi";
 import emailjs from '@emailjs/browser';
 import Link from "next/link";
 import FeedbackSection from "./components/FeedbackSection";
+
+// Cache for entry counts
+const CACHE_TIME = 5 * 60 * 1000; // 5 minutes
+let countCache = {
+  data: null,
+  timestamp: null,
+  userId: null
+};
 
 export default function Home() {
   const [viewMode, setViewMode] = useState(1);
@@ -32,11 +40,40 @@ export default function Home() {
   const [feedbackError, setFeedbackError] = useState("");
   const [sendingFeedback, setSendingFeedback] = useState(false);
   
+  // Memoize the entry types to prevent unnecessary re-renders
+  const entryTypes = useMemo(() => [
+    {
+      title: "Journal",
+      description: "Write your thoughts with rich text formatting",
+      count: entryCounts.journal,
+      link: "/journal/new",
+      type: "journal"
+    },
+    {
+      title: "Diary",
+      description: "Record your daily experiences",
+      count: entryCounts.diary,
+      link: "/diary/new",
+      type: "diary"
+    }
+  ], [entryCounts.journal, entryCounts.diary]);
+
   useEffect(() => {
     async function loadEntryCounts() {
       setLoading(true);
       
       try {
+        // Check cache first
+        if (user && 
+            countCache.data && 
+            countCache.timestamp && 
+            Date.now() - countCache.timestamp < CACHE_TIME &&
+            countCache.userId === user.id) {
+          setEntryCounts(countCache.data);
+          setLoading(false);
+          return;
+        }
+
         let counts = {
           journal: 0,
           diary: 0,
@@ -47,30 +84,34 @@ export default function Home() {
         
         // If user is logged in, get counts from Supabase
         if (user) {
-          // Get journal entries
-          const journalEntries = await databaseUtils.getJournalEntries(user.id);
-          counts.journal = journalEntries.length;
-          
-          // Get diary entries
-          const diaryEntries = await databaseUtils.getDiaryEntries(user.id);
-          counts.diary = diaryEntries.length;
+          // Get counts in parallel
+          const [journalEntries, diaryEntries] = await Promise.all([
+            databaseUtils.getJournalEntries(user.id),
+            databaseUtils.getDiaryEntries(user.id)
+          ]);
+
+          counts = {
+            ...counts,
+            journal: journalEntries.length,
+            diary: diaryEntries.length
+          };
+
+          // Update cache
+          countCache = {
+            data: counts,
+            timestamp: Date.now(),
+            userId: user.id
+          };
         } 
         // Otherwise fall back to localStorage
         else if (typeof window !== "undefined") {
-          // Get counts from localStorage
           const journalEntries = JSON.parse(localStorage.getItem("journalEntries") || "[]");
           const diaryEntries = JSON.parse(localStorage.getItem("diaryEntries") || "[]");
-          const storyEntries = JSON.parse(localStorage.getItem("storyEntries") || "[]");
-          const songEntries = JSON.parse(localStorage.getItem("poemEntries") || "[]");
-          const quoteEntries = JSON.parse(localStorage.getItem("quoteEntries") || "[]");
           
-          // Update entry counts
           counts = {
+            ...counts,
             journal: journalEntries.length,
-            diary: diaryEntries.length,
-            stories: storyEntries.length,
-            songs: songEntries.length,
-            quotes: quoteEntries.length
+            diary: diaryEntries.length
           };
         }
         
@@ -84,50 +125,6 @@ export default function Home() {
     
     loadEntryCounts();
   }, [user]);
-  
-  // Define entryTypes
-  const entryTypes = [
-    {
-      title: "Journals",
-      icon: "📒",
-      description: "Write detailed journal entries with rich formatting",
-      path: "/journal",
-      bgColor: "bg-green-50",
-      entryCount: entryCounts.journal
-    },
-    {
-      title: "Diaries",
-      icon: "📓",
-      description: "Record your daily thoughts and experiences",
-      path: "/diary",
-      bgColor: "bg-blue-50",
-      entryCount: entryCounts.diary
-    },
-    {
-      title: "Original Stories",
-      icon: "✍️",
-      description: "Create and save your original stories",
-      path: "/stories",
-      bgColor: "bg-yellow-50",
-      entryCount: entryCounts.stories
-    },
-    {
-      title: "Songs/Poems",
-      icon: "🎵",
-      description: "Express yourself through songs and poetry",
-      path: "/songs",
-      bgColor: "bg-purple-50",
-      entryCount: entryCounts.songs
-    },
-    {
-      title: "Quotes/Thoughts",
-      icon: "💬",
-      description: "Save inspiring quotes and thoughts",
-      path: "/quotes",
-      bgColor: "bg-pink-50",
-      entryCount: entryCounts.quotes
-    }
-  ];
 
   // Define ContentSection component inside Home
   const ContentSection = () => {

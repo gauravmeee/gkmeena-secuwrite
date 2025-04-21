@@ -1,18 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { FiCalendar, FiBook, FiEdit3, FiClock, FiChevronRight } from "react-icons/fi";
 import CreateFirstEntryDialog from "./CreateFirstEntryDialog";
 import EntryTypeCard from "./EntryTypeCard";
 import { useAuth } from "../../context/AuthContext";
 import databaseUtils from "../../lib/database";
+import { stripHtml } from "../../utils/textUtils";
 
-// Function to strip HTML tags for preview
-const stripHtml = (html) => {
-  if (typeof window === 'undefined') return '';
-  if (!html) return '';
-  
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  return doc.body.textContent || '';
+// Cache for entries data
+const CACHE_TIME = 5 * 60 * 1000; // 5 minutes
+let entriesCache = {
+  data: null,
+  timestamp: null,
+  userId: null
 };
 
 export default function EntriesSection({ viewMode, entryTypes }) {
@@ -21,110 +21,77 @@ export default function EntriesSection({ viewMode, entryTypes }) {
   const [anyEntryExists, setAnyEntryExists] = useState(false);
   const { user, toggleAuthModal } = useAuth();
 
+  // Memoized function to format entry data
+  const formatEntry = useMemo(() => (entry, type) => {
+    const now = entry.created_at ? new Date(entry.created_at) : new Date(entry.timestamp || Date.now());
+    return {
+      ...entry,
+      type,
+      preview: stripHtml(entry.content).substring(0, 120) + (stripHtml(entry.content).length > 120 ? '...' : ''),
+      date: now.toLocaleDateString('en-US'),
+      time: now.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      })
+    };
+  }, []);
+
   useEffect(() => {
     async function loadEntries() {
       setLoading(true);
       try {
-        let journalEntries = [];
-        let diaryEntries = [];
-        
-        // If user is logged in, load from Supabase
-        if (user) {
-          // Get entries from Supabase
-          const cloudJournalEntries = await databaseUtils.getJournalEntries(user.id);
-          const cloudDiaryEntries = await databaseUtils.getDiaryEntries(user.id);
-          
-          journalEntries = cloudJournalEntries.map(entry => {
-            const now = entry.created_at ? new Date(entry.created_at) : new Date();
-            return {
-              ...entry,
-              type: "journal",
-              preview: stripHtml(entry.content).substring(0, 120) + (stripHtml(entry.content).length > 120 ? '...' : ''),
-              date: now.toLocaleDateString('en-US'),
-              time: now.toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit', 
-                hour12: true 
-              })
+        let allEntries = [];
+
+        // Check cache first
+        if (user && 
+            entriesCache.data && 
+            entriesCache.timestamp && 
+            Date.now() - entriesCache.timestamp < CACHE_TIME &&
+            entriesCache.userId === user.id) {
+          allEntries = entriesCache.data;
+        } else {
+          // If user is logged in, load from Supabase
+          if (user) {
+            // Get both types of entries in parallel
+            const [journalEntries, diaryEntries] = await Promise.all([
+              databaseUtils.getJournalEntries(user.id),
+              databaseUtils.getDiaryEntries(user.id)
+            ]);
+
+            allEntries = [
+              ...journalEntries.map(entry => formatEntry(entry, 'journal')),
+              ...diaryEntries.map(entry => formatEntry(entry, 'diary'))
+            ];
+
+            // Update cache
+            entriesCache = {
+              data: allEntries,
+              timestamp: Date.now(),
+              userId: user.id
             };
-          });
-          
-          diaryEntries = cloudDiaryEntries.map(entry => {
-            const now = entry.created_at ? new Date(entry.created_at) : new Date();
-            return {
-              ...entry,
-              type: "diary",
-              preview: stripHtml(entry.content).substring(0, 120) + (stripHtml(entry.content).length > 120 ? '...' : ''),
-              date: now.toLocaleDateString('en-US'),
-              time: now.toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit', 
-                hour12: true 
-              })
-            };
-          });
-        } 
-        // Otherwise fall back to localStorage
-        else if (typeof window !== "undefined") {
-          // Get entries from localStorage
-          journalEntries = JSON.parse(localStorage.getItem("journalEntries") || "[]")
-            .map(entry => {
-              const now = entry.timestamp ? new Date(entry.timestamp) : new Date();
-              return { 
-                ...entry, 
-                type: "journal",
-                preview: stripHtml(entry.content).substring(0, 120) + (stripHtml(entry.content).length > 120 ? '...' : ''),
-                date: now.toLocaleDateString('en-US'),
-                time: now.toLocaleTimeString('en-US', { 
-                  hour: 'numeric', 
-                  minute: '2-digit', 
-                  hour12: true 
-                })
-              };
-            });
-          
-          diaryEntries = JSON.parse(localStorage.getItem("diaryEntries") || "[]")
-          .map(entry => {
-            const now = entry.timestamp ? new Date(entry.timestamp) : new Date();
-            return {
-              ...entry,
-              type: "diary",
-              preview: stripHtml(entry.content).substring(0, 120) + (stripHtml(entry.content).length > 120 ? '...' : ''),
-              date: now.toLocaleDateString('en-US'),
-              time: now.toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit', 
-                hour12: true 
-              })
-            };
-          });
+          }
+          // Otherwise fall back to localStorage
+          else if (typeof window !== "undefined") {
+            const journalEntries = JSON.parse(localStorage.getItem("journalEntries") || "[]")
+              .map(entry => formatEntry(entry, 'journal'));
+            
+            const diaryEntries = JSON.parse(localStorage.getItem("diaryEntries") || "[]")
+              .map(entry => formatEntry(entry, 'diary'));
+
+            allEntries = [...journalEntries, ...diaryEntries];
+          }
         }
-        
-        // Combine all entries
-        const allEntries = [...journalEntries, ...diaryEntries];
-        
-        // Check if any entries exist
-        const hasAnyEntry = allEntries.length > 0;
-        setAnyEntryExists(hasAnyEntry);
-        
+
         // Sort by timestamp (newest first) and take only the 5 most recent entries
         const recentEntries = allEntries
           .sort((a, b) => {
-            // First try to sort by timestamp
-            if (a.timestamp && b.timestamp) {
-              return b.timestamp - a.timestamp;
-            }
-            // Fall back to created_at for Supabase entries
-            if (a.created_at && b.created_at) {
-              return new Date(b.created_at) - new Date(a.created_at);
-            }
-            // If all else fails, use timestamp or created_at, whichever is available
             const aTime = a.timestamp || new Date(a.created_at || 0).getTime();
             const bTime = b.timestamp || new Date(b.created_at || 0).getTime();
             return bTime - aTime;
           })
-          .slice(0, 6);
-        
+          .slice(0, 5);
+
         setEntries(recentEntries);
       } catch (error) {
         console.error("Error loading entries:", error);
@@ -134,7 +101,7 @@ export default function EntriesSection({ viewMode, entryTypes }) {
     }
     
     loadEntries();
-  }, [user]);
+  }, [user, formatEntry]);
 
   if (loading) {
     return (
@@ -184,16 +151,16 @@ export default function EntriesSection({ viewMode, entryTypes }) {
   }
   
   // Get the appropriate icon for each entry type
-//   const getEntryIcon = (type) => {
-//     switch(type) {
-//       case 'diary':
-//         return <FiBook className="text-blue-400" />;
-//       case 'journal':
-//         return <FiEdit3 className="text-green-400" />;
-//       default:
-//         return <FiCalendar className="text-primary" />;
-//     }
-//   };
+  const getEntryIcon = (type) => {
+    switch(type) {
+      case 'diary':
+        return <FiBook className="text-blue-400" />;
+      case 'journal':
+        return <FiEdit3 className="text-green-400" />;
+      default:
+        return <FiCalendar className="text-primary" />;
+    }
+  };
   
   // Get the appropriate link for each entry type
   const getEntryLink = (entry, index) => {
@@ -204,14 +171,7 @@ export default function EntriesSection({ viewMode, entryTypes }) {
     }
     
     // For localStorage entries, use the index
-    switch(entry.type) {
-      case 'diary':
-        return `/diary/${index}`;
-      case 'journal':
-        return `/journal/${index}`;
-      default:
-        return '#';
-    }
+    return `/${entry.type}/${index}`;
   };
   
   // Get the label for an entry type
