@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useAuth } from "../../../context/AuthContext";
 import { supabase } from "../../../lib/supabase";
 import dynamic from "next/dynamic";
+import databaseUtils from "../../../lib/database";
 
 // Dynamically import JoditEditor for SSR compatibility
 const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
@@ -72,41 +73,24 @@ export default function NewJournalEntry() {
     try {
       setLoading(true);
 
-      console.log("Saving content:", editorContent); // Debug log
-
       // Create the entry object with all necessary fields
       const newEntry = {
         title: title.trim() || "Untitled",
         content: editorContent,
-        user_id: user.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
         date: new Date().toLocaleDateString('en-US', {
           month: 'long',
           day: 'numeric',
           year: 'numeric'
-        }),
-        day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-        time: new Date().toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
         })
       };
 
-      // Insert into Supabase
-      const { data, error } = await supabase
-        .from('journal_entries')
-        .insert(newEntry)
-        .select('*')
-        .single();
+      // Use databaseUtils to create the entry (this will handle encryption)
+      const result = await databaseUtils.createJournalEntry(user.id, newEntry);
 
-      if (error) {
-        console.error("Error saving journal entry:", error);
-        throw error;
+      if (!result) {
+        throw new Error("Failed to save journal entry");
       }
 
-      console.log("Journal entry saved successfully:", data);
       router.push("/journal");
 
     } catch (error) {

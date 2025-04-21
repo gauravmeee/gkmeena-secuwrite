@@ -7,6 +7,7 @@ import { FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
 import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
 import { useAuth } from "../../../context/AuthContext";
 import { supabase } from "../../../lib/supabase";
+import { databaseUtils } from "../../../lib/databaseUtils";
 
 // Function to format the date
 const formatDateTime = (dateString) => {
@@ -52,22 +53,16 @@ export default function JournalEntryPage() {
       setLoading(true);
       try {
         if (user) {
-          const { data: entry, error } = await supabase
-            .from('journal_entries')
-            .select('*')
-            .eq('id', params.id)
-            .eq('user_id', user.id)
-            .single();
+          // Use databaseUtils to get the entry (this will handle decryption)
+          const entry = await databaseUtils.getJournalEntry(params.id, user.id);
 
-          if (error) {
-            throw error;
+          if (!entry) {
+            throw new Error("Entry not found");
           }
 
-          if (entry) {
-            setEntry(entry);
-            setLoading(false);
-            return;
-          }
+          setEntry(entry);
+          setLoading(false);
+          return;
         }
 
         // Fallback to localStorage

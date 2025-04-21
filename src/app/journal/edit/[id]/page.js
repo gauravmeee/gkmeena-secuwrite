@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useAuth } from "../../../../context/AuthContext";
 import { supabase } from "../../../../lib/supabase";
 import dynamic from "next/dynamic";
+import databaseUtils from "../../../../lib/database";
 
 // Dynamically import JoditEditor for SSR compatibility
 const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
@@ -41,27 +42,17 @@ export default function EditJournalEntry() {
       if (!user || !params.id) return;
 
       try {
-        // Fetch the entry directly from Supabase
-        const { data: entry, error } = await supabase
-          .from('journal_entries')
-          .select('*')
-          .eq('id', params.id)
-          .eq('user_id', user.id)
-          .single();
+        // Use databaseUtils to get the entry (this will handle decryption)
+        const entry = await databaseUtils.getJournalEntry(params.id, user.id);
 
-        if (error) {
-          throw error;
+        if (!entry) {
+          throw new Error("Entry not found");
         }
 
-        if (entry) {
-          setTitle(entry.title || "");
-          // Store the initial content in ref to set it once editor is initialized
-          initialContentRef.current = entry.content || "";
-          console.log("Loading content:", initialContentRef.current); // Debug log
-        } else {
-          console.error("Entry not found");
-          router.push("/journal");
-        }
+        setTitle(entry.title || "");
+        // Store the initial content in ref to set it once editor is initialized
+        initialContentRef.current = entry.content || "";
+        console.log("Loading content:", initialContentRef.current); // Debug log
       } catch (error) {
         console.error("Error loading entry:", error);
         alert("Could not load the entry. Please try again.");
@@ -96,22 +87,16 @@ export default function EditJournalEntry() {
     try {
       setSaving(true);
 
-      console.log("Saving content:", editorContent); // Debug log
-
       const updatedEntry = {
         title: title.trim() || "Untitled",
-        content: editorContent,
-        updated_at: new Date().toISOString()
+        content: editorContent
       };
 
-      const { error } = await supabase
-        .from('journal_entries')
-        .update(updatedEntry)
-        .eq('id', params.id)
-        .eq('user_id', user.id);
+      // Use databaseUtils to update the entry (this will handle encryption)
+      const result = await databaseUtils.updateJournalEntry(params.id, updatedEntry, user.id);
 
-      if (error) {
-        throw error;
+      if (!result) {
+        throw new Error("Failed to update journal entry");
       }
 
       router.push("/journal");

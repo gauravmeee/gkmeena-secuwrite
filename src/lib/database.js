@@ -299,52 +299,98 @@ export async function getJournalEntries(userId) {
     console.error('Error fetching journal entries:', error);
     return [];
   }
+
+  // Initialize encryption
+  const keyArray = await initializeEncryption();
+
+  // Decrypt entries
+  const decryptedEntries = await Promise.all(data.map(async (entry) => {
+    try {
+      return {
+        ...entry,
+        title: entry.title ? await decryptData(entry.title, keyArray) : '',
+        content: entry.content ? await decryptData(entry.content, keyArray) : ''
+      };
+    } catch (error) {
+      console.error('Error decrypting journal entry:', error);
+      return entry;
+    }
+  }));
   
-  return data || [];
+  return decryptedEntries;
 }
 
 export async function createJournalEntry(userId, entry) {
   if (!userId) return null;
   
-  const { data, error } = await supabase
-    .from('journal_entries')
-    .insert([{
-      user_id: userId,
-      title: entry.title,
-      content: entry.content,
-      date: entry.date,
-      created_at: new Date().toISOString()
-    }])
-    .select();
+  try {
+    // Initialize encryption
+    const keyArray = await initializeEncryption();
     
-  if (error) {
-    console.error('Error creating journal entry:', error);
+    // Encrypt title and content
+    const encryptedTitle = entry.title ? await encryptData(entry.title, keyArray) : null;
+    const encryptedContent = entry.content ? await encryptData(entry.content, keyArray) : null;
+    
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .insert([{
+        user_id: userId,
+        title: encryptedTitle,
+        content: encryptedContent,
+        date: entry.date,
+        created_at: new Date().toISOString()
+      }])
+      .select();
+      
+    if (error) {
+      console.error('Error creating journal entry:', error);
+      return null;
+    }
+    
+    return data?.[0] || null;
+  } catch (error) {
+    console.error('Error creating encrypted journal entry:', error);
     return null;
   }
-  
-  return data?.[0] || null;
 }
 
 export async function updateJournalEntry(entryId, updates, userId) {
   if (!userId) return null;
   
-  const { data, error } = await supabase
-    .from('journal_entries')
-    .update({
-      title: updates.title,
-      content: updates.content,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', entryId)
-    .eq('user_id', userId) // Security check
-    .select();
+  try {
+    // Initialize encryption
+    const keyArray = await initializeEncryption();
     
-  if (error) {
-    console.error('Error updating journal entry:', error);
+    // Encrypt updated fields
+    const updateData = {
+      updated_at: new Date().toISOString()
+    };
+    
+    if (updates.title !== undefined) {
+      updateData.title = updates.title ? await encryptData(updates.title, keyArray) : null;
+    }
+    
+    if (updates.content !== undefined) {
+      updateData.content = updates.content ? await encryptData(updates.content, keyArray) : null;
+    }
+    
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .update(updateData)
+      .eq('id', entryId)
+      .eq('user_id', userId)
+      .select();
+      
+    if (error) {
+      console.error('Error updating journal entry:', error);
+      return null;
+    }
+    
+    return data?.[0] || null;
+  } catch (error) {
+    console.error('Error updating encrypted journal entry:', error);
     return null;
   }
-  
-  return data?.[0] || null;
 }
 
 export async function deleteJournalEntry(entryId, userId) {
@@ -395,17 +441,20 @@ export async function getJournalEntry(entryId, userId) {
       return null;
     }
 
-    // Ensure content is properly returned
-    if (data && typeof data.content === 'string') {
+    // Initialize encryption and decrypt the entry
+    const keyArray = await initializeEncryption();
+    
+    if (data) {
       return {
         ...data,
-        content: data.content
+        title: data.title ? await decryptData(data.title, keyArray) : '',
+        content: data.content ? await decryptData(data.content, keyArray) : ''
       };
     }
 
-    return data;
+    return null;
   } catch (error) {
-    console.error('Error getting journal entry:', error);
+    console.error('Error getting encrypted journal entry:', error);
     return null;
   }
 }
