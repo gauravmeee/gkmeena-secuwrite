@@ -1,11 +1,15 @@
 # Unseen Stories Application
 
-A versatile writing platform for all your creative needs - from daily journal entries to poems, stories, and inspirational quotes.
+A versatile writing platform for all your creative needs - from daily journal entries to poems, stories, and inspirational quotes. Features end-to-end encryption to ensure your personal writings remain private and secure.
 
 ## Features
 
 - **Diary Entries**: Create and manage daily diary entries with a beautiful lined paper design
 - **Journal Entries**: Format your ideas with a rich text editor
+- **End-to-End Encryption**: All your entries are encrypted before being stored
+  - Client-side encryption ensures data privacy
+  - Recovery key system for backup and device synchronization
+  - Zero-knowledge encryption (server never sees unencrypted data)
 - **User Authentication**: Secure login and signup powered by Supabase
   - Email/Password authentication
   - Google OAuth integration
@@ -57,8 +61,14 @@ yarn install
        - `date` (text)
        - `created_at` (timestamp with timezone)
        - `updated_at` (timestamp with timezone)
-   - Enable Row Level Security (RLS) for both tables
-   - Create RLS policies to allow users to only access their own entries
+     - `user_encryption_keys` with columns:
+       - `id` (uuid, primary key)
+       - `user_id` (uuid, foreign key to auth.users)
+       - `encrypted_key` (text)
+       - `created_at` (timestamp with timezone)
+       - `updated_at` (timestamp with timezone)
+   - Enable Row Level Security (RLS) for all tables
+   - Create RLS policies to allow users to only access their own data
 
 4. Set up Google OAuth
    - Go to the [Google Cloud Console](https://console.cloud.google.com/)
@@ -92,13 +102,36 @@ yarn dev
 
 7. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result
 
-## Authentication Flow
+## Security Features
+
+### End-to-End Encryption
+
+The application implements client-side encryption to ensure your data remains private:
+
+1. **Key Generation**: Each user gets a unique encryption key when they first use the system
+2. **Recovery System**: 
+   - A recovery key is generated for backup purposes
+   - The recovery key is shown to the user ONCE and must be saved securely
+   - The encryption key is encrypted with the recovery key before being stored
+3. **Multi-Device Support**:
+   - Users can access their data from multiple devices using their recovery key
+   - The encryption key is stored locally for convenience
+4. **Zero-Knowledge Design**:
+   - All encryption/decryption happens in the browser
+   - The server never sees unencrypted data
+   - Even if the database is compromised, the data remains secure
+
+### Authentication Flow
 
 1. Users can sign up or log in using the authentication modal
    - Email/password authentication
    - Google OAuth
-2. After successful authentication, users can create and manage their diary and journal entries
-3. All entries are securely stored in the Supabase database
+2. After successful authentication:
+   - New users get a new encryption key and recovery key
+   - Existing users either:
+     - Use their locally stored encryption key
+     - Or recover their key using their recovery key
+3. All entries are encrypted before being stored in the database
 4. Users can only access their own entries through Row Level Security policies
 
 ## Deployment
