@@ -27,66 +27,6 @@ export default function DiaryPage() {
   const { user, toggleAuthModal } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(10);
-  const [imageUrls, setImageUrls] = useState({});
-
-  // Function to get signed URL for an image
-  const getSignedUrl = async (imageUrl) => {
-    if (!imageUrl || imageUrl.startsWith('data:image/')) {
-      return imageUrl;
-    }
-
-    try {
-      // Extract the path from the full URL if it's a full Supabase URL
-      let path = imageUrl;
-      if (imageUrl.includes('diary-images/')) {
-        path = imageUrl.split('diary-images/')[1];
-      }
-
-      console.log('Attempting to get signed URL for path:', path);
-
-      const { data, error } = await supabase
-        .storage
-        .from('diary-images')
-        .createSignedUrl(path, 3600);
-
-      if (error) {
-        console.error('Error getting signed URL:', error);
-        // If the error is "Object not found", try using the full URL
-        if (error.message.includes('Object not found')) {
-          console.log('Object not found, trying with full URL');
-          return imageUrl;
-        }
-        return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
-      }
-
-      if (!data?.signedUrl) {
-        console.error('No signed URL returned from Supabase');
-        return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
-      }
-
-      return data.signedUrl;
-    } catch (error) {
-      console.error('Error getting signed URL:', error);
-      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
-    }
-  };
-
-  // Load signed URLs for all images
-  useEffect(() => {
-    async function loadSignedUrls() {
-      if (!user) return;
-
-      const urls = {};
-      for (const entry of processedEntries) {
-        if (entry.image_url && !entry.image_url.startsWith('data:image/')) {
-          urls[entry.id] = await getSignedUrl(entry.image_url);
-        }
-      }
-      setImageUrls(urls);
-    }
-
-    loadSignedUrls();
-  }, [processedEntries, user]);
 
   useEffect(() => {
     async function loadEntries() {
@@ -126,11 +66,14 @@ export default function DiaryPage() {
           const day = now.getDate();
           const ordinalDay = day + getOrdinalSuffix(day);
 
+          // For image entries, use a placeholder preview text
+          const previewText = entry.entry_type === 'image' 
+            ? '[Image Entry]' 
+            : stripHtml(entry.content).substring(0, 150) + (stripHtml(entry.content).length > 150 ? "..." : "");
+
           return {
             ...entry,
-            preview:
-              stripHtml(entry.content).substring(0, 150) +
-              (stripHtml(entry.content).length > 150 ? "..." : ""),
+            preview: previewText,
             date:
               entry.date ||
               `${ordinalDay} ${now.toLocaleDateString("en-US", {
@@ -254,59 +197,6 @@ export default function DiaryPage() {
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entryId);
         
         if (isUuid) {
-          // Find the entry to get its image URL
-          const entryToDelete = processedEntries.find(e => e.id === entryId);
-          
-          // Delete image from Supabase storage if it exists
-          if (entryToDelete?.image_url && !entryToDelete.image_url.startsWith('data:image/')) {
-            try {
-              // Extract the path from the full URL if it's a full Supabase URL
-              let path = entryToDelete.image_url;
-              if (entryToDelete.image_url.includes('diary-images/')) {
-                path = entryToDelete.image_url.split('diary-images/')[1];
-              } else if (entryToDelete.image_url.includes('storage.googleapis.com')) {
-                // Extract path from full Supabase URL
-                const urlParts = entryToDelete.image_url.split('/');
-                path = urlParts.slice(urlParts.indexOf('diary-images') + 1).join('/');
-              }
-
-              console.log('Attempting to delete image from storage:', path);
-              
-              // First check if the file exists
-              const { data: exists } = await supabase
-                .storage
-                .from('diary-images')
-                .list(path.split('/').slice(0, -1).join('/'));
-
-              if (exists) {
-                const { error: storageError } = await supabase
-                  .storage
-                  .from('diary-images')
-                  .remove([path]);
-
-                if (storageError) {
-                  console.error('Error deleting image from storage:', storageError);
-                  // Try alternative path format
-                  const altPath = path.replace(/^[^/]+\//, '');
-                  console.log('Trying alternative path:', altPath);
-                  const { error: altError } = await supabase
-                    .storage
-                    .from('diary-images')
-                    .remove([altPath]);
-
-                  if (altError) {
-                    console.error('Error deleting image with alternative path:', altError);
-                  }
-                }
-              } else {
-                console.log('Image file not found in storage:', path);
-              }
-            } catch (error) {
-              console.error('Error deleting image from storage:', error);
-              // Continue with entry deletion even if image deletion fails
-            }
-          }
-
           // Delete entry from Supabase
           await databaseUtils.deleteDiaryEntry(entryId, user.id);
           
@@ -454,25 +344,19 @@ export default function DiaryPage() {
                           href={`/diary/${entry.id || entry.timestamp}`}
                           className="block"
                         >
-                          {entry.image_url ? (
+                          {entry.entry_type === 'image' ? (
                             <div className="space-y-4">
                               <img
-                                src={imageUrls[entry.id] || entry.image_url}
+                                src={entry.content}
                                 alt="Diary entry"
                                 className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"
                                 onError={(e) => {
                                   console.warn('Image loading error:', {
-                                    src: e.target.src,
-                                    originalUrl: entry.image_url
+                                    src: e.target.src
                                   });
                                   e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
                                 }}
                               />
-                              {entry.preview && (
-                                <p className="pt-2 font-handwriting text-xl">
-                                  {entry.preview}
-                                </p>
-                              )}
                             </div>
                           ) : (
                             <p className="pt-2 font-handwriting text-xl">

@@ -1,34 +1,13 @@
 import supabase from './supabase';
 
-// Helper function to upload image to Supabase storage
-async function uploadImage(file, userId) {
-  try {
-    if (!file) return null;
-
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}/${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    // Try to upload directly without checking bucket existence
-    const { error: uploadError, data } = await supabase.storage
-      .from('diary-images')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      console.error('Error uploading image:', uploadError);
-      return null;
-    }
-
-    // Get the public URL for the uploaded image
-    const { data: { publicUrl } } = supabase.storage
-      .from('diary-images')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
-  } catch (error) {
-    console.error('Error in uploadImage:', error);
-    return null;
-  }
+// Helper function to convert image file to base64
+async function imageToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
 }
 
 // Diary entry functions
@@ -51,15 +30,15 @@ export async function getDiaryEntries(userId) {
 
 export async function createDiaryEntry(userId, entry) {
   try {
-    let imageUrl = null;
+    let imageData = null;
     
-    // If there's an image file, upload it first
+    // If there's an image file, convert it to base64
     if (entry.imageFile) {
       try {
-        imageUrl = await uploadImage(entry.imageFile, userId);
+        imageData = await imageToBase64(entry.imageFile);
       } catch (error) {
-        console.error("Error uploading image:", error);
-        // Continue without the image if upload fails
+        console.error("Error converting image to base64:", error);
+        // Continue without the image if conversion fails
       }
     }
 
@@ -78,15 +57,13 @@ export async function createDiaryEntry(userId, entry) {
         minute: '2-digit', 
         hour12: true 
       }),
-      has_manual_title: entry.hasManualTitle || false
+      has_manual_title: entry.hasManualTitle || false,
+      entry_type: imageData ? 'image' : 'text'
     };
 
-    // Only add image_url and entry_type if they exist in the schema
-    if (imageUrl || entry.imageUrl) {
-      entryData.image_url = imageUrl || entry.imageUrl;
-      entryData.entry_type = 'image';
-    } else {
-      entryData.entry_type = 'text';
+    // If we have image data, store it in the content field
+    if (imageData) {
+      entryData.content = imageData;
     }
 
     // Insert the entry
@@ -137,22 +114,21 @@ export async function updateDiaryEntry(entryId, updates, userId) {
 
     console.log("Found existing entry:", existingEntry);
 
-    let imageUrl = existingEntry.image_url;
+    let imageData = null;
 
-    // If there's a new image file, upload it
+    // If there's a new image file, convert it to base64
     if (updates.imageFile) {
-      imageUrl = await uploadImage(updates.imageFile, userId);
+      imageData = await imageToBase64(updates.imageFile);
     }
 
     // Prepare the update data
     const updateData = {
       title: updates.title || '',
-      content: updates.content || '',
+      content: imageData || updates.content || existingEntry.content || '',
       date: updates.date || existingEntry.date || '',
       time: updates.time || existingEntry.time || '',
       has_manual_title: updates.hasManualTitle || false,
-      image_url: imageUrl || updates.imageUrl || existingEntry.image_url,
-      entry_type: updates.imageFile || updates.imageUrl ? 'image' : (updates.content ? 'text' : existingEntry.entry_type),
+      entry_type: imageData ? 'image' : (updates.content ? 'text' : existingEntry.entry_type),
       updated_at: new Date().toISOString()
     };
 

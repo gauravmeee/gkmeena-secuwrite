@@ -90,7 +90,7 @@ export default function DiaryEntryPage() {
               
               if (foundEntry) {
                 // Set entry type based on content
-                setEntryType(foundEntry.image_url ? 'image' : 'text');
+                setEntryType(foundEntry.entry_type || 'text');
                 // Add missing day field if needed
                 if (!foundEntry.day && foundEntry.date) {
                   // Try to reconstruct the day from the date
@@ -163,6 +163,7 @@ export default function DiaryEntryPage() {
               }
             }
             setEntry(entries[entryIndex]);
+            setEntryType(entries[entryIndex].entry_type || 'text');
           }
         }
       } catch (error) {
@@ -178,7 +179,7 @@ export default function DiaryEntryPage() {
   useEffect(() => {
     // Update entryType when entry changes
     if (entry) {
-      setEntryType(entry.image_url ? 'image' : 'text');
+      setEntryType(entry.entry_type || 'text');
     }
   }, [entry]);
 
@@ -368,25 +369,19 @@ export default function DiaryEntryPage() {
             <div className="font-serif text-lg text-gray-800">
               <div className="mt-10 font-handwriting text-xl">Dear Diary,</div>
               
-              {entry.image_url ? (
+              {entryType === 'image' ? (
                 <div className="mt-6">
                   <img
-                    src={imageUrl || entry?.image_url}
+                    src={entry.content}
                     alt="Diary entry"
                     className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
                     onError={(e) => {
                       console.warn('Image loading error:', {
-                        src: e.target.src,
-                        originalUrl: entry?.image_url
+                        src: e.target.src
                       });
                       e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
                     }}
                   />
-                  {entry.content && (
-                    <div className="mt-6 whitespace-pre-wrap line-height-loose font-handwriting text-xl">
-                      {entry.content}
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div className="whitespace-pre-wrap line-height-loose font-handwriting text-xl">

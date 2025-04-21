@@ -49,13 +49,15 @@ export default function EditDiaryEntry() {
             if (isUuid) {
               // Fetch all entries and find the one with matching ID
               const entries = await databaseUtils.getDiaryEntries(user.id);
-              console.log("All Supabase entries:", entries);
               const foundEntry = entries.find(e => e.id === params.id);
               
               if (foundEntry) {
-                console.log("Found Supabase entry:", foundEntry);
+                // Set entry type and image preview if it's an image entry
+                setEntryType(foundEntry.entry_type || 'text');
+                if (foundEntry.entry_type === 'image') {
+                  setImagePreview(foundEntry.content);
+                }
                 
-                // Extract fields using Supabase column names
                 setTitle(foundEntry.title || "");
                 setContent(foundEntry.content || "");
                 setOriginalDate(foundEntry.date || "");
@@ -64,29 +66,6 @@ export default function EditDiaryEntry() {
                 setEntryId(foundEntry.id);
                 setHasManualTitle(foundEntry.has_manual_title || false);
                 setIsCloudEntry(true);
-                
-                // Handle image entry
-                if (foundEntry.image_url) {
-                  console.log("Found image URL:", foundEntry.image_url);
-                  const imageUrl = foundEntry.image_url;
-                  
-                  // If the image URL is a base64 string, use it directly
-                  if (imageUrl.startsWith('data:image/')) {
-                    setImagePreview(imageUrl);
-                  } 
-                  // If it's a Supabase storage URL, construct the full URL
-                  else if (imageUrl.startsWith('diary-images/')) {
-                    const { data: { publicUrl } } = supabase
-                      .storage
-                      .from('diary-images')
-                      .getPublicUrl(imageUrl);
-                    setImagePreview(publicUrl);
-                  }
-                  setEntryType('image');
-                } else {
-                  setEntryType('text');
-                }
-                
                 setLoading(false);
                 return;
               }
@@ -98,66 +77,29 @@ export default function EditDiaryEntry() {
         
         // Fall back to localStorage
         if (typeof window !== "undefined") {
-          try {
-            // Get all entries
-            const entries = JSON.parse(localStorage.getItem("diaryEntries") || "[]");
+          // Get all entries
+          const entries = JSON.parse(localStorage.getItem("diaryEntries") || "[]");
+          
+          // Find the entry with the matching id
+          const entryIndex = parseInt(params.id);
+          if (entryIndex >= 0 && entryIndex < entries.length) {
+            const entry = entries[entryIndex];
+            setTitle(entry.title || "");
+            setContent(entry.content || "");
+            setOriginalDate(entry.date || "");
+            setOriginalDay(entry.day || "");
+            setOriginalTime(entry.time || "");
+            setOriginalTimestamp(entry.timestamp);
+            setHasManualTitle(entry.hasManualTitle || false);
+            setIsCloudEntry(false);
             
-            // Find the entry with the matching id
-            const entryIndex = parseInt(params.id);
-            if (entryIndex >= 0 && entryIndex < entries.length) {
-              const entry = entries[entryIndex];
-              setTitle(entry.title || "");
-              setContent(entry.content || "");
-              setOriginalDate(entry.date || "");
-              setOriginalDay(entry.day || "");
-              setOriginalTime(entry.time || "");
-              setOriginalTimestamp(entry.timestamp);
-              setHasManualTitle(entry.hasManualTitle || false);
-              setIsCloudEntry(false);
-              
-              // Handle image entry in localStorage
-              if (entry.imageUrl) {
-                console.log("Found localStorage image:", entry.imageUrl);
-                setImagePreview(entry.imageUrl);
-                setEntryType('image');
-              } else {
-                setEntryType('text');
-              }
-              
-              // Add missing day field if needed
-              if (!entry.day && entry.date) {
-                try {
-                  // Parse date like "23rd March 2025"
-                  const dateParts = entry.date.split(' ');
-                  if (dateParts.length >= 3) {
-                    const day = parseInt(dateParts[0]);
-                    const month = dateParts[1];
-                    const year = parseInt(dateParts[2]);
-                    
-                    if (!isNaN(day) && !isNaN(year)) {
-                      const monthMap = {
-                        'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5,
-                        'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11
-                      };
-                      
-                      if (month in monthMap) {
-                        const date = new Date(year, monthMap[month], day);
-                        const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
-                        setOriginalDay(weekday);
-                        
-                        // Also update the entry in localStorage to include day
-                        entries[entryIndex].day = weekday;
-                        localStorage.setItem("diaryEntries", JSON.stringify(entries));
-                      }
-                    }
-                  }
-                } catch (e) {
-                  console.error("Error reconstructing day:", e);
-                }
-              }
+            // Handle image entry in localStorage
+            if (entry.entry_type === 'image') {
+              setImagePreview(entry.content);
+              setEntryType('image');
+            } else {
+              setEntryType('text');
             }
-          } catch (error) {
-            console.error("Error loading from localStorage:", error);
           }
         }
       } catch (error) {
