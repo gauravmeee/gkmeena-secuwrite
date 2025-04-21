@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { FiSave, FiArrowLeft, FiUpload, FiX } from "react-icons/fi";
+import { FiSave, FiArrowLeft, FiUpload, FiX, FiImage, FiFileText } from "react-icons/fi";
 import Link from "next/link";
 import { useAuth } from "../../../context/AuthContext";
 import databaseUtils from "../../../lib/database";
@@ -27,7 +27,7 @@ function NewDiaryEntryContent() {
       router.push('/');
     }
 
-    // If it's an image entry from URL parameter, show file picker immediately
+    // Update entry type based on URL parameter
     const typeFromUrl = searchParams.get('type');
     if (typeFromUrl === 'image') {
       setEntryType('image');
@@ -35,6 +35,8 @@ function NewDiaryEntryContent() {
       if (input) {
         input.click();
       }
+    } else {
+      setEntryType('text');
     }
   }, [user, router, searchParams]);
 
@@ -205,46 +207,65 @@ function NewDiaryEntryContent() {
             <span>Back to Diary</span>
           </Link>
           
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className={`flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg transition-all duration-300 ${
-              loading
-                ? "bg-opacity-70 cursor-not-allowed"
-                : "hover:bg-primary/90 cursor-pointer"
-            }`}
-          >
-            {loading ? (
-              <div className="flex items-center gap-2">
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8H4z"
-                  ></path>
-                </svg>
-                <span className="hidden sm:inline">Saving...</span>
-              </div>
-            ) : (
-              <>
-                <FiSave size={18} />
-                <span className="hidden sm:inline">Save Entry</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-4">
+            <Link
+              href={entryType === 'text' ? '/diary/new?type=image' : '/diary/new'}
+              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg"
+            >
+              {entryType === 'text' ? (
+                <>
+                  <FiImage size={18} />
+                  <span>Image Entry</span>
+                </>
+              ) : (
+                <>
+                  <FiFileText size={18} />
+                  <span>Text Entry</span>
+                </>
+              )}
+            </Link>
+            
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className={`flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg transition-all duration-300 ${
+                loading
+                  ? "bg-opacity-70 cursor-not-allowed"
+                  : "hover:bg-primary/90 cursor-pointer"
+              }`}
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    ></path>
+                  </svg>
+                  <span className="hidden sm:inline">Saving...</span>
+                </div>
+              ) : (
+                <>
+                  <FiSave size={18} />
+                  <span className="hidden sm:inline">Save Entry</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
         
         <div className={`bg-white rounded-xl shadow-sm border border-gray-800 overflow-hidden ${entryType === 'image' ? 'pb-6' : ''}`}>
