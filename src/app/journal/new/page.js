@@ -16,10 +16,12 @@ export default function NewJournalEntry() {
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
   const mounted = useRef(false);
   const editorRef = useRef(null);
+  const draftTimerRef = useRef(null);
 
   // Update authentication check
   useEffect(() => {
@@ -40,6 +42,100 @@ export default function NewJournalEntry() {
       mounted.current = false;
     };
   }, []);
+
+  // Load draft content when component mounts
+  useEffect(() => {
+    if (user) {
+      const drafts = JSON.parse(localStorage.getItem('journal_drafts') || '[]');
+      // Get the most recent draft that was being edited
+      const currentDraft = drafts.find(d => d.isCurrentlyEditing);
+      
+      if (currentDraft) {
+        setTitle(currentDraft.title || '');
+        if (editorRef.current) {
+          editorRef.current.value = currentDraft.content || '';
+        }
+      }
+    }
+  }, [user]);
+
+  // Save draft while typing
+  useEffect(() => {
+    const saveDraft = () => {
+      if (!user || !editorRef.current) return;
+
+      const content = editorRef.current.value;
+      const drafts = JSON.parse(localStorage.getItem('journal_drafts') || '[]');
+      
+      // Find currently editing draft
+      const currentDraft = drafts.find(d => d.isCurrentlyEditing);
+      
+      if (currentDraft) {
+        // Update existing draft
+        const updatedDrafts = drafts.map(d => {
+          if (d.isCurrentlyEditing) {
+            return {
+              ...d,
+              title: title || "",
+              content: content || "",
+              timestamp: new Date().toISOString()
+            };
+          }
+          return d;
+        });
+        localStorage.setItem('journal_drafts', JSON.stringify(updatedDrafts));
+      } else {
+        // Create new draft
+        const newDraft = {
+          userId: user.id,
+          title: title || "",
+          content: content || "",
+          timestamp: new Date().toISOString(),
+          isCurrentlyEditing: true
+        };
+        
+        // Remove editing flag from all other drafts
+        const otherDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
+        localStorage.setItem('journal_drafts', JSON.stringify([newDraft, ...otherDrafts]));
+      }
+      setDraftSaved(true);
+      setTimeout(() => setDraftSaved(false), 2000);
+    };
+
+    if (draftTimerRef.current) {
+      clearTimeout(draftTimerRef.current);
+    }
+
+    draftTimerRef.current = setTimeout(saveDraft, 1000);
+
+    return () => {
+      if (draftTimerRef.current) {
+        clearTimeout(draftTimerRef.current);
+      }
+    };
+  }, [title, user]);
+
+  // Clear draft when component unmounts
+  useEffect(() => {
+    return () => {
+      if (user) {
+        const drafts = JSON.parse(localStorage.getItem('journal_drafts') || '[]');
+        const updatedDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
+        localStorage.setItem('journal_drafts', JSON.stringify(updatedDrafts));
+      }
+    };
+  }, [user]);
+
+  const clearDraft = () => {
+    if (user) {
+      const drafts = JSON.parse(localStorage.getItem('journal_drafts') || '[]');
+      const currentDraft = drafts.find(d => d.isCurrentlyEditing);
+      if (!currentDraft) return;
+
+      const filteredDrafts = drafts.filter(d => !d.isCurrentlyEditing);
+      localStorage.setItem('journal_drafts', JSON.stringify(filteredDrafts));
+    }
+  };
 
   // Show loading state while checking auth
   if (!authChecked || !user) {
@@ -98,6 +194,8 @@ export default function NewJournalEntry() {
         throw new Error("Failed to save journal entry");
       }
 
+      // Clear the draft after successful save
+      clearDraft();
       router.push("/journal");
 
     } catch (error) {
@@ -165,10 +263,17 @@ export default function NewJournalEntry() {
       <main className="max-w-6xl mx-auto pt-24 px-4 pb-20">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-6">
-          <Link href="/journal" className="flex items-center gap-2 text-primary hover:underline">
-            <FiArrowLeft size={18} />
-            <span>Back to Journal</span>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/journal" className="flex items-center gap-2 text-primary hover:underline">
+              <FiArrowLeft size={18} />
+              <span>Back to Journal</span>
+            </Link>
+            {draftSaved && (
+              <span className="text-sm text-gray-400">
+                Draft saved
+              </span>
+            )}
+          </div>
 
           <button
             onClick={handleSave}

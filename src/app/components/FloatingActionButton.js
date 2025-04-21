@@ -33,9 +33,9 @@ export default function FloatingActionButton() {
   const entryTypes = [
     { name: "Diary", icon: <FiEdit />, path: "/diary/new" },
     { name: "Journal", icon: <FiBook />, path: "/journal/new" },
-    { name: "Story", icon: <FiFeather />, path: "/stories/new" },
-    { name: "Song/Poem", icon: <FiMusic />, path: "/songs/new" },
-    { name: "Quote/Thought", icon: <FiMessageCircle />, path: "/quotes/new" },
+    // { name: "Story", icon: <FiFeather />, path: "/stories/new" },
+    // { name: "Song/Poem", icon: <FiMusic />, path: "/songs/new" },
+    // { name: "Quote/Thought", icon: <FiMessageCircle />, path: "/quotes/new" },
   ];
   
   return (

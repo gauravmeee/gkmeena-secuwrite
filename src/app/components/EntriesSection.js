@@ -27,7 +27,9 @@ export default function EntriesSection({ viewMode, entryTypes }) {
     return {
       ...entry,
       type,
-      preview: stripHtml(entry.content).substring(0, 120) + (stripHtml(entry.content).length > 120 ? '...' : ''),
+      preview: type === 'diary' && entry.entry_type === 'image' 
+        ? '[Image]' 
+        : stripHtml(entry.content).substring(0, 120) + (stripHtml(entry.content).length > 120 ? '...' : ''),
       date: now.toLocaleDateString('en-US'),
       time: now.toLocaleTimeString('en-US', { 
         hour: 'numeric', 
@@ -83,14 +85,14 @@ export default function EntriesSection({ viewMode, entryTypes }) {
           }
         }
 
-        // Sort by timestamp (newest first) and take only the 5 most recent entries
+        // Sort by timestamp (newest first) and take only the 6 most recent entries
         const recentEntries = allEntries
           .sort((a, b) => {
             const aTime = a.timestamp || new Date(a.created_at || 0).getTime();
             const bTime = b.timestamp || new Date(b.created_at || 0).getTime();
             return bTime - aTime;
           })
-          .slice(0, 5);
+          .slice(0, 6);
 
         setEntries(recentEntries);
       } catch (error) {

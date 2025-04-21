@@ -34,15 +34,6 @@ export default function CreateFirstEntryDialog() {
   
   const entryOptions = [
     {
-      title: "Journal Entry",
-      description: "Write a detailed journal entry with rich formatting",
-      path: "/journal/new",
-      icon: "📒",
-      bgColor: "bg-primary/10",
-      borderColor: "border-primary/30",
-      hoverBg: "group-hover:bg-primary/20"
-    },
-    {
       title: "Diary Entry",
       description: "Record your daily thoughts and experiences",
       path: "/diary/new",
@@ -52,32 +43,41 @@ export default function CreateFirstEntryDialog() {
       hoverBg: "group-hover:bg-secondary/20"
     },
     {
-      title: "Story",
-      description: "Create an original story",
-      path: "/stories/new",
-      icon: "✍️",
-      bgColor: "bg-accent/10",
-      borderColor: "border-accent/30",
-      hoverBg: "group-hover:bg-accent/20"
+      title: "Journal Entry",
+      description: "Write a detailed journal entry with rich formatting",
+      path: "/journal/new",
+      icon: "📒",
+      bgColor: "bg-primary/10",
+      borderColor: "border-primary/30",
+      hoverBg: "group-hover:bg-primary/20"
     },
-    {
-      title: "Song/Poem",
-      description: "Express yourself through songs and poetry",
-      path: "/songs/new",
-      icon: "🎵",
-      bgColor: "bg-secondary/10",
-      borderColor: "border-secondary/30",
-      hoverBg: "group-hover:bg-secondary/20"
-    },
-    {
-      title: "Quote/Thought",
-      description: "Save an inspiring quote or thought",
-      path: "/quotes/new",
-      icon: "💬",
-      bgColor: "bg-accent/10",
-      borderColor: "border-accent/30",
-      hoverBg: "group-hover:bg-accent/20"
-    }
+    // {
+    //   title: "Story",
+    //   description: "Create an original story",
+    //   path: "/stories/new",
+    //   icon: "✍️",
+    //   bgColor: "bg-accent/10",
+    //   borderColor: "border-accent/30",
+    //   hoverBg: "group-hover:bg-accent/20"
+    // },
+    // {
+    //   title: "Song/Poem",
+    //   description: "Express yourself through songs and poetry",
+    //   path: "/songs/new",
+    //   icon: "🎵",
+    //   bgColor: "bg-secondary/10",
+    //   borderColor: "border-secondary/30",
+    //   hoverBg: "group-hover:bg-secondary/20"
+    // },
+    // {
+    //   title: "Quote/Thought",
+    //   description: "Save an inspiring quote or thought",
+    //   path: "/quotes/new",
+    //   icon: "💬",
+    //   bgColor: "bg-accent/10",
+    //   borderColor: "border-accent/30",
+    //   hoverBg: "group-hover:bg-accent/20"
+    // }
   ];
   
   if (!user) {

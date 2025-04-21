@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import databaseUtils from "../../lib/database";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import NoEntriesState from "../components/NoEntriesState";
+import { useRouter } from "next/navigation";
 
 const stripHtml = (html) => {
   if (typeof window === "undefined") return "";
@@ -96,6 +97,45 @@ export default function JournalPage() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { user, toggleAuthModal } = useAuth();
+  const [entries, setEntries] = useState([]);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [draftsCount, setDraftsCount] = useState(0);
+  const router = useRouter();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAuthChecked(true);
+      if (!user) {
+        router.push('/');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [user, router]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) return;
+
+      try {
+        // Load journal entries
+        const journalEntries = await databaseUtils.getJournalEntries(user.id);
+        setEntries(journalEntries || []);
+
+        // Count drafts
+        const drafts = JSON.parse(localStorage.getItem('journal_drafts') || '[]');
+        const userDrafts = drafts.filter(draft => draft.userId === user.id);
+        setDraftsCount(userDrafts.length);
+
+      } catch (error) {
+        console.error("Error loading journal entries:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user]);
 
   useEffect(() => {
     async function loadEntries() {
@@ -193,47 +233,27 @@ export default function JournalPage() {
       />
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">My Journal</h1>
-
-          <div className="flex gap-2">
-            {user && processedEntries.length > 0 && (
-              <>
-                <button
-                  onClick={handleToggleSelectionMode}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors cursor-pointer ${
-                    isSelectionMode
-                      ? "bg-gray-600 text-white hover:bg-gray-700"
-                      : "bg-red-600 text-white hover:bg-red-700"
-                  }`}
-                >
-                  {isSelectionMode ? <FiX size={18} /> : <FiTrash2 size={18} />}
-                  <span className="hidden sm:inline">
-                    {isSelectionMode ? "Cancel" : "Delete Multiple"}
-                  </span>
-                </button>
-
-                {isSelectionMode && selectedEntries.size > 0 && (
-                  <button
-                    onClick={handleDeleteSelected}
-                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors cursor-pointer"
-                  >
-                    <FiTrash2 size={18} />
-                    <span className="hidden sm:inline">Delete</span> ({selectedEntries.size})
-                  </button>
-                )}
-              </>
-            )}
-            
-            {user && (
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold text-white">My Journal</h1>
+            {draftsCount > 0 && (
               <Link
-                href="/journal/new"
-                className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+                href="/journal/draft"
+                className="text-red-500 hover:text-red-400 transition-colors flex items-center gap-1"
               >
-                <FiPlus size={16} />
-                <span className="hidden sm:inline">New Entry</span>
+                <span>Drafts</span>
+                <span className="bg-red-100 text-red-500 px-2 py-0.5 rounded text-sm">
+                  {draftsCount}
+                </span>
               </Link>
             )}
           </div>
+          <Link
+            href="/journal/new"
+            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-all"
+          >
+            <FiPlus size={18} />
+            <span className="hidden sm:inline">New Entry</span>
+          </Link>
         </div>
 
         {processedEntries.length === 0 ? (
