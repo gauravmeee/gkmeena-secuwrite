@@ -27,6 +27,7 @@ export default function DiaryPage() {
   const { user, toggleAuthModal } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(10);
+  const [draftsCount, setDraftsCount] = useState(0);
 
   useEffect(() => {
     async function loadEntries() {
@@ -38,6 +39,8 @@ export default function DiaryPage() {
         if (user) {
           const cloudEntries = await databaseUtils.getDiaryEntries(user.id);
           entries = cloudEntries;
+          
+          // We don't merge drafts into the main list anymore
         }
         // Otherwise fall back to localStorage
         else if (typeof window !== "undefined") {
@@ -92,7 +95,14 @@ export default function DiaryPage() {
           };
         });
 
-        setProcessedEntries(processed);
+        // Sort entries by timestamp, newest first
+        const sortedEntries = processed.sort((a, b) => {
+          const aTime = a.timestamp || new Date(a.created_at || 0).getTime();
+          const bTime = b.timestamp || new Date(b.created_at || 0).getTime();
+          return bTime - aTime;
+        });
+
+        setProcessedEntries(sortedEntries);
       } catch (error) {
         console.error("Error loading entries:", error);
       } finally {
@@ -101,6 +111,13 @@ export default function DiaryPage() {
     }
 
     loadEntries();
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
+      setDraftsCount(drafts.length);
+    }
   }, [user]);
 
   const handleToggleSelectionMode = () => {
@@ -238,7 +255,20 @@ export default function DiaryPage() {
       />
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">My Diary</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold">My Diary</h1>
+            {user && draftsCount > 0 && (
+              <Link
+                href="/diary/draft"
+                className="text-red-500 hover:text-red-400 transition-colors flex items-center gap-1"
+              >
+                <span>Drafts</span>
+                <span className="bg-red-100 text-red-500 px-2 py-0.5 rounded text-sm">
+                  {draftsCount}
+                </span>
+              </Link>
+            )}
+          </div>
 
           <div className="flex gap-2">
             {user && processedEntries.length > 0 && (
@@ -324,11 +354,22 @@ export default function DiaryPage() {
                               className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
                             />
                           )}
-                          <Link href={`/diary/${entry.id}`}>
-                            <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
-                              {entry.title}
-                            </h2>
-                          </Link>
+                          {entry.isDraft ? (
+                            <Link href="/diary/draft/edit">
+                              <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
+                                {entry.title || "Untitled Draft"}
+                                <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
+                                  Draft
+                                </span>
+                              </h2>
+                            </Link>
+                          ) : (
+                            <Link href={`/diary/${entry.id}`}>
+                              <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
+                                {entry.title}
+                              </h2>
+                            </Link>
+                          )}
                         </div>
 
                         <div className="flex items-center justify-between mb-2">

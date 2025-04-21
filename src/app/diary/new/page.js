@@ -22,6 +22,104 @@ function NewDiaryEntryContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   
+  // Load draft content when component mounts
+  useEffect(() => {
+    if (user) {
+      const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
+      // Get the most recent draft that was being edited
+      const currentDraft = drafts.find(d => d.isCurrentlyEditing);
+      
+      if (currentDraft) {
+        setTitle(currentDraft.title || "");
+        setContent(currentDraft.content || "");
+        setEntryType(currentDraft.entry_type || 'text');
+        if (currentDraft.imagePreview) {
+          setImagePreview(currentDraft.imagePreview);
+        }
+      }
+    }
+  }, [user]);
+
+  // Save draft content when typing
+  useEffect(() => {
+    if (user && entryType === 'text') {
+      const saveTimer = setTimeout(() => {
+        if (title || content) {
+          // Get existing drafts
+          const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
+          
+          // Find currently editing draft
+          const currentDraft = drafts.find(d => d.isCurrentlyEditing);
+          
+          if (currentDraft) {
+            // Update existing draft
+            const updatedDrafts = drafts.map(d => {
+              if (d.isCurrentlyEditing) {
+                return {
+                  ...d,
+                  title: title || "",
+                  content: content || "",
+                  lastModified: new Date().getTime()
+                };
+              }
+              return { ...d, isCurrentlyEditing: false };
+            });
+            localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+          } else {
+            // Create new draft only if we don't have one being edited
+            const newDraft = {
+              title: title || "",
+              content: content || "",
+              timestamp: new Date().getTime(),
+              lastModified: new Date().getTime(),
+              isDraft: true,
+              isCurrentlyEditing: true,
+              date: new Date().toLocaleDateString('en-US', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              }),
+              day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+              time: new Date().toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+              }),
+              user_id: user.id,
+              entry_type: 'text'
+            };
+
+            // Remove editing flag from all other drafts
+            const otherDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
+            localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify([newDraft, ...otherDrafts]));
+          }
+        }
+      }, 1000);
+
+      return () => clearTimeout(saveTimer);
+    }
+  }, [title, content, user, entryType]);
+
+  // Clear draft after successful save
+  const clearDraft = () => {
+    if (user) {
+      const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
+      const updatedDrafts = drafts.filter(draft => !draft.isCurrentlyEditing);
+      localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+    }
+  };
+
+  // Clear the currently editing flag when leaving the page
+  useEffect(() => {
+    return () => {
+      if (user) {
+        const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
+        const updatedDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
+        localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+      }
+    };
+  }, [user]);
+
   // Update authentication check
   useEffect(() => {
     // Wait a bit to ensure auth is initialized
@@ -180,6 +278,7 @@ function NewDiaryEntryContent() {
         
         if (!directError && directData && directData.length > 0) {
           console.log("Direct insert worked! Redirecting...");
+          clearDraft(); // Clear draft after successful save
           router.push("/diary");
           return;
         }
@@ -189,6 +288,7 @@ function NewDiaryEntryContent() {
         const result = await databaseUtils.createDiaryEntry(user.id, newEntry);
         
         if (result) {
+          clearDraft(); // Clear draft after successful save
           router.push("/diary");
         } else {
           throw new Error("Failed to save entry");
@@ -209,10 +309,15 @@ function NewDiaryEntryContent() {
     <div className="min-h-screen bg-black text-white">
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
-          <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
-            <FiArrowLeft size={16} />
-            <span>Back to Diary</span>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
+              <FiArrowLeft size={16} />
+              <span>Back to Diary</span>
+            </Link>
+            {(title || content) && entryType === 'text' && (
+              <span className="text-gray-400 text-sm">Draft saved</span>
+            )}
+          </div>
           
           <div className="flex items-center gap-4">
             <Link

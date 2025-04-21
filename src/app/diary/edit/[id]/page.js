@@ -28,6 +28,41 @@ export default function EditDiaryEntry() {
   const params = useParams();
   const { user } = useAuth();
   
+  // Load draft content when component mounts
+  useEffect(() => {
+    if (user && params.id) {
+      const draftKey = `diary_edit_draft_${user.id}_${params.id}`;
+      const draftTitle = localStorage.getItem(`${draftKey}_title`);
+      const draftContent = localStorage.getItem(`${draftKey}_content`);
+      if (draftTitle) setTitle(draftTitle);
+      if (draftContent) setContent(draftContent);
+    }
+  }, [user, params.id]);
+
+  // Save draft content when typing
+  useEffect(() => {
+    if (user && params.id && entryType === 'text') {
+      const draftKey = `diary_edit_draft_${user.id}_${params.id}`;
+      const saveTimer = setTimeout(() => {
+        if (title || content) {
+          localStorage.setItem(`${draftKey}_title`, title);
+          localStorage.setItem(`${draftKey}_content`, content);
+        }
+      }, 1000); // Save after 1 second of no typing
+
+      return () => clearTimeout(saveTimer);
+    }
+  }, [title, content, user, params.id, entryType]);
+
+  // Clear draft after successful save
+  const clearDraft = () => {
+    if (user && params.id) {
+      const draftKey = `diary_edit_draft_${user.id}_${params.id}`;
+      localStorage.removeItem(`${draftKey}_title`);
+      localStorage.removeItem(`${draftKey}_content`);
+    }
+  };
+  
   // Update authentication check
   useEffect(() => {
     // Wait a bit to ensure auth is initialized
@@ -207,6 +242,7 @@ export default function EditDiaryEntry() {
           const result = await databaseUtils.updateDiaryEntry(entryId, updates, user.id);
           
           if (result) {
+            clearDraft(); // Clear draft after successful save
             console.log("Update successful, redirecting to:", `/diary/${entryId}`);
             router.push(`/diary/${entryId}`);
           } else {
@@ -244,6 +280,7 @@ export default function EditDiaryEntry() {
         
         // Save to localStorage
         localStorage.setItem("diaryEntries", JSON.stringify(existingEntries));
+        clearDraft(); // Clear draft after successful save
         
         // Redirect back to the diary entry view
         router.push(`/diary/${entryIndex}`);
@@ -279,10 +316,15 @@ export default function EditDiaryEntry() {
     <div className="min-h-screen bg-black text-white">
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
-          <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
-            <FiArrowLeft size={16} />
-            <span>Back to Diary</span>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
+              <FiArrowLeft size={16} />
+              <span>Back to Diary</span>
+            </Link>
+            {(title || content) && entryType === 'text' && (
+              <span className="text-gray-400 text-sm">Draft saved</span>
+            )}
+          </div>
           
           <button
             onClick={handleSave}
