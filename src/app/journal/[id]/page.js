@@ -7,7 +7,7 @@ import { FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
 import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
 import { useAuth } from "../../../context/AuthContext";
 import { supabase } from "../../../lib/supabase";
-import { databaseUtils } from "../../../lib/databaseUtils";
+import databaseUtils from "../../../lib/database";
 
 // Function to format the date
 const formatDateTime = (dateString) => {

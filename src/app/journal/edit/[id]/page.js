@@ -16,6 +16,7 @@ export default function EditJournalEntry() {
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const router = useRouter();
   const params = useParams();
   const { user } = useAuth();
@@ -23,11 +24,17 @@ export default function EditJournalEntry() {
   const editorRef = useRef(null);
   const initialContentRef = useRef("");
 
-  // Add authentication check
+  // Update authentication check
   useEffect(() => {
-    if (!user) {
-      router.push('/');
-    }
+    // Wait a bit to ensure auth is initialized
+    const timer = setTimeout(() => {
+      setAuthChecked(true);
+      if (!user) {
+        router.push('/');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [user, router]);
 
   useEffect(() => {
@@ -62,8 +69,10 @@ export default function EditJournalEntry() {
       }
     }
 
-    loadEntry();
-  }, [params.id, user, router]);
+    if (authChecked && user) {  // Only load entry after auth check
+      loadEntry();
+    }
+  }, [params.id, user, router, authChecked]);  // Add authChecked to dependencies
 
   const handleSave = async () => {
     // Get content directly from the editor
@@ -164,7 +173,7 @@ export default function EditJournalEntry() {
     }
   };
 
-  if (!user) {
+  if (!authChecked || !user) {
     return (
       <div className="min-h-screen bg-gray-950 text-white">
         <main className="max-w-6xl mx-auto pt-24 px-6">

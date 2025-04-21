@@ -17,17 +17,26 @@ function NewDiaryEntryContent() {
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [entryType, setEntryType] = useState('text');
+  const [authChecked, setAuthChecked] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
   const searchParams = useSearchParams();
   
-  // Add authentication check
+  // Update authentication check
   useEffect(() => {
-    if (!user) {
-      router.push('/');
-    }
+    // Wait a bit to ensure auth is initialized
+    const timer = setTimeout(() => {
+      setAuthChecked(true);
+      if (!user) {
+        router.push('/');
+      }
+    }, 1000);
 
-    // Update entry type based on URL parameter
+    return () => clearTimeout(timer);
+  }, [user, router]);
+
+  useEffect(() => {
+    // If it's an image entry from URL parameter, show file picker immediately
     const typeFromUrl = searchParams.get('type');
     if (typeFromUrl === 'image') {
       setEntryType('image');
@@ -35,13 +44,11 @@ function NewDiaryEntryContent() {
       if (input) {
         input.click();
       }
-    } else {
-      setEntryType('text');
     }
-  }, [user, router, searchParams]);
+  }, [searchParams]);
 
-  // If not logged in, show loading state
-  if (!user) {
+  // Show loading state while checking auth
+  if (!authChecked || !user) {
     return (
       <div className="min-h-screen bg-black text-white">
         <main className="max-w-4xl mx-auto pt-24 px-4">

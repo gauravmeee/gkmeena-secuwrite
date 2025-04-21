@@ -15,16 +15,23 @@ const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 export default function NewJournalEntry() {
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
   const mounted = useRef(false);
   const editorRef = useRef(null);
 
-  // Add authentication check
+  // Update authentication check
   useEffect(() => {
-    if (!user) {
-      router.push('/');
-    }
+    // Wait a bit to ensure auth is initialized
+    const timer = setTimeout(() => {
+      setAuthChecked(true);
+      if (!user) {
+        router.push('/');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [user, router]);
 
   useEffect(() => {
@@ -34,8 +41,8 @@ export default function NewJournalEntry() {
     };
   }, []);
 
-  // If not logged in, show loading state
-  if (!user) {
+  // Show loading state while checking auth
+  if (!authChecked || !user) {
     return (
       <div className="min-h-screen bg-gray-950 text-white">
         <main className="max-w-6xl mx-auto pt-24 px-6">

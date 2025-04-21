@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { FiSave, FiArrowLeft, FiUpload, FiX, FiImage, FiFileText } from "react-icons/fi";
 import Link from "next/link";
 import { useAuth } from "../../../../context/AuthContext";
@@ -23,43 +23,28 @@ export default function EditDiaryEntry() {
   const [imagePreview, setImagePreview] = useState(null);
   const [entryType, setEntryType] = useState('text');
   const [saving, setSaving] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const router = useRouter();
   const params = useParams();
-  const searchParams = useSearchParams();
   const { user } = useAuth();
   
-  // Add function to sync URL with entry type
-  const syncUrlWithType = (type) => {
-    const currentUrl = new URL(window.location.href);
-    if (type === 'image' && !currentUrl.searchParams.has('type')) {
-      router.replace(`${params.id}?type=image`);
-    } else if (type === 'text' && currentUrl.searchParams.has('type')) {
-      router.replace(`${params.id}`);
-    }
-  };
-
+  // Update authentication check
   useEffect(() => {
-    // Update entry type based on URL parameter
-    const typeFromUrl = searchParams.get('type');
-    if (typeFromUrl === 'image') {
-      setEntryType('image');
-      // If switching to image and we have image preview, keep it
-      if (!imagePreview && content.startsWith('data:image')) {
-        setImagePreview(content);
-        setContent('');
+    // Wait a bit to ensure auth is initialized
+    const timer = setTimeout(() => {
+      setAuthChecked(true);
+      if (!user) {
+        router.push('/');
       }
-    } else {
-      setEntryType('text');
-      // If switching to text and content is an image, clear it
-      if (content.startsWith('data:image')) {
-        setContent('');
-      }
-    }
-  }, [searchParams, content, imagePreview]);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [user, router]);
 
   useEffect(() => {
     async function loadEntry() {
-      setLoading(true);
+      if (!user || !params.id) return;
+
       try {
         if (user) {
           // Try to load from Supabase first
@@ -78,11 +63,9 @@ export default function EditDiaryEntry() {
                 setEntryType(entryType);
                 if (entryType === 'image') {
                   setImagePreview(foundEntry.content);
-                  setContent(''); // Clear text content for image entries
-                  syncUrlWithType('image');
+                  setContent('');
                 } else {
                   setContent(foundEntry.content || '');
-                  setImagePreview(null); // Clear image preview for text entries
                 }
                 
                 setTitle(foundEntry.title || "");
@@ -121,12 +104,10 @@ export default function EditDiaryEntry() {
             // Handle image entry in localStorage
             if (entry.entry_type === 'image') {
               setImagePreview(entry.content);
-              setContent(''); // Clear text content for image entries
+              setContent('');
               setEntryType('image');
-              syncUrlWithType('image');
             } else {
               setContent(entry.content || '');
-              setImagePreview(null); // Clear image preview for text entries
               setEntryType('text');
             }
           }
@@ -137,9 +118,11 @@ export default function EditDiaryEntry() {
         setLoading(false);
       }
     }
-    
-    loadEntry();
-  }, [params.id, user]);
+
+    if (authChecked && user) {
+      loadEntry();
+    }
+  }, [params.id, user, router, authChecked]);
   
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -276,7 +259,7 @@ export default function EditDiaryEntry() {
     }
   };
   
-  if (loading) {
+  if (!authChecked || !user) {
     return (
       <div className="min-h-screen bg-black text-white">
         <main className="max-w-4xl mx-auto pt-24 px-4">
@@ -301,65 +284,46 @@ export default function EditDiaryEntry() {
             <span>Back to Diary</span>
           </Link>
           
-          <div className="flex items-center gap-4">
-            <Link
-              href={entryType === 'text' ? `/diary/edit/${params.id}?type=image` : `/diary/edit/${params.id}`}
-              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg"
-            >
-              {entryType === 'text' ? (
-                <>
-                  <FiImage size={18} />
-                  <span>Image Entry</span>
-                </>
-              ) : (
-                <>
-                  <FiFileText size={18} />
-                  <span>Text Entry</span>
-                </>
-              )}
-            </Link>
-            
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className={`flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg transition-all duration-300 ${
-                saving
-                  ? "bg-opacity-70 cursor-not-allowed"
-                  : "hover:bg-primary/90 cursor-pointer"
-              }`}
-            >
-              {saving ? (
-                <div className="flex items-center gap-2">
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v8H4z"
-                    ></path>
-                  </svg>
-                  <span className="hidden sm:inline">Saving...</span>
-                </div>
-              ) : (
-                <>
-                  <FiSave size={18} />
-                  <span className="hidden sm:inline">Save Changes</span>
-                </>
-              )}
-            </button>
-          </div>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className={`flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg transition-all duration-300 ${
+              saving
+                ? "bg-opacity-70 cursor-not-allowed"
+                : "hover:bg-primary/90 cursor-pointer"
+            }`}
+          >
+            {saving ? (
+              <div className="flex items-center gap-2">
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  ></path>
+                </svg>
+                <span className="hidden sm:inline">Saving...</span>
+              </div>
+            ) : (
+              <>
+                <FiSave size={18} />
+                <span className="hidden sm:inline">Save Changes</span>
+              </>
+            )}
+          </button>
         </div>
         
         <div className={`bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden ${entryType === 'image' ? 'pb-6' : ''}`}>
