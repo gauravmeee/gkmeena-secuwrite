@@ -1,13 +1,75 @@
 import supabase from './supabase';
+import { encryptData, decryptData, initializeEncryption } from './encryption';
 
 // Helper function to convert image file to base64
 async function imageToBase64(file) {
   return new Promise((resolve, reject) => {
+    if (!(file instanceof File || file instanceof Blob)) {
+      reject(new Error('Invalid file object'));
+      return;
+    }
+
+    // Check file size
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      reject(new Error('File size too large. Maximum size is 10MB.'));
+      return;
+    }
+
     const reader = new FileReader();
+    reader.onload = () => {
+      resolve(reader.result);
+    };
+    reader.onerror = (error) => reject(error);
     reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
   });
+}
+
+// Helper function to handle content encryption based on type
+async function encryptContent(content, type, keyArray) {
+  try {
+    if (!content) return null;
+    
+    if (type === 'image') {
+      if (content instanceof File || content instanceof Blob) {
+        try {
+          const base64Data = await imageToBase64(content);
+          return await encryptData(base64Data, keyArray);
+        } catch (error) {
+          console.error('Error converting image:', error);
+          throw error;
+        }
+      } else if (typeof content === 'string' && content.startsWith('data:')) {
+        return await encryptData(content, keyArray);
+      } else {
+        throw new Error('Invalid image data format');
+      }
+    }
+    
+    // For text content
+    return await encryptData(content.toString(), keyArray);
+  } catch (error) {
+    console.error('Error in encryptContent:', error);
+    throw error;
+  }
+}
+
+// Helper function to handle content decryption based on type
+async function decryptContent(content, type, keyArray) {
+  try {
+    if (!content) return '';
+    
+    const decryptedData = await decryptData(content, keyArray);
+    
+    if (type === 'image' && !decryptedData.startsWith('data:')) {
+      // If it's an image and doesn't have the data URL prefix, add it
+      return `data:image/jpeg;base64,${decryptedData}`;
+    }
+    
+    return decryptedData;
+  } catch (error) {
+    console.error('Error in decryptContent:', error);
+    throw error;
+  }
 }
 
 // Diary entry functions
@@ -25,28 +87,62 @@ export async function getDiaryEntries(userId) {
     return [];
   }
   
-  return data || [];
+  // Initialize encryption
+  const keyArray = await initializeEncryption();
+
+  // Decrypt entries
+  const decryptedEntries = await Promise.all(data.map(async (entry) => {
+    try {
+      return {
+        ...entry,
+        title: entry.title ? await decryptData(entry.title, keyArray) : '',
+        content: entry.content ? await decryptContent(entry.content, entry.entry_type, keyArray) : ''
+      };
+    } catch (error) {
+      console.error('Error decrypting entry:', error);
+      return entry;
+    }
+  }));
+
+  return decryptedEntries;
 }
 
 export async function createDiaryEntry(userId, entry) {
   try {
-    let imageData = null;
+    if (!userId) throw new Error('User ID is required');
+
+    // Initialize encryption
+    const keyArray = await initializeEncryption();
     
-    // If there's an image file, convert it to base64
-    if (entry.imageFile) {
-      try {
-        imageData = await imageToBase64(entry.imageFile);
-      } catch (error) {
-        console.error("Error converting image to base64:", error);
-        // Continue without the image if conversion fails
+    // Determine entry type and validate content
+    const entryType = entry.imageFile ? 'image' : 'text';
+    const contentToEncrypt = entryType === 'image' ? entry.imageFile : entry.content;
+    
+    if (!contentToEncrypt) {
+      throw new Error('Content is required');
+    }
+
+    // For images, validate size before processing
+    if (entryType === 'image' && contentToEncrypt instanceof File) {
+      if (contentToEncrypt.size > 10 * 1024 * 1024) { // 10MB limit
+        throw new Error('Image file size too large. Maximum size is 10MB.');
       }
     }
 
+    // Encrypt the content
+    const encryptedContent = await encryptContent(contentToEncrypt, entryType, keyArray);
+    if (!encryptedContent) {
+      throw new Error('Failed to encrypt content');
+    }
+    
+    // Encrypt title if it exists
+    const encryptedTitle = entry.title ? await encryptData(entry.title, keyArray) : null;
+    
     // Prepare the entry data
     const entryData = {
       user_id: userId,
-      title: entry.title || "",
-      content: entry.content || "",
+      title: encryptedTitle,
+      content: encryptedContent,
       date: entry.date || new Date().toLocaleDateString('en-US', { 
         day: 'numeric', 
         month: 'long', 
@@ -58,13 +154,9 @@ export async function createDiaryEntry(userId, entry) {
         hour12: true 
       }),
       has_manual_title: entry.hasManualTitle || false,
-      entry_type: imageData ? 'image' : 'text'
+      entry_type: entryType,
+      created_at: new Date().toISOString()
     };
-
-    // If we have image data, store it in the content field
-    if (imageData) {
-      entryData.content = imageData;
-    }
 
     // Insert the entry
     const { data, error } = await supabase
@@ -86,13 +178,29 @@ export async function createDiaryEntry(userId, entry) {
 
 export async function updateDiaryEntry(entryId, updates, userId) {
   try {
-    // Validate inputs
     if (!entryId || !userId) {
-      console.error("Missing required parameters:", { entryId, userId });
-      return null;
+      throw new Error("Missing required parameters");
     }
 
-    console.log("Starting update with:", { entryId, userId, updates });
+    // Initialize encryption
+    const keyArray = await initializeEncryption();
+
+    // Determine if this is an image update
+    const isImageUpdate = updates.imageFile !== undefined;
+    const entryType = isImageUpdate ? 'image' : 'text';
+    const contentToEncrypt = isImageUpdate ? updates.imageFile : updates.content;
+
+    // Encrypt content if it exists
+    let encryptedContent = null;
+    if (contentToEncrypt) {
+      encryptedContent = await encryptContent(contentToEncrypt, entryType, keyArray);
+    }
+
+    // Encrypt title if it exists
+    let encryptedTitle = null;
+    if (updates.title !== undefined) {
+      encryptedTitle = updates.title ? await encryptData(updates.title, keyArray) : null;
+    }
 
     // First verify the entry exists and belongs to the user
     const { data: existingEntry, error: fetchError } = await supabase
@@ -102,37 +210,26 @@ export async function updateDiaryEntry(entryId, updates, userId) {
       .eq('user_id', userId)
       .single();
 
-    if (fetchError) {
-      console.error("Error fetching entry:", fetchError);
-      return null;
-    }
-
-    if (!existingEntry) {
-      console.error("Entry not found or doesn't belong to user");
-      return null;
-    }
-
-    console.log("Found existing entry:", existingEntry);
-
-    let imageData = null;
-
-    // If there's a new image file, convert it to base64
-    if (updates.imageFile) {
-      imageData = await imageToBase64(updates.imageFile);
+    if (fetchError || !existingEntry) {
+      throw new Error("Entry not found or access denied");
     }
 
     // Prepare the update data
     const updateData = {
-      title: updates.title || '',
-      content: imageData || updates.content || existingEntry.content || '',
-      date: updates.date || existingEntry.date || '',
-      time: updates.time || existingEntry.time || '',
-      has_manual_title: updates.hasManualTitle || false,
-      entry_type: imageData ? 'image' : (updates.content ? 'text' : existingEntry.entry_type),
       updated_at: new Date().toISOString()
     };
 
-    console.log("Prepared update data:", updateData);
+    // Only include fields that are being updated
+    if (encryptedContent !== null) {
+      updateData.content = encryptedContent;
+      updateData.entry_type = entryType;
+    }
+    if (encryptedTitle !== null) {
+      updateData.title = encryptedTitle;
+    }
+    if (updates.hasManualTitle !== undefined) {
+      updateData.has_manual_title = updates.hasManualTitle;
+    }
 
     // Perform the update
     const { data, error } = await supabase
@@ -140,32 +237,17 @@ export async function updateDiaryEntry(entryId, updates, userId) {
       .update(updateData)
       .eq('id', entryId)
       .eq('user_id', userId)
-      .select('*')
+      .select()
       .single();
 
     if (error) {
-      console.error("Supabase update error:", {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      });
-      return null;
+      throw error;
     }
 
-    if (!data) {
-      console.error("No data returned from update");
-      return null;
-    }
-
-    console.log("Update successful:", data);
     return data;
   } catch (error) {
-    console.error("Error in updateDiaryEntry:", {
-      message: error.message,
-      stack: error.stack
-    });
-    return null;
+    console.error("Error in updateDiaryEntry:", error);
+    throw error;
   }
 }
 
