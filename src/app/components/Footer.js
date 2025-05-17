@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import { FiGithub, FiHeart, FiBook, FiLinkedin } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";

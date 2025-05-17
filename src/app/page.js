@@ -13,6 +13,7 @@ import { FiMessageSquare, FiChevronRight } from "react-icons/fi";
 import emailjs from '@emailjs/browser';
 import Link from "next/link";
 import FeedbackSection from "./components/FeedbackSection";
+import EncryptionMigration from '../components/EncryptionMigration';
 
 // Cache for entry counts
 const CACHE_TIME = 5 * 60 * 1000; // 5 minutes
@@ -288,6 +289,10 @@ export default function Home() {
       
       {/* Floating Action Button */}
       {user && <FloatingActionButton />}
+
+      {user && (
+        <EncryptionMigration userId={user.id} />
+      )}
     </div>
   );
 }

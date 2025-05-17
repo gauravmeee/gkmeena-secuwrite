@@ -87,8 +87,8 @@ export async function getDiaryEntries(userId) {
     return [];
   }
   
-  // Initialize encryption
-  const keyArray = await initializeEncryption();
+  // Initialize encryption with userId
+  const keyArray = await initializeEncryption(userId);
 
   // Decrypt entries
   const decryptedEntries = await Promise.all(data.map(async (entry) => {
@@ -111,8 +111,8 @@ export async function createDiaryEntry(userId, entry) {
   try {
     if (!userId) throw new Error('User ID is required');
 
-    // Initialize encryption
-    const keyArray = await initializeEncryption();
+    // Initialize encryption with userId
+    const keyArray = await initializeEncryption(userId);
     
     // Determine entry type and validate content
     const entryType = entry.imageFile ? 'image' : 'text';
@@ -183,7 +183,7 @@ export async function updateDiaryEntry(entryId, updates, userId) {
     }
 
     // Initialize encryption
-    const keyArray = await initializeEncryption();
+    const keyArray = await initializeEncryption(userId);
 
     // Determine if this is an image update
     const isImageUpdate = updates.imageFile !== undefined;
@@ -300,8 +300,8 @@ export async function getJournalEntries(userId) {
     return [];
   }
 
-  // Initialize encryption
-  const keyArray = await initializeEncryption();
+  // Initialize encryption with userId
+  const keyArray = await initializeEncryption(userId);
 
   // Decrypt entries
   const decryptedEntries = await Promise.all(data.map(async (entry) => {
@@ -324,8 +324,8 @@ export async function createJournalEntry(userId, entry) {
   if (!userId) return null;
   
   try {
-    // Initialize encryption
-    const keyArray = await initializeEncryption();
+    // Initialize encryption with userId
+    const keyArray = await initializeEncryption(userId);
     
     // Encrypt title and content
     const encryptedTitle = entry.title ? await encryptData(entry.title, keyArray) : null;
@@ -358,8 +358,8 @@ export async function updateJournalEntry(entryId, updates, userId) {
   if (!userId) return null;
   
   try {
-    // Initialize encryption
-    const keyArray = await initializeEncryption();
+    // Initialize encryption with userId
+    const keyArray = await initializeEncryption(userId);
     
     // Encrypt updated fields
     const updateData = {
@@ -441,8 +441,8 @@ export async function getJournalEntry(entryId, userId) {
       return null;
     }
 
-    // Initialize encryption and decrypt the entry
-    const keyArray = await initializeEncryption();
+    // Initialize encryption with userId and decrypt the entry
+    const keyArray = await initializeEncryption(userId);
     
     if (data) {
       return {
@@ -479,6 +479,87 @@ export async function getJournalEntry(entryId, userId) {
 //     return null;
 //   }
 // }
+
+// Helper function to re-encrypt data with the correct key
+export async function reEncryptUserData(userId) {
+  try {
+    if (!userId) return { success: false, message: 'User ID required' };
+
+    // Get the correct encryption key
+    const keyArray = await migrateExistingKey(userId);
+    
+    // Get all diary entries
+    const { data: diaryEntries, error: diaryError } = await supabase
+      .from('diary_entries')
+      .select('*')
+      .eq('user_id', userId);
+      
+    if (diaryError) throw diaryError;
+
+    // Get all journal entries
+    const { data: journalEntries, error: journalError } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .eq('user_id', userId);
+      
+    if (journalError) throw journalError;
+
+    // Re-encrypt diary entries
+    for (const entry of diaryEntries) {
+      try {
+        // Try to decrypt with current key
+        let decryptedTitle = entry.title ? await decryptData(entry.title, keyArray) : '';
+        let decryptedContent = entry.content ? await decryptContent(entry.content, entry.entry_type, keyArray) : '';
+
+        // If successful, re-encrypt and update
+        const encryptedTitle = decryptedTitle ? await encryptData(decryptedTitle, keyArray) : null;
+        const encryptedContent = decryptedContent ? await encryptContent(decryptedContent, entry.entry_type, keyArray) : null;
+
+        await supabase
+          .from('diary_entries')
+          .update({
+            title: encryptedTitle,
+            content: encryptedContent,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', entry.id)
+          .eq('user_id', userId);
+      } catch (error) {
+        console.error(`Error re-encrypting diary entry ${entry.id}:`, error);
+      }
+    }
+
+    // Re-encrypt journal entries
+    for (const entry of journalEntries) {
+      try {
+        // Try to decrypt with current key
+        let decryptedTitle = entry.title ? await decryptData(entry.title, keyArray) : '';
+        let decryptedContent = entry.content ? await decryptData(entry.content, keyArray) : '';
+
+        // If successful, re-encrypt and update
+        const encryptedTitle = decryptedTitle ? await encryptData(decryptedTitle, keyArray) : null;
+        const encryptedContent = decryptedContent ? await encryptData(decryptedContent, keyArray) : null;
+
+        await supabase
+          .from('journal_entries')
+          .update({
+            title: encryptedTitle,
+            content: encryptedContent,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', entry.id)
+          .eq('user_id', userId);
+      } catch (error) {
+        console.error(`Error re-encrypting journal entry ${entry.id}:`, error);
+      }
+    }
+
+    return { success: true, message: 'Data re-encryption completed' };
+  } catch (error) {
+    console.error('Error in reEncryptUserData:', error);
+    return { success: false, message: error.message };
+  }
+}
 
 // Export all functions as a single object for easier importing
 const databaseUtils = {
