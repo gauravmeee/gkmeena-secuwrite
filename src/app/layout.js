@@ -1,7 +1,10 @@
+
 import { Geist, Geist_Mono } from "next/font/google";
 import { Homemade_Apple } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from '../context/AuthContext';
+import { DiaryLockProvider } from "../context/DiaryLockContext";
+import DiaryLockGuard from "../components/DiaryLockGuard";
 import AuthModal from './components/AuthModal';
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
@@ -43,13 +46,15 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} ${homemadeApple.variable} antialiased`}
       >
         <AuthProvider>
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-grow bg-gray-950 text-gray-100 pt-16">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <DiaryLockProvider>
+            <DiaryLockGuard>
+              <Navbar />
+              <main className="flex-grow bg-gray-950 text-gray-100 pt-16">
+                {children}
+              </main>
+              <Footer />
+            </DiaryLockGuard>
+          </DiaryLockProvider>
           <AuthModal />
         </AuthProvider>
       </body>

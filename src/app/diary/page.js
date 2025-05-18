@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiPlus, FiTrash2, FiX, FiCamera } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiX, FiCamera, FiEdit2, FiImage } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import databaseUtils from "../../lib/database";
 import { supabase } from "../../lib/supabase";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import NoEntriesState from "../components/NoEntriesState";
+import DiaryLock from "../components/DiaryLock";
+import { useRouter } from "next/navigation";
 
 // Function to strip HTML tags for preview
 const stripHtml = (html) => {
@@ -16,6 +18,17 @@ const stripHtml = (html) => {
 
   const doc = new DOMParser().parseFromString(html, "text/html");
   return doc.body.textContent || "";
+};
+
+// Function to format date with ordinal suffix
+const getOrdinalSuffix = (day) => {
+  if (day > 3 && day < 21) return "th";
+  switch (day % 10) {
+    case 1: return "st";
+    case 2: return "nd";
+    case 3: return "rd";
+    default: return "th";
+  }
 };
 
 export default function DiaryPage() {
@@ -28,10 +41,16 @@ export default function DiaryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(10);
   const [draftsCount, setDraftsCount] = useState(0);
+  const router = useRouter();
 
+  // Load entries
   useEffect(() => {
     async function loadEntries() {
-      setLoading(true);
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       try {
         let entries = [];
 
@@ -39,59 +58,43 @@ export default function DiaryPage() {
         if (user) {
           const cloudEntries = await databaseUtils.getDiaryEntries(user.id);
           entries = cloudEntries;
-          
-          // We don't merge drafts into the main list anymore
         }
         // Otherwise fall back to localStorage
         else if (typeof window !== "undefined") {
           entries = JSON.parse(localStorage.getItem("diaryEntries") || "[]");
         }
 
-        // Create processed entries with preview text and ensure date/time fields
+        // Process entries with preview text and ensure date/time fields
         const processed = entries.map((entry) => {
-          const now = new Date(entry.timestamp || Date.now());
-
-          // Function to add ordinal suffix to day
-          const getOrdinalSuffix = (day) => {
-            if (day > 3 && day < 21) return "th";
-            switch (day % 10) {
-              case 1:
-                return "st";
-              case 2:
-                return "nd";
-              case 3:
-                return "rd";
-              default:
-                return "th";
-            }
-          };
-
+          const now = new Date(entry.timestamp || entry.created_at || Date.now());
           const day = now.getDate();
           const ordinalDay = day + getOrdinalSuffix(day);
 
-          // For image entries, use a placeholder preview text
-          const previewText = entry.entry_type === 'image' 
-            ? '[Image Entry]' 
-            : stripHtml(entry.content).substring(0, 150) + (stripHtml(entry.content).length > 150 ? "..." : "");
+          // Generate preview text based on entry type
+          let previewText = '';
+          if (entry.entry_type === 'image') {
+            previewText = '[Image Entry]';
+          } else {
+            const strippedContent = stripHtml(entry.content);
+            previewText = strippedContent.substring(0, 150) + (strippedContent.length > 150 ? "..." : "");
+          }
 
           return {
             ...entry,
             preview: previewText,
-            date:
-              entry.date ||
-              `${ordinalDay} ${now.toLocaleDateString("en-US", {
-                month: "long",
-                year: "numeric",
-              })}`,
-            day:
-              entry.day || now.toLocaleDateString("en-US", { weekday: "long" }),
-            time:
-              entry.time ||
-              now.toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-              }),
+            date: entry.date || `${ordinalDay} ${now.toLocaleDateString("en-US", {
+              month: "long",
+              year: "numeric",
+            })}`,
+            day: entry.day || now.toLocaleDateString("en-US", { weekday: "long" }),
+            time: entry.time || now.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            }),
+            displayTitle: entry.title || `Entry ${entries.length - entries.indexOf(entry)}`,
+            displayDate: entry.date || "No date",
+            displayTime: entry.time || "No time"
           };
         });
 
@@ -113,12 +116,52 @@ export default function DiaryPage() {
     loadEntries();
   }, [user]);
 
+  // Load drafts count separately
   useEffect(() => {
     if (user) {
       const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
       setDraftsCount(drafts.length);
     }
   }, [user]);
+
+  // Show loading only during initial auth check
+  if (!user && loading) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <main className="max-w-4xl mx-auto pt-24 px-4">
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show sign in prompt if not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <main className="max-w-4xl mx-auto pt-24 px-4">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-4">Your Diary</h1>
+            <p className="text-gray-400 mb-8">Sign in to access your diary entries</p>
+            <button
+              onClick={toggleAuthModal}
+              className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-md transition-colors"
+            >
+              Sign In
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Calculate pagination
+  const indexOfLastEntry = currentPage * entriesPerPage;
+  const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
+  const currentEntries = processedEntries.slice(indexOfFirstEntry, indexOfLastEntry);
+  const totalPages = Math.ceil(processedEntries.length / entriesPerPage);
 
   const handleToggleSelectionMode = () => {
     setIsSelectionMode(!isSelectionMode);
@@ -233,18 +276,6 @@ export default function DiaryPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black text-white">
-        <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="flex justify-center items-center h-64">
-            <p className="text-xl">Loading diary entries...</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-black text-white">
       <DeleteConfirmationModal 
@@ -325,95 +356,88 @@ export default function DiaryPage() {
         ) : (
           <>
             <div className="grid grid-cols-1 gap-5">
-              {processedEntries
-                .slice(
-                  (currentPage - 1) * entriesPerPage,
-                  currentPage * entriesPerPage
-                )
-                .map((entry) => (
-                  <div
-                    key={entry.id || entry.timestamp}
-                    className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden"
-                  >
-                    <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {isSelectionMode && (
-                            <input
-                              type="checkbox"
-                              checked={selectedEntries.has(entry.id)}
-                              onChange={(e) => {
-                                const newSelected = new Set(selectedEntries);
-                                if (e.target.checked) {
-                                  newSelected.add(entry.id);
-                                } else {
-                                  newSelected.delete(entry.id);
-                                }
-                                setSelectedEntries(newSelected);
-                              }}
-                              className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
-                            />
-                          )}
-                          {entry.isDraft ? (
-                            <Link href="/diary/draft/edit">
-                              <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
-                                {entry.title || "Untitled Draft"}
-                                <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
-                                  Draft
-                                </span>
-                              </h2>
-                            </Link>
-                          ) : (
-                            <Link href={`/diary/${entry.id}`}>
-                              <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
-                                {entry.title}
-                              </h2>
-                            </Link>
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="font-handwriting text-gray-800">
-                            {entry.date} | {entry.time}
-                          </div>
-                        </div>
+              {currentEntries.map((entry) => (
+                <div
+                  key={entry.id || entry.timestamp}
+                  className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden"
+                >
+                  <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {isSelectionMode && (
+                          <input
+                            type="checkbox"
+                            checked={selectedEntries.has(entry.id)}
+                            onChange={(e) => {
+                              const newSelected = new Set(selectedEntries);
+                              if (e.target.checked) {
+                                newSelected.add(entry.id);
+                              } else {
+                                newSelected.delete(entry.id);
+                              }
+                              setSelectedEntries(newSelected);
+                            }}
+                            className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                          />
+                        )}
+                        {entry.isDraft ? (
+                          <Link href="/diary/draft/edit">
+                            <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
+                              {entry.displayTitle}
+                              <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
+                                Draft
+                              </span>
+                            </h2>
+                          </Link>
+                        ) : (
+                          <Link href={`/diary/${entry.id}`}>
+                            <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
+                              {entry.displayTitle}
+                            </h2>
+                          </Link>
+                        )}
                       </div>
-                    </div>
-                    <div className={entry.image_url ? 'bg-white p-8' : 'lined-paper flex items-start justify-between gap-4 p-5 bg-white'}>
-                      <div className="flex-1 text-gray-800">
-                        <Link
-                          href={`/diary/${entry.id || entry.timestamp}`}
-                          className="block"
-                        >
-                          {entry.entry_type === 'image' ? (
-                            <div className="space-y-4">
-                              <img
-                                src={entry.content}
-                                alt="Diary entry"
-                                className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"
-                                onError={(e) => {
-                                  console.warn('Image loading error:', {
-                                    src: e.target.src
-                                  });
-                                  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
-                                }}
-                              />
-                            </div>
-                          ) : (
-                            <p className="pt-2 font-handwriting text-xl">
-                              {entry.preview}
-                            </p>
-                          )}
-                        </Link>
+
+                      <div className="font-handwriting text-gray-800">
+                        {entry.displayDate} | {entry.displayTime}
                       </div>
                     </div>
                   </div>
-                ))}
+                  <div className={entry.entry_type === 'image' ? 'bg-white p-8' : 'lined-paper flex items-start justify-between gap-4 p-5 bg-white'}>
+                    <div className="flex-1 text-gray-800">
+                      <Link
+                        href={`/diary/${entry.id}`}
+                        className="block"
+                      >
+                        {entry.entry_type === 'image' ? (
+                          <div className="space-y-4">
+                            <img
+                              src={entry.content}
+                              alt="Diary entry"
+                              className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"
+                              onError={(e) => {
+                                console.warn('Image loading error:', {
+                                  src: e.target.src
+                                });
+                                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <p className="pt-2 font-handwriting text-xl">
+                            {entry.preview}
+                          </p>
+                        )}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(processedEntries.length / entriesPerPage)}
+              totalPages={totalPages}
               onPageChange={(page) => setCurrentPage(page)}
             />
           </>
