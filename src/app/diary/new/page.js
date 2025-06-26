@@ -457,10 +457,10 @@ function NewDiaryEntryContent() {
       </main>
       
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&display=swap');
-        
+        @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");
+
         .font-handwriting {
-          font-family: 'Caveat', 'Dancing Script', cursive;
+          font-family: "Kalam", "Caveat", "Dancing Script", cursive;
         }
         
         .lined-paper {
