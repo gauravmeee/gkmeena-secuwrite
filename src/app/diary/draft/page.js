@@ -42,8 +42,14 @@ export default function DraftDiaryPage() {
         time: draft.time,
         day: draft.day,
         timestamp: new Date().getTime(),
-        entry_type: 'text'
+        entry_type: draft.entry_type || 'text'
       };
+
+      // Handle image entries
+      if (draft.entry_type === 'image' && draft.content) {
+        newEntry.imageFile = null; // We'll use the base64 content directly
+        newEntry.imageUrl = draft.content; // Use the base64 data as imageUrl
+      }
 
       const result = await databaseUtils.createDiaryEntry(user.id, newEntry);
       
@@ -99,7 +105,13 @@ export default function DraftDiaryPage() {
       `diary_drafts_${user.id}`, 
       JSON.stringify([draftToEdit, ...otherDrafts.map(d => ({ ...d, isCurrentlyEditing: false }))])
     );
-    router.push("/diary/new");
+    
+    // Navigate to the appropriate page based on entry type
+    if (draft.entry_type === 'image') {
+      router.push("/diary/new?type=image");
+    } else {
+      router.push("/diary/new");
+    }
   };
 
   if (loading) {
@@ -163,12 +175,21 @@ export default function DraftDiaryPage() {
                     onClick={() => handleEdit(draft)}
                     className="group cursor-pointer"
                   >
-                    <h2 className="text-xl font-semibold text-gray-800 hover:text-primary transition-colors">
-                      {draft.title || "Untitled Draft"}
-                      <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
-                        Draft
-                      </span>
-                    </h2>
+                    {draft.title && (
+                      <h2 className="text-xl font-semibold text-gray-800 hover:text-primary transition-colors">
+                        {draft.title}
+                        <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
+                          Draft
+                        </span>
+                      </h2>
+                    )}
+                    {!draft.title && (
+                      <h2 className="text-xl font-semibold text-gray-800 hover:text-primary transition-colors">
+                        <span className="text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
+                          Draft
+                        </span>
+                      </h2>
+                    )}
                   </button>
                   <div className="flex items-center gap-3">
                     <button
@@ -203,7 +224,7 @@ export default function DraftDiaryPage() {
                 </div>
               </div>
               
-              <div className="lined-paper p-8 bg-white">
+              <div className={draft.entry_type === 'image' ? 'bg-white p-8' : 'lined-paper p-8 bg-white'}>
                 <div className="mb-6 text-left">
                   <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">
                     {draft.date}
@@ -218,9 +239,25 @@ export default function DraftDiaryPage() {
                 
                 <div className="font-serif text-lg text-gray-800">
                   <div className="mt-10 font-handwriting text-xl">Dear Diary,</div>
-                  <div className="whitespace-pre-wrap line-height-loose font-handwriting text-xl mt-4">
-                    {draft.content}
-                  </div>
+                  {draft.entry_type === 'image' ? (
+                    <div className="mt-6">
+                      <img
+                        src={draft.content}
+                        alt="Diary entry"
+                        className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
+                        onError={(e) => {
+                          console.warn('Image loading error:', {
+                            src: e.target.src
+                          });
+                          e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="whitespace-pre-wrap line-height-loose font-handwriting text-xl mt-4">
+                      {draft.content}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

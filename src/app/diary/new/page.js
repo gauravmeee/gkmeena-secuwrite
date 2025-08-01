@@ -18,6 +18,8 @@ function NewDiaryEntryContent() {
   const [loading, setLoading] = useState(false);
   const [entryType, setEntryType] = useState('text');
   const [authChecked, setAuthChecked] = useState(false);
+  const [draftStatus, setDraftStatus] = useState(''); // 'saving', 'saved', 'error'
+  const [lastSaved, setLastSaved] = useState(null);
   const router = useRouter();
   const { user } = useAuth();
   const searchParams = useSearchParams();
@@ -33,22 +35,118 @@ function NewDiaryEntryContent() {
         setTitle(currentDraft.title || "");
         setContent(currentDraft.content || "");
         setEntryType(currentDraft.entry_type || 'text');
-        if (currentDraft.imagePreview) {
+        if (currentDraft.imagePreview && currentDraft.entry_type === 'image') {
           setImagePreview(currentDraft.imagePreview);
         }
       }
     }
   }, [user]);
 
-  // Save draft content when typing
+  // Save draft content when typing or when image changes
   useEffect(() => {
-    if (user && entryType === 'text') {
+    if (user) {
       const saveTimer = setTimeout(() => {
-        if (title || content) {
-          // Get existing drafts
-          const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
+        // Save draft if there's any content (title, text content, or image)
+        if (title || content || imagePreview) {
+          setDraftStatus('saving');
           
-          // Find currently editing draft
+          try {
+            // Get existing drafts
+            const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
+            
+            // Find currently editing draft
+            const currentDraft = drafts.find(d => d.isCurrentlyEditing);
+            
+            if (currentDraft) {
+              // Update existing draft
+              const updatedDrafts = drafts.map(d => {
+                if (d.isCurrentlyEditing) {
+                  return {
+                    ...d,
+                    title: title || "",
+                    content: entryType === 'image' ? imagePreview : (content || ""),
+                    entry_type: entryType,
+                    imagePreview: entryType === 'image' ? imagePreview : null,
+                    lastModified: new Date().getTime()
+                  };
+                }
+                return { ...d, isCurrentlyEditing: false };
+              });
+              localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+            } else {
+              // Create new draft
+              const newDraft = {
+                title: title || "",
+                content: entryType === 'image' ? imagePreview : (content || ""),
+                timestamp: new Date().getTime(),
+                lastModified: new Date().getTime(),
+                isDraft: true,
+                isCurrentlyEditing: true,
+                date: new Date().toLocaleDateString('en-US', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                }),
+                day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+                time: new Date().toLocaleTimeString('en-US', { 
+                  hour: 'numeric', 
+                  minute: '2-digit',
+                  hour12: true 
+                }),
+                user_id: user.id,
+                entry_type: entryType,
+                imagePreview: entryType === 'image' ? imagePreview : null
+              };
+
+              // Remove editing flag from all other drafts
+              const otherDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
+              localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify([newDraft, ...otherDrafts]));
+            }
+            
+            // Show success status
+            setDraftStatus('saved');
+            setLastSaved(new Date());
+            
+            // Clear success status after 3 seconds
+            setTimeout(() => {
+              setDraftStatus('');
+            }, 3000);
+            
+          } catch (error) {
+            console.error('Error saving draft:', error);
+            setDraftStatus('error');
+            
+            // Clear error status after 5 seconds
+            setTimeout(() => {
+              setDraftStatus('');
+            }, 5000);
+          }
+        }
+      }, 1000);
+
+      return () => clearTimeout(saveTimer);
+    }
+  }, [title, content, imagePreview, user, entryType]);
+
+  // Clear draft after successful save
+  const clearDraft = () => {
+    if (user) {
+      const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
+      const updatedDrafts = drafts.filter(draft => !draft.isCurrentlyEditing);
+      localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+    }
+  };
+
+  // Don't clear the currently editing flag when leaving the page
+  // This ensures drafts persist across page refreshes and navigation
+  // The flag will only be cleared when the draft is saved or deleted
+
+  // Save draft immediately when page is about to unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (user && (title || content || imagePreview)) {
+        try {
+          const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
           const currentDraft = drafts.find(d => d.isCurrentlyEditing);
           
           if (currentDraft) {
@@ -58,18 +156,20 @@ function NewDiaryEntryContent() {
                 return {
                   ...d,
                   title: title || "",
-                  content: content || "",
+                  content: entryType === 'image' ? imagePreview : (content || ""),
+                  entry_type: entryType,
+                  imagePreview: entryType === 'image' ? imagePreview : null,
                   lastModified: new Date().getTime()
                 };
               }
-              return { ...d, isCurrentlyEditing: false };
+              return d;
             });
             localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify(updatedDrafts));
           } else {
-            // Create new draft only if we don't have one being edited
+            // Create new draft
             const newDraft = {
               title: title || "",
-              content: content || "",
+              content: entryType === 'image' ? imagePreview : (content || ""),
               timestamp: new Date().getTime(),
               lastModified: new Date().getTime(),
               isDraft: true,
@@ -86,39 +186,22 @@ function NewDiaryEntryContent() {
                 hour12: true 
               }),
               user_id: user.id,
-              entry_type: 'text'
+              entry_type: entryType,
+              imagePreview: entryType === 'image' ? imagePreview : null
             };
 
-            // Remove editing flag from all other drafts
             const otherDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
             localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify([newDraft, ...otherDrafts]));
           }
+        } catch (error) {
+          console.error('Error saving draft on unload:', error);
         }
-      }, 1000);
-
-      return () => clearTimeout(saveTimer);
-    }
-  }, [title, content, user, entryType]);
-
-  // Clear draft after successful save
-  const clearDraft = () => {
-    if (user) {
-      const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
-      const updatedDrafts = drafts.filter(draft => !draft.isCurrentlyEditing);
-      localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify(updatedDrafts));
-    }
-  };
-
-  // Clear the currently editing flag when leaving the page
-  useEffect(() => {
-    return () => {
-      if (user) {
-        const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
-        const updatedDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
-        localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify(updatedDrafts));
       }
     };
-  }, [user]);
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [title, content, imagePreview, user, entryType]);
 
   // Update authentication check
   useEffect(() => {
@@ -314,8 +397,27 @@ function NewDiaryEntryContent() {
               <FiArrowLeft size={16} />
               <span>Back to Diary</span>
             </Link>
-            {(title || content) && entryType === 'text' && (
-              <span className="text-gray-400 text-sm">Draft saved</span>
+            {draftStatus === 'saving' && (
+              <div className="flex items-center gap-2 text-blue-400 text-sm">
+                <div className="w-3 h-3 border border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                <span>Saving draft...</span>
+              </div>
+            )}
+            {draftStatus === 'saved' && (
+              <div className="flex items-center gap-2 text-green-400 text-sm">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                <span>Draft saved {lastSaved && `at ${lastSaved.toLocaleTimeString()}`}</span>
+              </div>
+            )}
+            {draftStatus === 'error' && (
+              <div className="flex items-center gap-2 text-red-400 text-sm">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span>Failed to save draft</span>
+              </div>
             )}
           </div>
           
