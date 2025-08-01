@@ -186,20 +186,32 @@ export async function updateDiaryEntry(entryId, updates, userId) {
     const keyArray = await initializeEncryption(userId);
 
     // Determine if this is an image update
-    const isImageUpdate = updates.imageFile !== undefined;
+    const isImageUpdate = updates.imageFile !== undefined || updates.imageUrl !== undefined;
     const entryType = isImageUpdate ? 'image' : 'text';
-    const contentToEncrypt = isImageUpdate ? updates.imageFile : updates.content;
-
-    // Encrypt content if it exists
+    
+    // Handle content encryption based on type
     let encryptedContent = null;
-    if (contentToEncrypt) {
-      encryptedContent = await encryptContent(contentToEncrypt, entryType, keyArray);
+    if (isImageUpdate) {
+      // For image updates, use imageFile if available, otherwise use imageUrl (base64)
+      const imageContent = updates.imageFile || updates.imageUrl;
+      if (imageContent) {
+        encryptedContent = await encryptContent(imageContent, 'image', keyArray);
+      }
+    } else if (updates.content !== undefined) {
+      // For text updates
+      if (updates.content) {
+        encryptedContent = await encryptContent(updates.content, 'text', keyArray);
+      }
     }
 
     // Encrypt title if it exists
     let encryptedTitle = null;
     if (updates.title !== undefined) {
-      encryptedTitle = updates.title ? await encryptData(updates.title, keyArray) : null;
+      // Handle empty string as null (to clear the title)
+      console.log("Database: updates.title =", updates.title);
+      console.log("Database: updates.title.trim() =", updates.title ? updates.title.trim() : "N/A");
+      encryptedTitle = updates.title && updates.title.trim() ? await encryptData(updates.title.trim(), keyArray) : null;
+      console.log("Database: encryptedTitle =", encryptedTitle);
     }
 
     // First verify the entry exists and belongs to the user
@@ -224,8 +236,10 @@ export async function updateDiaryEntry(entryId, updates, userId) {
       updateData.content = encryptedContent;
       updateData.entry_type = entryType;
     }
-    if (encryptedTitle !== null) {
+    if (updates.title !== undefined) {
+      // Always include title field, even if it's null (to clear the title)
       updateData.title = encryptedTitle;
+      console.log("Database: Setting updateData.title =", encryptedTitle);
     }
     if (updates.hasManualTitle !== undefined) {
       updateData.has_manual_title = updates.hasManualTitle;
@@ -367,11 +381,13 @@ export async function updateJournalEntry(entryId, updates, userId) {
     };
     
     if (updates.title !== undefined) {
-      updateData.title = updates.title ? await encryptData(updates.title, keyArray) : null;
+      // Handle empty string as null (to clear the title)
+      updateData.title = updates.title && updates.title.trim() ? await encryptData(updates.title.trim(), keyArray) : null;
     }
     
     if (updates.content !== undefined) {
-      updateData.content = updates.content ? await encryptData(updates.content, keyArray) : null;
+      // Handle empty string as null (to clear the content)
+      updateData.content = updates.content && updates.content.trim() ? await encryptData(updates.content.trim(), keyArray) : null;
     }
     
     const { data, error } = await supabase

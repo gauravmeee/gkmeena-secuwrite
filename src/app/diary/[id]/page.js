@@ -326,9 +326,11 @@ export default function DiaryEntryPage() {
         </div>
         
         <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
-          <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
-            <h1 className="text-xl font-serif text-gray-800">{entry.title}</h1>
-          </div>
+          {entry.title && (
+            <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
+              <h1 className="text-xl font-serif text-gray-800">{entry.title}</h1>
+            </div>
+          )}
           
           <div className={entryType === 'image' ? 'bg-white p-8' : 'lined-paper p-8 min-h-[70vh] bg-white'}>
             <div className="mb-6 text-left">

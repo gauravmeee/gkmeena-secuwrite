@@ -185,7 +185,8 @@ export default function EditDiaryEntry() {
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    setEntryType('text');
+    // Keep the entry type as 'image' so the image upload interface remains visible
+    // setEntryType('text'); // Removed this line
   };
 
   const handleSave = async () => {
@@ -194,9 +195,10 @@ export default function EditDiaryEntry() {
       return;
     }
 
+    // For image entries, allow saving even without an image (will convert to text entry)
     if (entryType === 'image' && !imageFile && !imagePreview) {
-      alert("Please upload an image before saving");
-      return;
+      // Allow saving without image - it will be converted to text entry
+      // No alert, just continue with save
     }
     
     try {
@@ -227,16 +229,40 @@ export default function EditDiaryEntry() {
         
         // Update in Supabase
         const updates = {
-          title: title || "",
+          title: title || "", // Include title even if empty to allow clearing
           content: content || "",
           date: originalDate || "",
           time: originalTime || "",
-          hasManualTitle: hasManualTitle || false,
-          imageFile: imageFile || null,
-          imageUrl: imagePreview || null
+          hasManualTitle: !!title // Set hasManualTitle based on whether title exists
         };
+
+        // Handle image updates properly
+        if (entryType === 'image') {
+          if (imageFile) {
+            // New image uploaded
+            updates.imageFile = imageFile;
+          } else if (imagePreview) {
+            // Existing image or base64 data
+            updates.imageUrl = imagePreview;
+          } else {
+            // No image selected, treat as text entry
+            if (content && content.trim()) {
+              updates.content = content;
+            }
+            // Set entry type to text since no image is present
+            updates.entryType = 'text';
+          }
+        } else {
+          // Text entry - only include content if it's not empty
+          if (content && content.trim()) {
+            updates.content = content;
+          }
+        }
         
         console.log("Preparing update with data:", updates);
+        console.log("Title value:", title);
+        console.log("Title type:", typeof title);
+        console.log("Title length:", title ? title.length : 0);
         
         try {
           const result = await databaseUtils.updateDiaryEntry(entryId, updates, user.id);
@@ -267,14 +293,14 @@ export default function EditDiaryEntry() {
       if (entryIndex >= 0 && entryIndex < existingEntries.length) {
         // Update the entry
         existingEntries[entryIndex] = {
-          title: title,
-          hasManualTitle: hasManualTitle || (title !== existingEntries[entryIndex].title),
-          content: content,
+          title: title || null, // Allow null for empty titles
+          hasManualTitle: !!title, // Set hasManualTitle based on whether title exists
+          content: entryType === 'image' && imagePreview ? imagePreview : content,
           date: originalDate,
           day: originalDay,
           time: originalTime,
           timestamp: originalTimestamp || new Date().getTime(),
-          entryType: entryType,
+          entry_type: entryType === 'image' && imagePreview ? 'image' : 'text',
           imageUrl: imagePreview || null
         };
         

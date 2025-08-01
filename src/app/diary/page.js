@@ -8,7 +8,6 @@ import databaseUtils from "../../lib/database";
 import { supabase } from "../../lib/supabase";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import NoEntriesState from "../components/NoEntriesState";
-import DiaryLock from "../components/DiaryLock";
 import { useRouter } from "next/navigation";
 
 // Function to strip HTML tags for preview
@@ -92,7 +91,7 @@ export default function DiaryPage() {
               minute: "2-digit",
               hour12: true,
             }),
-            displayTitle: entry.title || `Entry ${entries.length - entries.indexOf(entry)}`,
+            displayTitle: entry.title || "",
             displayDate: entry.date || "No date",
             displayTime: entry.time || "No time"
           };
@@ -380,21 +379,23 @@ export default function DiaryPage() {
                             className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
                           />
                         )}
-                        {entry.isDraft ? (
-                          <Link href="/diary/draft/edit">
-                            <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
-                              {entry.displayTitle}
-                              <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
-                                Draft
-                              </span>
-                            </h2>
-                          </Link>
-                        ) : (
-                          <Link href={`/diary/${entry.id}`}>
-                            <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
-                              {entry.displayTitle}
-                            </h2>
-                          </Link>
+                        {entry.displayTitle && (
+                          entry.isDraft ? (
+                            <Link href="/diary/draft/edit">
+                              <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
+                                {entry.displayTitle}
+                                <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
+                                  Draft
+                                </span>
+                              </h2>
+                            </Link>
+                          ) : (
+                            <Link href={`/diary/${entry.id}`}>
+                              <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
+                                {entry.displayTitle}
+                              </h2>
+                            </Link>
+                          )
                         )}
                       </div>
 
