@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FiSave, FiArrowLeft } from "react-icons/fi";
 import Link from "next/link";
@@ -12,7 +12,7 @@ import databaseUtils from "../../../lib/database";
 // Dynamically import JoditEditor for SSR compatibility
 const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
-export default function NewJournalEntry() {
+function NewJournalEntryContent() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
@@ -556,5 +556,26 @@ export default function NewJournalEntry() {
         </div>
       </main>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function NewJournalEntry() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-950 text-white">
+        <main className="max-w-6xl mx-auto pt-24 px-4 pb-20">
+          <div className="flex justify-center items-center h-64">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    }>
+      <NewJournalEntryContent />
+    </Suspense>
   );
 }
