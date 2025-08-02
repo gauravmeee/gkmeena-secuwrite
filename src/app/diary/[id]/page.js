@@ -299,10 +299,10 @@ export default function DiaryEntryPage() {
       
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
-          <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
-            <FiArrowLeft size={16} />
-            <span>Back to Diary</span>
-          </Link>
+                      <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
+              <FiArrowLeft size={16} />
+              <span>Back</span>
+            </Link>
           
           <div className="flex items-center gap-3">
             <Link

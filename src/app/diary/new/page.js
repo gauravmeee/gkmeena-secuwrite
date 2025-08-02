@@ -18,8 +18,7 @@ function NewDiaryEntryContent() {
   const [loading, setLoading] = useState(false);
   const [entryType, setEntryType] = useState('text');
   const [authChecked, setAuthChecked] = useState(false);
-  const [draftStatus, setDraftStatus] = useState(''); // 'saving', 'saved', 'error'
-  const [lastSaved, setLastSaved] = useState(null);
+
   const router = useRouter();
   const { user } = useAuth();
   const searchParams = useSearchParams();
@@ -27,29 +26,80 @@ function NewDiaryEntryContent() {
   // Load draft content when component mounts
   useEffect(() => {
     if (user) {
-      const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
-      // Get the most recent draft that was being edited
-      const currentDraft = drafts.find(d => d.isCurrentlyEditing);
+      const editDraftId = searchParams.get('editDraft');
       
-      if (currentDraft) {
-        setTitle(currentDraft.title || "");
-        setContent(currentDraft.content || "");
-        setEntryType(currentDraft.entry_type || 'text');
-        if (currentDraft.imagePreview && currentDraft.entry_type === 'image') {
-          setImagePreview(currentDraft.imagePreview);
+      if (editDraftId) {
+        // Editing a specific draft - clear any session flags first
+        sessionStorage.removeItem(`diary_new_session_${user.id}`);
+        
+        const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
+        const currentDraft = drafts.find(d => d.timestamp === parseInt(editDraftId));
+        
+        if (currentDraft) {
+          setTitle(currentDraft.title || "");
+          setContent(currentDraft.content || "");
+          setEntryType(currentDraft.entry_type || 'text');
+          if (currentDraft.imagePreview && currentDraft.entry_type === 'image') {
+            setImagePreview(currentDraft.imagePreview);
+          }
+          
+          // Mark this draft as currently being edited
+          const updatedDrafts = drafts.map(d => ({
+            ...d,
+            isCurrentlyEditing: d.timestamp === currentDraft.timestamp
+          }));
+          localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+        }
+      } else {
+        // Check if user is intentionally creating new or refreshing while writing
+        const isIntentionallyNew = sessionStorage.getItem(`diary_new_session_${user.id}`);
+        
+        if (isIntentionallyNew === 'true') {
+          // User intentionally clicked "New Entry" - start blank
+          // Clear any currently editing flags
+          const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
+          const updatedDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
+          localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+          
+          // Reset form to blank state
+          setTitle("");
+          setContent("");
+          setEntryType('text');
+          setImagePreview(null);
+          
+          // Clear the session flag
+          sessionStorage.removeItem(`diary_new_session_${user.id}`);
+        } else {
+          // Check if there's a draft that was being edited (for refresh scenarios)
+          const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
+          const currentDraft = drafts.find(d => d.isCurrentlyEditing);
+          
+          if (currentDraft) {
+            // Load the currently editing draft (for refresh scenarios)
+            setTitle(currentDraft.title || "");
+            setContent(currentDraft.content || "");
+            setEntryType(currentDraft.entry_type || 'text');
+            if (currentDraft.imagePreview && currentDraft.entry_type === 'image') {
+              setImagePreview(currentDraft.imagePreview);
+            }
+          } else {
+            // No draft being edited - start blank
+            setTitle("");
+            setContent("");
+            setEntryType('text');
+            setImagePreview(null);
+          }
         }
       }
     }
-  }, [user]);
+  }, [user, searchParams]);
 
-  // Save draft content when typing or when image changes
+  // Save draft content when typing or when image changes (silent)
   useEffect(() => {
     if (user) {
       const saveTimer = setTimeout(() => {
         // Save draft if there's any content (title, text content, or image)
         if (title || content || imagePreview) {
-          setDraftStatus('saving');
-          
           try {
             // Get existing drafts
             const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
@@ -103,23 +153,10 @@ function NewDiaryEntryContent() {
               localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify([newDraft, ...otherDrafts]));
             }
             
-            // Show success status
-            setDraftStatus('saved');
-            setLastSaved(new Date());
-            
-            // Clear success status after 3 seconds
-            setTimeout(() => {
-              setDraftStatus('');
-            }, 3000);
+            // Silent saving - no status updates to avoid re-renders
             
           } catch (error) {
             console.error('Error saving draft:', error);
-            setDraftStatus('error');
-            
-            // Clear error status after 5 seconds
-            setTimeout(() => {
-              setDraftStatus('');
-            }, 5000);
           }
         }
       }, 1000);
@@ -393,32 +430,14 @@ function NewDiaryEntryContent() {
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
+            <Link 
+              href={searchParams.get('editDraft') ? "/diary/draft" : "/diary"} 
+              className="flex items-center gap-2 text-primary hover:underline"
+            >
               <FiArrowLeft size={16} />
-              <span>Back to Diary</span>
+              <span>Back</span>
             </Link>
-            {draftStatus === 'saving' && (
-              <div className="flex items-center gap-2 text-blue-400 text-sm">
-                <div className="w-3 h-3 border border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                <span>Saving draft...</span>
-              </div>
-            )}
-            {draftStatus === 'saved' && (
-              <div className="flex items-center gap-2 text-green-400 text-sm">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                <span>Draft saved {lastSaved && `at ${lastSaved.toLocaleTimeString()}`}</span>
-              </div>
-            )}
-            {draftStatus === 'error' && (
-              <div className="flex items-center gap-2 text-red-400 text-sm">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <span>Failed to save draft</span>
-              </div>
-            )}
+
           </div>
           
           <div className="flex items-center gap-4">

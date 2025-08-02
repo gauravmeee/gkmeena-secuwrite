@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FiSave, FiArrowLeft } from "react-icons/fi";
 import Link from "next/link";
 import { useAuth } from "../../../context/AuthContext";
@@ -14,11 +14,13 @@ const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 export default function NewJournalEntry() {
   const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const [draftSaved, setDraftSaved] = useState(false);
+  const isTypingRef = useRef(false);
   const router = useRouter();
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const mounted = useRef(false);
   const editorRef = useRef(null);
   const draftTimerRef = useRef(null);
@@ -46,60 +48,137 @@ export default function NewJournalEntry() {
   // Load draft content when component mounts
   useEffect(() => {
     if (user) {
-      const drafts = JSON.parse(localStorage.getItem('journal_drafts') || '[]');
-      // Get the most recent draft that was being edited
-      const currentDraft = drafts.find(d => d.isCurrentlyEditing);
+      const editDraftId = searchParams.get('editDraft');
       
-      if (currentDraft) {
-        setTitle(currentDraft.title || '');
-        if (editorRef.current) {
-          editorRef.current.value = currentDraft.content || '';
+      if (editDraftId) {
+        // Editing a specific draft - clear any session flags first
+        sessionStorage.removeItem(`journal_new_session_${user.id}`);
+        
+        const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
+        const currentDraft = drafts.find(d => d.timestamp === editDraftId);
+        
+        if (currentDraft) {
+          setTitle(currentDraft.title || '');
+          setContent(currentDraft.content || '');
+          if (editorRef.current) {
+            editorRef.current.value = currentDraft.content || '';
+          }
+          
+          // Mark this draft as currently being edited
+          const updatedDrafts = drafts.map(d => ({
+            ...d,
+            isCurrentlyEditing: d.timestamp === currentDraft.timestamp
+          }));
+          localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+        }
+      } else {
+        // Check if user is intentionally creating new or refreshing while writing
+        const isIntentionallyNew = sessionStorage.getItem(`journal_new_session_${user.id}`);
+        
+        if (isIntentionallyNew === 'true') {
+          // User intentionally clicked "New Entry" - start blank
+          // Clear any currently editing flags
+          const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
+          const updatedDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
+          localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+          
+          // Reset form to blank state
+          setTitle('');
+          setContent('');
+          if (editorRef.current) {
+            editorRef.current.value = '';
+          }
+          
+          // Clear the session flag
+          sessionStorage.removeItem(`journal_new_session_${user.id}`);
+        } else {
+          // Check if there's a draft that was being edited (for refresh scenarios)
+          const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
+          const currentDraft = drafts.find(d => d.isCurrentlyEditing);
+          
+          if (currentDraft) {
+            // Load the currently editing draft (for refresh scenarios)
+            setTitle(currentDraft.title || '');
+            setContent(currentDraft.content || '');
+            if (editorRef.current) {
+              editorRef.current.value = currentDraft.content || '';
+            }
+          } else {
+            // No draft being edited - start blank
+            setTitle('');
+            setContent('');
+            if (editorRef.current) {
+              editorRef.current.value = '';
+            }
+          }
         }
       }
     }
-  }, [user]);
+  }, [user, searchParams]);
 
-  // Save draft while typing
+  // Save draft when title changes (silent - no status updates)
   useEffect(() => {
     const saveDraft = () => {
       if (!user || !editorRef.current) return;
 
-      const content = editorRef.current.value;
-      const drafts = JSON.parse(localStorage.getItem('journal_drafts') || '[]');
+      const currentContent = editorRef.current.value;
       
-      // Find currently editing draft
-      const currentDraft = drafts.find(d => d.isCurrentlyEditing);
-      
-      if (currentDraft) {
-        // Update existing draft
-        const updatedDrafts = drafts.map(d => {
-          if (d.isCurrentlyEditing) {
-            return {
-              ...d,
+      // Only save if there's content (title or content)
+      if (title || currentContent) {
+        try {
+          const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
+          
+          // Find currently editing draft
+          const currentDraft = drafts.find(d => d.isCurrentlyEditing);
+          
+          if (currentDraft) {
+            // Update existing draft
+            const updatedDrafts = drafts.map(d => {
+              if (d.isCurrentlyEditing) {
+                return {
+                  ...d,
+                  title: title || "",
+                  content: currentContent || "",
+                  lastModified: new Date().getTime()
+                  // Keep original timestamp to avoid creating duplicates
+                };
+              }
+              return d;
+            });
+            localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+          } else {
+            // Create new draft
+            const newDraft = {
+              userId: user.id,
               title: title || "",
-              content: content || "",
-              timestamp: new Date().toISOString()
+              content: currentContent || "",
+              timestamp: new Date().toISOString(),
+              lastModified: new Date().getTime(),
+              isCurrentlyEditing: true,
+              date: new Date().toLocaleDateString('en-US', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              }),
+              day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+              time: new Date().toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+              })
             };
+            
+            // Remove editing flag from all other drafts
+            const otherDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
+            localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify([newDraft, ...otherDrafts]));
           }
-          return d;
-        });
-        localStorage.setItem('journal_drafts', JSON.stringify(updatedDrafts));
-      } else {
-        // Create new draft
-        const newDraft = {
-          userId: user.id,
-          title: title || "",
-          content: content || "",
-          timestamp: new Date().toISOString(),
-          isCurrentlyEditing: true
-        };
-        
-        // Remove editing flag from all other drafts
-        const otherDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
-        localStorage.setItem('journal_drafts', JSON.stringify([newDraft, ...otherDrafts]));
+          
+          // Silent saving - no status updates to avoid re-renders
+          
+        } catch (error) {
+          console.error('Error saving draft:', error);
+        }
       }
-      setDraftSaved(true);
-      setTimeout(() => setDraftSaved(false), 2000);
     };
 
     if (draftTimerRef.current) {
@@ -113,27 +192,81 @@ export default function NewJournalEntry() {
         clearTimeout(draftTimerRef.current);
       }
     };
-  }, [title, user]);
+  }, [title, user]); // Only trigger on title changes
 
-  // Clear draft when component unmounts
+  // Save draft immediately when page is about to unload
   useEffect(() => {
-    return () => {
+    const handleBeforeUnload = () => {
       if (user) {
-        const drafts = JSON.parse(localStorage.getItem('journal_drafts') || '[]');
-        const updatedDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
-        localStorage.setItem('journal_drafts', JSON.stringify(updatedDrafts));
+        const currentContent = editorRef.current ? editorRef.current.value : '';
+        if (title || currentContent) {
+          try {
+            const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
+            const currentDraft = drafts.find(d => d.isCurrentlyEditing);
+            
+            if (currentDraft) {
+              // Update existing draft
+              const updatedDrafts = drafts.map(d => {
+                if (d.isCurrentlyEditing) {
+                  return {
+                    ...d,
+                    title: title || "",
+                    content: currentContent || "",
+                    lastModified: new Date().getTime()
+                    // Keep original timestamp to avoid creating duplicates
+                  };
+                }
+                return d;
+              });
+              localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+            } else {
+              // Create new draft
+              const newDraft = {
+                userId: user.id,
+                title: title || "",
+                content: currentContent || "",
+                timestamp: new Date().toISOString(),
+                lastModified: new Date().getTime(),
+                isCurrentlyEditing: true,
+                date: new Date().toLocaleDateString('en-US', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                }),
+                day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+                time: new Date().toLocaleTimeString('en-US', { 
+                  hour: 'numeric', 
+                  minute: '2-digit',
+                  hour12: true 
+                })
+              };
+
+              const otherDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
+              localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify([newDraft, ...otherDrafts]));
+            }
+          } catch (error) {
+            console.error('Error saving draft on unload:', error);
+          }
+        }
       }
     };
-  }, [user]);
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [title, user]); // Removed content from dependencies
+
+  // Don't clear the currently editing flag when leaving the page
+  // This ensures drafts persist across page refreshes and navigation
+  // The flag will only be cleared when the draft is saved or deleted
 
   const clearDraft = () => {
     if (user) {
-      const drafts = JSON.parse(localStorage.getItem('journal_drafts') || '[]');
+      const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
       const currentDraft = drafts.find(d => d.isCurrentlyEditing);
       if (!currentDraft) return;
 
       const filteredDrafts = drafts.filter(d => !d.isCurrentlyEditing);
-      localStorage.setItem('journal_drafts', JSON.stringify(filteredDrafts));
+      localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(filteredDrafts));
     }
   };
 
@@ -155,8 +288,8 @@ export default function NewJournalEntry() {
   }
 
   const handleSave = async () => {
-    // Get content directly from the editor
-    const editorContent = editorRef.current?.value || "";
+    // Get content from state or editor
+    const editorContent = content || editorRef.current?.value || "";
     
     // Check if content is empty or only contains whitespace/HTML tags
     const tempDiv = document.createElement('div');
@@ -254,6 +387,81 @@ export default function NewJournalEntry() {
     events: {
       afterInit: function(editor) {
         editorRef.current = editor;
+        // Set initial content if available
+        if (content) {
+          editor.value = content;
+        }
+        
+        // Add event listener to trigger draft saving
+        editor.events.on('change', () => {
+          // Mark as typing without causing re-render
+          isTypingRef.current = true;
+          
+          // Clear any existing timer
+          if (draftTimerRef.current) {
+            clearTimeout(draftTimerRef.current);
+          }
+          
+          // Set timer for draft saving
+          draftTimerRef.current = setTimeout(() => {
+            if (user && editorRef.current) {
+              const currentContent = editorRef.current.value;
+              if (title || currentContent) {
+                try {
+                  const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
+                  const currentDraft = drafts.find(d => d.isCurrentlyEditing);
+                  
+                  if (currentDraft) {
+                    const updatedDrafts = drafts.map(d => {
+                      if (d.isCurrentlyEditing) {
+                        return {
+                          ...d,
+                          title: title || "",
+                          content: currentContent || "",
+                          lastModified: new Date().getTime()
+                          // Keep original timestamp to avoid creating duplicates
+                        };
+                      }
+                      return d;
+                    });
+                    localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+                  } else {
+                    const newDraft = {
+                      userId: user.id,
+                      title: title || "",
+                      content: currentContent || "",
+                      timestamp: new Date().toISOString(),
+                      lastModified: new Date().getTime(),
+                      isCurrentlyEditing: true,
+                      date: new Date().toLocaleDateString('en-US', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      }),
+                      day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+                      time: new Date().toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit',
+                        hour12: true 
+                      })
+                    };
+                    
+                    const otherDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
+                    localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify([newDraft, ...otherDrafts]));
+                  }
+                  
+                  // Mark as not typing after a delay
+                  setTimeout(() => {
+                    isTypingRef.current = false;
+                  }, 2000);
+                  
+                } catch (error) {
+                  console.error('Error saving draft:', error);
+                }
+              }
+            }
+          }, 1000);
+        });
       }
     }
   };
@@ -264,15 +472,15 @@ export default function NewJournalEntry() {
         {/* Header Section */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link href="/journal" className="flex items-center gap-2 text-primary hover:underline">
+            <Link 
+              href={searchParams.get('editDraft') ? "/journal/draft" : "/journal"} 
+              className="flex items-center gap-2 text-primary hover:underline"
+            >
               <FiArrowLeft size={18} />
-              <span>Back to Journal</span>
+              <span>Back</span>
             </Link>
-            {draftSaved && (
-              <span className="text-sm text-gray-400">
-                Draft saved
-              </span>
-            )}
+
+
           </div>
 
           <button

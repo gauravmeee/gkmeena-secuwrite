@@ -123,9 +123,8 @@ export default function JournalPage() {
         setEntries(journalEntries || []);
 
         // Count drafts
-        const drafts = JSON.parse(localStorage.getItem('journal_drafts') || '[]');
-        const userDrafts = drafts.filter(draft => draft.userId === user.id);
-        setDraftsCount(userDrafts.length);
+        const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
+        setDraftsCount(drafts.length);
 
       } catch (error) {
         console.error("Error loading journal entries:", error);
@@ -135,6 +134,30 @@ export default function JournalPage() {
     };
 
     loadData();
+  }, [user]);
+
+  // Refresh draft count when page becomes visible (user navigates back)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user) {
+        const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
+        setDraftsCount(drafts.length);
+      }
+    };
+
+    const handleFocus = () => {
+      if (user) {
+        const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
+        setDraftsCount(drafts.length);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [user]);
 
   useEffect(() => {
@@ -249,6 +272,11 @@ export default function JournalPage() {
           </div>
           <Link
             href="/journal/new"
+            onClick={() => {
+              if (user) {
+                sessionStorage.setItem(`journal_new_session_${user.id}`, 'true');
+              }
+            }}
             className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-all"
           >
             <FiPlus size={18} />
@@ -290,12 +318,9 @@ export default function JournalPage() {
                               className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
                             />
                           )}
-                          <Link
-                            href={`/journal/${entry.id}`}
-                            className="text-lg font-semibold text-white hover:underline"
-                          >
+                          <h2 className="text-lg font-semibold text-white">
                             {entry.title}
-                          </Link>
+                          </h2>
                         </div>
                         <div className="flex items-center gap-2 text-gray-400">
                           <span>{entry.dateTime}</span>
@@ -303,12 +328,17 @@ export default function JournalPage() {
                       </div>
                     </div>
                     <div className="p-4">
-                      <div className="prose prose-gray max-w-none text-gray-800">
-                        <div
-                          className="line-clamp-5 [&_img]:max-w-[200px] [&_img]:max-h-[150px] [&_img]:object-cover [&_img]:my-2"
-                          dangerouslySetInnerHTML={{ __html: entry.preview.content }}
-                        />
-                      </div>
+                      <Link
+                        href={`/journal/${entry.id}`}
+                        className="block"
+                      >
+                        <div className="prose prose-gray max-w-none text-gray-800">
+                          <div
+                            className="line-clamp-5 [&_img]:max-w-[200px] [&_img]:max-h-[150px] [&_img]:object-cover [&_img]:my-2"
+                            dangerouslySetInnerHTML={{ __html: entry.preview.content }}
+                          />
+                        </div>
+                      </Link>
                     </div>
                   </div>
                 ))}

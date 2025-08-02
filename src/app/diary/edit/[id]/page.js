@@ -343,13 +343,11 @@ export default function EditDiaryEntry() {
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
+            <Link href={`/diary/${entryId}`} className="flex items-center gap-2 text-primary hover:underline">
               <FiArrowLeft size={16} />
-              <span>Back to Diary</span>
+              <span>Back</span>
             </Link>
-            {(title || content) && entryType === 'text' && (
-              <span className="text-gray-400 text-sm">Draft saved</span>
-            )}
+            {(title || content) && entryType === 'text'}
           </div>
           
           <button

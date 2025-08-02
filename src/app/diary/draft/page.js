@@ -6,13 +6,9 @@ import Link from "next/link";
 import { FiArrowLeft, FiSave, FiTrash2, FiEdit2 } from "react-icons/fi";
 import { useAuth } from "../../../context/AuthContext";
 import databaseUtils from "../../../lib/database";
-import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
-
 export default function DraftDiaryPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedDraft, setSelectedDraft] = useState(null);
   const [drafts, setDrafts] = useState([]);
   const router = useRouter();
   const { user } = useAuth();
@@ -86,7 +82,6 @@ export default function DraftDiaryPage() {
       );
       localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify(updatedDrafts));
       setDrafts(updatedDrafts);
-      setShowDeleteModal(false);
       
       if (updatedDrafts.length === 0) {
         router.push("/diary");
@@ -98,19 +93,11 @@ export default function DraftDiaryPage() {
   };
 
   const handleEdit = (draft) => {
-    // Store the draft as the most recent one and mark it as being edited
-    const otherDrafts = drafts.filter(d => d.timestamp !== draft.timestamp);
-    const draftToEdit = { ...draft, isCurrentlyEditing: true };
-    localStorage.setItem(
-      `diary_drafts_${user.id}`, 
-      JSON.stringify([draftToEdit, ...otherDrafts.map(d => ({ ...d, isCurrentlyEditing: false }))])
-    );
-    
-    // Navigate to the appropriate page based on entry type
+    // Navigate to the appropriate page based on entry type with editDraft parameter
     if (draft.entry_type === 'image') {
-      router.push("/diary/new?type=image");
+      router.push(`/diary/new?type=image&editDraft=${draft.timestamp}`);
     } else {
-      router.push("/diary/new");
+      router.push(`/diary/new?editDraft=${draft.timestamp}`);
     }
   };
 
@@ -147,20 +134,18 @@ export default function DraftDiaryPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <DeleteConfirmationModal 
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={() => handleDelete(selectedDraft)}
-        itemType="draft"
-      />
-      
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
           <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
             <FiArrowLeft size={16} />
-            <span>Back to Diary</span>
+            <span>Back</span>
           </Link>
-          <h1 className="text-3xl font-bold">My Drafts</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">My Drafts</h1>
+            <span className="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full">
+              {drafts.length} {drafts.length === 1 ? 'draft' : 'drafts'}
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-5">
@@ -208,10 +193,7 @@ export default function DraftDiaryPage() {
                       <span>Save</span>
                     </button>
                     <button
-                      onClick={() => {
-                        setSelectedDraft(draft);
-                        setShowDeleteModal(true);
-                      }}
+                      onClick={() => handleDelete(draft)}
                       className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors cursor-pointer"
                     >
                       <FiTrash2 size={16} />
@@ -224,7 +206,10 @@ export default function DraftDiaryPage() {
                 </div>
               </div>
               
-              <div className={draft.entry_type === 'image' ? 'bg-white p-8' : 'lined-paper p-8 bg-white'}>
+              <div 
+                onClick={() => handleEdit(draft)}
+                className={`${draft.entry_type === 'image' ? 'bg-white p-8' : 'lined-paper p-8 bg-white'} cursor-pointer`}
+              >
                 <div className="mb-6 text-left">
                   <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">
                     {draft.date}

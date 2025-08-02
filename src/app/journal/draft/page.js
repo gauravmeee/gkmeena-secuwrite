@@ -5,14 +5,12 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../../context/AuthContext";
 import Link from "next/link";
 import { FiArrowLeft, FiEdit2, FiSave, FiTrash2 } from "react-icons/fi";
-import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
+import databaseUtils from "../../../lib/database";
 
 export default function JournalDraftPage() {
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedDraft, setSelectedDraft] = useState(null);
   const router = useRouter();
   const { user } = useAuth();
 
@@ -26,24 +24,14 @@ export default function JournalDraftPage() {
   }, [user, router]);
 
   const loadDrafts = () => {
-    const storedDrafts = JSON.parse(localStorage.getItem('journal_drafts') || '[]');
-    const userDrafts = storedDrafts.filter(draft => draft.userId === user?.id);
-    setDrafts(userDrafts);
+    const storedDrafts = JSON.parse(localStorage.getItem(`journal_drafts_${user?.id}`) || '[]');
+    setDrafts(storedDrafts);
     setLoading(false);
   };
 
   const handleEdit = (draft) => {
-    // Store the draft as the most recent one and mark it as being edited
-    const allDrafts = JSON.parse(localStorage.getItem('journal_drafts') || '[]');
-    const otherDrafts = allDrafts.filter(d => d.userId !== user.id || d.timestamp !== draft.timestamp);
-    const draftToEdit = { ...draft, isCurrentlyEditing: true };
-    localStorage.setItem(
-      'journal_drafts', 
-      JSON.stringify([draftToEdit, ...otherDrafts.map(d => ({ ...d, isCurrentlyEditing: false }))])
-    );
-    
-    // Navigate to new page for editing
-    router.push('/journal/new');
+    // Navigate to new page for editing with editDraft parameter
+    router.push(`/journal/new?editDraft=${draft.timestamp}`);
   };
 
   const handleSave = async (draft) => {
@@ -70,7 +58,7 @@ export default function JournalDraftPage() {
         const updatedDrafts = drafts.filter(d => 
           d.timestamp !== draft.timestamp
         );
-        localStorage.setItem('journal_drafts', JSON.stringify(updatedDrafts));
+        localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
         setDrafts(updatedDrafts);
         
         if (updatedDrafts.length === 0) {
@@ -88,17 +76,16 @@ export default function JournalDraftPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!user || !selectedDraft) return;
+  const handleDelete = async (draft) => {
+    if (!user) return;
     
     try {
       // Remove this draft from localStorage
       const updatedDrafts = drafts.filter(d => 
-        d.timestamp !== selectedDraft.timestamp
+        d.timestamp !== draft.timestamp
       );
-      localStorage.setItem('journal_drafts', JSON.stringify(updatedDrafts));
+      localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
       setDrafts(updatedDrafts);
-      setShowDeleteModal(false);
       
       if (updatedDrafts.length === 0) {
         router.push("/journal");
@@ -142,20 +129,18 @@ export default function JournalDraftPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <DeleteConfirmationModal 
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDelete}
-        itemType="draft"
-      />
-      
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
           <Link href="/journal" className="flex items-center gap-2 text-primary hover:underline">
             <FiArrowLeft size={16} />
-            <span>Back to Journal</span>
+            <span>Back</span>
           </Link>
-          <h1 className="text-3xl font-bold">My Drafts</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">My Drafts</h1>
+            <span className="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full">
+              {drafts.length} {drafts.length === 1 ? 'draft' : 'drafts'}
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-5">
@@ -167,15 +152,14 @@ export default function JournalDraftPage() {
               <div className="bg-gray-800 border-b border-gray-700 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleEdit(draft)}
-                      className="text-lg font-semibold text-white hover:underline"
-                    >
-                      {draft.title || "Untitled Draft"}
+                    <h2 className="text-lg font-semibold text-white">
+                      {draft.title && (
+                        <span>{draft.title}</span>
+                      )}
                       <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
                         Draft
                       </span>
-                    </button>
+                    </h2>
                   </div>
                   <div className="flex items-center gap-3">
                     <button
@@ -194,10 +178,7 @@ export default function JournalDraftPage() {
                       <span>Save</span>
                     </button>
                     <button
-                      onClick={() => {
-                        setSelectedDraft(draft);
-                        setShowDeleteModal(true);
-                      }}
+                      onClick={() => handleDelete(draft)}
                       className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors cursor-pointer"
                     >
                       <FiTrash2 size={16} />
@@ -211,17 +192,22 @@ export default function JournalDraftPage() {
               </div>
               
               <div className="p-4">
-                <div className="prose prose-gray max-w-none text-gray-800">
-                  <div className="line-clamp-5 [&_img]:max-w-[200px] [&_img]:max-h-[150px] [&_img]:object-cover [&_img]:my-2">
-                    {draft.content ? (
-                      <div dangerouslySetInnerHTML={{ 
-                        __html: draft.content.length > 300 
-                          ? draft.content.substring(0, 300) + "..." 
-                          : draft.content 
-                      }} />
-                    ) : (
-                      <em>No content</em>
-                    )}
+                <div
+                  onClick={() => handleEdit(draft)}
+                  className="cursor-pointer"
+                >
+                  <div className="prose prose-gray max-w-none text-gray-800">
+                    <div className="line-clamp-5 [&_img]:max-w-[200px] [&_img]:max-h-[150px] [&_img]:object-cover [&_img]:my-2">
+                      {draft.content ? (
+                        <div dangerouslySetInnerHTML={{ 
+                          __html: draft.content.length > 300 
+                            ? draft.content.substring(0, 300) + "..." 
+                            : draft.content 
+                        }} />
+                      ) : (
+                        <em>No content</em>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

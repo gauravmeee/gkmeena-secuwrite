@@ -196,7 +196,7 @@ export default function EditJournalEntry() {
         <div className="flex items-center justify-between mb-6">
           <Link href={`/journal/${params.id}`} className="flex items-center gap-2 text-primary hover:underline">
             <FiArrowLeft size={18} />
-            <span>Back to Entry</span>
+            <span>Back</span>
           </Link>
 
           <button
