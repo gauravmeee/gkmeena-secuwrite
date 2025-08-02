@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import databaseUtils from "../../lib/database";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import NoEntriesState from "../components/NoEntriesState";
+import SignInPrompt from "../components/SignInPrompt";
 import { useRouter } from "next/navigation";
 
 const stripHtml = (html) => {
@@ -105,13 +106,10 @@ export default function JournalPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setAuthChecked(true);
-      if (!user) {
-        router.push('/');
-      }
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [user, router]);
+  }, [user]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -244,6 +242,11 @@ export default function JournalPage() {
         </main>
       </div>
     );
+  }
+
+  // Show sign in prompt if not authenticated
+  if (!user) {
+    return <SignInPrompt type="Journal" />;
   }
 
   return (

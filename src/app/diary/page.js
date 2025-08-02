@@ -8,6 +8,7 @@ import databaseUtils from "../../lib/database";
 import { supabase } from "../../lib/supabase";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import NoEntriesState from "../components/NoEntriesState";
+import SignInPrompt from "../components/SignInPrompt";
 import { useRouter } from "next/navigation";
 
 // Function to strip HTML tags for preview
@@ -138,22 +139,7 @@ export default function DiaryPage() {
 
   // Show sign in prompt if not authenticated
   if (!user) {
-    return (
-      <div className="min-h-screen bg-black text-white">
-        <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold mb-4">Your Diary</h1>
-            <p className="text-gray-400 mb-8">Sign in to access your diary entries</p>
-            <button
-              onClick={toggleAuthModal}
-              className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-md transition-colors"
-            >
-              Sign In
-            </button>
-          </div>
-        </main>
-      </div>
-    );
+    return <SignInPrompt type="Diary" />;
   }
 
   // Calculate pagination
