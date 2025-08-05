@@ -15,6 +15,7 @@ import Link from "next/link";
 import FeedbackSection from "./components/FeedbackSection";
 import EncryptionMigration from '../components/EncryptionMigration';
 
+
 // Cache for entry counts
 const CACHE_TIME = 5 * 60 * 1000; // 5 minutes
 let countCache = {
@@ -281,6 +282,8 @@ export default function Home() {
         {/* Content Section Component */}
         <ContentSection />
       </div>
+      
+
       
       {/* Feedback Section with improved styling */}
       <section className="mt-16">

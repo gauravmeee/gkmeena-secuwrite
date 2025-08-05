@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FiPlus, FiTrash2, FiX } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
+import { useLock } from "../../context/LockContext";
 import databaseUtils from "../../lib/database";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import NoEntriesState from "../components/NoEntriesState";
@@ -98,6 +99,7 @@ export default function JournalPage() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { user, toggleAuthModal } = useAuth();
+  const { shouldBlur } = useLock();
   const [entries, setEntries] = useState([]);
   const [authChecked, setAuthChecked] = useState(false);
   const [draftsCount, setDraftsCount] = useState(0);
@@ -273,18 +275,48 @@ export default function JournalPage() {
               </Link>
             )}
           </div>
-          <Link
-            href="/journal/new"
-            onClick={() => {
-              if (user) {
-                sessionStorage.setItem(`journal_new_session_${user.id}`, 'true');
-              }
-            }}
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-all"
-          >
-            <FiPlus size={18} />
-            <span className="hidden sm:inline">New Entry</span>
-          </Link>
+          <div className="flex gap-2">
+            {user && processedEntries.length > 0 && (
+              <>
+                <button
+                  onClick={handleToggleSelectionMode}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors cursor-pointer border-2 ${
+                    isSelectionMode
+                      ? "bg-gray-600 text-white hover:bg-gray-700 border-transparent"
+                      : "border-green-500 text-green-500 hover:border-green-400 hover:text-green-400 bg-gray-800/40"
+                  }`}
+                >
+                  {isSelectionMode ? <FiX size={18} /> : <FiTrash2 size={18} />}
+                  <span className="hidden sm:inline">
+                    {isSelectionMode ? "Cancel" : "Delete Multiple"}
+                  </span>
+                </button>
+
+                {isSelectionMode && selectedEntries.size > 0 && (
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors cursor-pointer border-2 border-transparent"
+                  >
+                    <FiTrash2 size={18} />
+                    <span className="hidden sm:inline">Delete</span> ({selectedEntries.size})
+                  </button>
+                )}
+              </>
+            )}
+
+            <Link
+              href="/journal/new"
+              onClick={() => {
+                if (user) {
+                  sessionStorage.setItem(`journal_new_session_${user.id}`, 'true');
+                }
+              }}
+              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-all"
+            >
+              <FiPlus size={18} />
+              <span className="hidden sm:inline">New Entry</span>
+            </Link>
+          </div>
         </div>
 
         {processedEntries.length === 0 ? (
@@ -335,7 +367,9 @@ export default function JournalPage() {
                         href={`/journal/${entry.id}`}
                         className="block"
                       >
-                        <div className="prose prose-gray max-w-none text-gray-800">
+                        <div className={`prose prose-gray max-w-none text-gray-800 ${
+                          shouldBlur('journal') ? 'blur-sm' : ''
+                        }`}>
                           <div
                             className="line-clamp-5 [&_img]:max-w-[200px] [&_img]:max-h-[150px] [&_img]:object-cover [&_img]:my-2"
                             dangerouslySetInnerHTML={{ __html: entry.preview.content }}

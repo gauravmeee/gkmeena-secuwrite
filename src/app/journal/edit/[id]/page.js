@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { FiSave, FiArrowLeft } from "react-icons/fi";
 import Link from "next/link";
+import EntryLockProtection from "../../../components/EntryLockProtection";
 import { useAuth } from "../../../../context/AuthContext";
 import { supabase } from "../../../../lib/supabase";
 import dynamic from "next/dynamic";
@@ -190,8 +191,9 @@ export default function EditJournalEntry() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <main className="max-w-6xl mx-auto pt-24 px-4 pb-20">
+    <EntryLockProtection entryType="journal">
+      <div className="min-h-screen bg-gray-950 text-white">
+        <main className="max-w-6xl mx-auto pt-24 px-4 pb-20">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-6">
           <Link href={`/journal/${params.id}`} className="flex items-center gap-2 text-primary hover:underline">
@@ -273,7 +275,8 @@ export default function EditJournalEntry() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+        </main>
+      </div>
+    </EntryLockProtection>
   );
 }

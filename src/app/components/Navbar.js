@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { FiBook, FiEdit, FiHome, FiUser, FiLogOut, FiMenu, FiX, FiChevronDown, FiExternalLink } from "react-icons/fi";
+import { FiBook, FiEdit, FiHome, FiUser, FiLogOut, FiMenu, FiX, FiChevronDown } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
+import LockMenu from "./LockMenu";
 
 export default function Navbar() {
   const pathname = usePathname();
   const { user, signOut, toggleAuthModal } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [resourcesOpen, setResourcesOpen] = useState(false);
   
   useEffect(() => {
     const handleScroll = () => {
@@ -59,70 +59,33 @@ export default function Navbar() {
             <span>Journal</span>
           </Link>
 
-          {/* More Resources Dropdown */}
-          <div className="relative group">
-            <button 
-              className={`flex items-center gap-1.5 py-2 transition-colors duration-200 ${isActive('/resources')}`}
-              onClick={() => setResourcesOpen(!resourcesOpen)}
-            >
-              <span>More Resources</span>
-              <FiChevronDown size={16} className="text-primary transition-transform duration-200 group-hover:rotate-180" />
-            </button>
-            
-            <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 backdrop-blur-md rounded-lg shadow-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 border border-gray-800/30">
-              <a 
-                href="https://mycodebank.vercel.app/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col gap-1 p-4 hover:bg-gray-700/30 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <img 
-                    src="https://mycodebank.vercel.app/favicon.png" 
-                    alt="CodeBank Logo" 
-                    className="w-5 h-5 rounded"
-                  />
-                  <span className="font-medium">CodeBank</span>
-                  <FiExternalLink size={14} className="text-primary" />
-                </div>
-                <p className="text-sm text-gray-400">Your ultimate platform for contests, job posts, Resources and more!</p>
-              </a>
-            </div>
-          </div>
 
-          {/* Know Me Link */}
-          <a 
-            href="https://gkmeena.netlify.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 py-2 text-foreground/70 hover:text-white transition-colors duration-200"
-          >
-            <span>Know me</span>
-            <FiExternalLink size={14} className="text-primary" />
-          </a>
           
           {user ? (
-            <div className="relative group">
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-800/40 backdrop-blur-sm rounded-full hover:bg-gray-700/50 transition-all duration-200 ml-2">
-                <span className="text-sm font-medium truncate max-w-32">
-                  {user.email.split('@')[0]}
-                </span>
-                <FiChevronDown size={16} className="text-primary transition-transform duration-200 group-hover:rotate-180" />
-              </button>
-              
-              <div className="absolute right-0 top-full mt-2 w-48 bg-black/90 backdrop-blur-md rounded-lg shadow-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 border border-gray-800/30">
-                <div className="p-3 border-b border-gray-700/30">
-                  <p className="text-sm text-gray-300 truncate">{user.email}</p>
-                </div>
-                <button 
-                  onClick={signOut}
-                  className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left"
-                >
-                  <FiLogOut size={16} />
-                  <span>Sign Out</span>
+            <>
+              <LockMenu />
+              <div className="relative group">
+                <button className="flex items-center gap-2 px-4 py-2 bg-gray-800/40 backdrop-blur-sm rounded-full hover:bg-gray-700/50 transition-all duration-200 ml-2">
+                  <span className="text-sm font-medium truncate max-w-32">
+                    {user.email.split('@')[0]}
+                  </span>
+                  <FiChevronDown size={16} className="text-primary transition-transform duration-200 group-hover:rotate-180" />
                 </button>
+                
+                <div className="absolute right-0 top-full mt-2 w-48 bg-black/90 backdrop-blur-md rounded-lg shadow-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 border border-gray-800/30">
+                  <div className="p-3 border-b border-gray-700/30">
+                    <p className="text-sm text-gray-300 truncate">{user.email}</p>
+                  </div>
+                  <button 
+                    onClick={signOut}
+                    className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left"
+                  >
+                    <FiLogOut size={16} />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
               </div>
-            </div>
+            </>
           ) : (
             <button 
               onClick={toggleAuthModal}
@@ -170,42 +133,7 @@ export default function Navbar() {
               <span className="text-lg">{pathname === '/journal' ? <span className="gradient-text font-medium">Journal</span> : 'Journal'}</span>
             </Link>
 
-            {/* Mobile More Resources */}
-            <div className="flex flex-col gap-2 p-4 rounded-lg hover:bg-gray-800/30">
-              <div className="flex items-center gap-3">
-                <span className="text-lg">More Resources</span>
-              </div>
-              <a 
-                href="https://mycodebank.vercel.app/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col gap-1"
-                onClick={closeMobileMenu}
-              >
-                <div className="flex items-center gap-2">
-                  <img 
-                    src="https://mycodebank.vercel.app/favicon.png" 
-                    alt="CodeBank Logo" 
-                    className="w-5 h-5 rounded"
-                  />
-                  <span className="font-medium">CodeBank</span>
-                  <FiExternalLink size={14} className="text-primary" />
-                </div>
-                <p className="text-sm text-gray-400">Your ultimate platform for contests, job posts, Resources and more!</p>
-              </a>
-            </div>
 
-            {/* Mobile Know Me Link */}
-            <a 
-              href="https://gkmeena.netlify.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 p-4 rounded-lg hover:bg-gray-800/30"
-              onClick={closeMobileMenu}
-            >
-              <span className="text-lg">Know me</span>
-              <FiExternalLink size={14} className="text-primary" />
-            </a>
             
             {user ? (
               <div className="mt-4 border-t border-gray-800/30 pt-4">

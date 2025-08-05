@@ -16,10 +16,10 @@ export default function ActionButtons({
         <>
           <button
             onClick={onToggleSelection}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border-2 ${
               isSelectionMode
-                ? "bg-gray-600 text-white hover:bg-gray-700"
-                : "bg-red-600 text-white hover:bg-red-700"
+                ? "bg-gray-600 text-white hover:bg-gray-700 border-transparent"
+                : "border-green-500 text-green-500 hover:border-green-400 hover:text-green-400 bg-gray-800/40"
             }`}
           >
             {isSelectionMode ? <FiX size={18} /> : <FiTrash2 size={18} />}
@@ -31,7 +31,7 @@ export default function ActionButtons({
           {isSelectionMode && selectedCount > 0 && (
             <button
               onClick={onDeleteSelected}
-              className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+              className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors border-2 border-transparent"
             >
               <FiTrash2 size={18} />
               <span className="hidden sm:inline">Delete</span> ({selectedCount})

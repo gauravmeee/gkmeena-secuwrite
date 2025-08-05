@@ -143,3 +143,31 @@ This application can be easily deployed on Vercel:
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+
+
+# To Implement
+
+I want to implement Lock Option.
+If Locked, 
+- then Text should be blurred in Preview on Home scree, Diary page, Journal Page
+- Diary/[id], Journal/[id], Diary/Edit/[id], Journal/edit/[id] should not open, if forcefully open through ur, than it should ask to unlock
+- Even Opening diary/draft... or Journal/draft, should not open, and also ask to unlock
+
+
+
+With a Lock Icon on Navbarbar, with menus:
+
+Case 1 : No password Set
+- Set Lock
+
+Case 2 : Passowrd Set
+
+2. 1 : If Locked
+- Unlock
+- Also Lock Journal [ ]  (checkbox)
+- Reset Password
+
+2. 2 : If Unlocked
+- Remove Lock
+- Change Password

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { FiSave, FiArrowLeft, FiUpload, FiX, FiImage, FiFileText } from "react-icons/fi";
 import Link from "next/link";
+import EntryLockProtection from "../../../components/EntryLockProtection";
 import { useAuth } from "../../../../context/AuthContext";
 import databaseUtils from "../../../../lib/database";
 import { supabase } from "../../../../lib/supabase";
@@ -339,8 +340,9 @@ export default function EditDiaryEntry() {
   }
   
   return (
-    <div className="min-h-screen bg-black text-white">
-      <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
+    <EntryLockProtection entryType="diary">
+      <div className="min-h-screen bg-black text-white">
+        <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <Link href={`/diary/${entryId}`} className="flex items-center gap-2 text-primary hover:underline">
@@ -484,7 +486,7 @@ export default function EditDiaryEntry() {
                     />
                     <button
                       onClick={removeImage}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors border-2 border-transparent"
                     >
                       <FiX size={20} />
                     </button>
@@ -518,6 +520,7 @@ export default function EditDiaryEntry() {
           padding-top: 0.5rem;
         }
       `}</style>
-    </div>
+        </div>
+      </EntryLockProtection>
   );
 } 

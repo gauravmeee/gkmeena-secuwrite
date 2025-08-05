@@ -5,23 +5,34 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../../context/AuthContext";
 import Link from "next/link";
 import { FiArrowLeft, FiEdit2, FiSave, FiTrash2 } from "react-icons/fi";
+import EntryLockProtection from "../../components/EntryLockProtection";
 import databaseUtils from "../../../lib/database";
 
 export default function JournalDraftPage() {
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
 
+  // Check authentication first
   useEffect(() => {
-    if (!user) {
-      router.push('/');
-      return;
-    }
+    const timer = setTimeout(() => {
+      setAuthChecked(true);
+      if (!user) {
+        router.push('/');
+      }
+    }, 1000);
 
-    loadDrafts();
+    return () => clearTimeout(timer);
   }, [user, router]);
+
+  useEffect(() => {
+    if (user && authChecked) {
+      loadDrafts();
+    }
+  }, [user, authChecked]);
 
   const loadDrafts = () => {
     const storedDrafts = JSON.parse(localStorage.getItem(`journal_drafts_${user?.id}`) || '[]');
@@ -96,7 +107,7 @@ export default function JournalDraftPage() {
     }
   };
 
-  if (loading) {
+  if (!authChecked || loading) {
     return (
       <div className="min-h-screen bg-black text-white">
         <main className="max-w-4xl mx-auto pt-24 px-4">
@@ -128,8 +139,9 @@ export default function JournalDraftPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
+    <EntryLockProtection entryType="journal">
+      <div className="min-h-screen bg-black text-white">
+        <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
           <Link href="/journal" className="flex items-center gap-2 text-primary hover:underline">
             <FiArrowLeft size={16} />
@@ -214,7 +226,8 @@ export default function JournalDraftPage() {
             </div>
           ))}
         </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </EntryLockProtection>
   );
 } 

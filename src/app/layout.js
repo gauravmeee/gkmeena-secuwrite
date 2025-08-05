@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Homemade_Apple } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from '../context/AuthContext';
+import { LockProvider } from '../context/LockContext';
 import AuthModal from './components/AuthModal';
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
@@ -44,12 +45,14 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} ${homemadeApple.variable} antialiased`}
       >
         <AuthProvider>
-          <Navbar />
-          <main className="flex-grow bg-gray-950 text-gray-100 pt-16">
-            {children}
-          </main>
-          <Footer />
-          <AuthModal />
+          <LockProvider>
+            <Navbar />
+            <main className="flex-grow bg-gray-950 text-gray-100 pt-16">
+              {children}
+            </main>
+            <Footer />
+            <AuthModal />
+          </LockProvider>
         </AuthProvider>
       </body>
     </html>

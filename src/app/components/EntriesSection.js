@@ -4,6 +4,7 @@ import { FiCalendar, FiBook, FiEdit3, FiClock, FiChevronRight } from "react-icon
 import CreateFirstEntryDialog from "./CreateFirstEntryDialog";
 import EntryTypeCard from "./EntryTypeCard";
 import { useAuth } from "../../context/AuthContext";
+import { useLock } from "../../context/LockContext";
 import databaseUtils from "../../lib/database";
 import { stripHtml } from "../../utils/textUtils";
 
@@ -20,6 +21,7 @@ export default function EntriesSection({ viewMode, entryTypes }) {
   const [loading, setLoading] = useState(true);
   const [anyEntryExists, setAnyEntryExists] = useState(false);
   const { user, toggleAuthModal } = useAuth();
+  const { shouldBlur } = useLock();
 
   // Memoized function to format entry data
   const formatEntry = useMemo(() => (entry, type) => {
@@ -251,7 +253,9 @@ export default function EntriesSection({ viewMode, entryTypes }) {
                         <div className="h-6 mb-2"></div> 
                       )}
                       
-                      <p className="font-handwriting italic text-gray-400 text-sm line-clamp-3 mb-4 flex-grow">
+                      <p className={`font-handwriting italic text-gray-400 text-sm line-clamp-3 mb-4 flex-grow ${
+                        shouldBlur(entry.type) ? 'blur-sm' : ''
+                      }`}>
                         {entry.preview}
                       </p>
                       

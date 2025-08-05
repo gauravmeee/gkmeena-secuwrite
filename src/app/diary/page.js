@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FiPlus, FiTrash2, FiX, FiCamera, FiEdit2, FiImage } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
+import { useLock } from "../../context/LockContext";
 import databaseUtils from "../../lib/database";
 import { supabase } from "../../lib/supabase";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
@@ -38,6 +39,7 @@ export default function DiaryPage() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { user, toggleAuthModal } = useAuth();
+  const { shouldBlur } = useLock();
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(10);
   const [draftsCount, setDraftsCount] = useState(0);
@@ -124,13 +126,17 @@ export default function DiaryPage() {
     }
   }, [user]);
 
-  // Show loading only during initial auth check
-  if (!user && loading) {
+  // Show loading while entries are being loaded
+  if (loading) {
     return (
       <div className="min-h-screen bg-black text-white">
         <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          <div className="flex justify-center items-center h-64">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
+              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
+            </div>
           </div>
         </main>
       </div>
@@ -291,10 +297,10 @@ export default function DiaryPage() {
               <>
                 <button
                   onClick={handleToggleSelectionMode}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors cursor-pointer ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors cursor-pointer border-2 ${
                     isSelectionMode
-                      ? "bg-gray-600 text-white hover:bg-gray-700"
-                      : "bg-red-600 text-white hover:bg-red-700"
+                      ? "bg-gray-600 text-white hover:bg-gray-700 border-transparent"
+                      : "border-green-500 text-green-500 hover:border-green-400 hover:text-green-400 bg-gray-800/40"
                   }`}
                 >
                   {isSelectionMode ? <FiX size={18} /> : <FiTrash2 size={18} />}
@@ -306,7 +312,7 @@ export default function DiaryPage() {
                 {isSelectionMode && selectedEntries.size > 0 && (
                   <button
                     onClick={handleDeleteSelected}
-                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors cursor-pointer"
+                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors cursor-pointer border-2 border-transparent"
                   >
                     <FiTrash2 size={18} />
                     <span className="hidden sm:inline">Delete</span> ({selectedEntries.size})
@@ -346,7 +352,7 @@ export default function DiaryPage() {
           </div>
         </div>
 
-        {processedEntries.length === 0 ? (
+        {!loading && processedEntries.length === 0 ? (
           <NoEntriesState type="Diary" />
         ) : (
           <>
@@ -411,7 +417,9 @@ export default function DiaryPage() {
                             <img
                               src={entry.content}
                               alt="Diary entry"
-                              className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"
+                              className={`w-full max-h-48 object-cover object-top rounded-lg shadow-sm ${
+                                shouldBlur('diary') ? 'blur-md' : ''
+                              }`}
                               onError={(e) => {
                                 console.warn('Image loading error:', {
                                   src: e.target.src
@@ -421,7 +429,9 @@ export default function DiaryPage() {
                             />
                           </div>
                         ) : (
-                          <p className="pt-2 font-handwriting text-xl">
+                          <p className={`pt-2 font-handwriting text-xl ${
+                            shouldBlur('diary') ? 'blur-sm' : ''
+                          }`}>
                             {entry.preview}
                           </p>
                         )}

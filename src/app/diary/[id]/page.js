@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
 import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
+import EntryLockProtection from "../../components/EntryLockProtection";
 import { useAuth } from "../../../context/AuthContext";
 import databaseUtils from "../../../lib/database";
 import { supabase } from "../../../lib/supabase";
@@ -295,9 +296,10 @@ export default function DiaryEntryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      
-      <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
+    <EntryLockProtection entryType="diary">
+      <div className="min-h-screen bg-black text-white">
+        
+        <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
                       <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
               <FiArrowLeft size={16} />
@@ -427,6 +429,7 @@ export default function DiaryEntryPage() {
       />
       
 
-    </div>
+        </div>
+      </EntryLockProtection>
   );
 } 

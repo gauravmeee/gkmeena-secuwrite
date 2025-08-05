@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
 import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
+import EntryLockProtection from "../../components/EntryLockProtection";
 import { useAuth } from "../../../context/AuthContext";
 import { supabase } from "../../../lib/supabase";
 import databaseUtils from "../../../lib/database";
@@ -145,8 +146,9 @@ export default function JournalEntryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
+    <EntryLockProtection entryType="journal">
+      <div className="min-h-screen bg-black text-white">
+        <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
                       <Link href="/journal" className="flex items-center gap-2 text-primary hover:underline">
               <FiArrowLeft size={16} />
@@ -195,6 +197,7 @@ export default function JournalEntryPage() {
         onConfirm={handleDelete}
         itemType="journal entry"
       />
-    </div>
+        </div>
+      </EntryLockProtection>
   );
 }

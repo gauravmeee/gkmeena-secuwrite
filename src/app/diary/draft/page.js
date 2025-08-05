@@ -4,25 +4,37 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FiArrowLeft, FiSave, FiTrash2, FiEdit2 } from "react-icons/fi";
+import EntryLockProtection from "../../components/EntryLockProtection";
 import { useAuth } from "../../../context/AuthContext";
 import databaseUtils from "../../../lib/database";
 export default function DraftDiaryPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [drafts, setDrafts] = useState([]);
+  const [authChecked, setAuthChecked] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
 
-  // Load drafts when component mounts
+  // Check authentication first
   useEffect(() => {
-    if (user) {
+    const timer = setTimeout(() => {
+      setAuthChecked(true);
+      if (!user) {
+        router.push('/');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [user, router]);
+
+  // Load drafts when component mounts and user is authenticated
+  useEffect(() => {
+    if (user && authChecked) {
       const storedDrafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
       setDrafts(storedDrafts);
       setLoading(false);
-    } else {
-      router.push('/');
     }
-  }, [user, router]);
+  }, [user, authChecked]);
 
   const handleSave = async (draft) => {
     if (!user) return;
@@ -101,7 +113,7 @@ export default function DraftDiaryPage() {
     }
   };
 
-  if (loading) {
+  if (!authChecked || loading) {
     return (
       <div className="min-h-screen bg-black text-white">
         <main className="max-w-4xl mx-auto pt-24 px-4">
@@ -133,8 +145,9 @@ export default function DraftDiaryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
+    <EntryLockProtection entryType="diary">
+      <div className="min-h-screen bg-black text-white">
+        <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
           <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
             <FiArrowLeft size={16} />
@@ -272,6 +285,7 @@ export default function DraftDiaryPage() {
           padding-top: 0.5rem;
         }
       `}</style>
-    </div>
+        </div>
+      </EntryLockProtection>
   );
 } 
