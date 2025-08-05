@@ -24,7 +24,7 @@ export default function EntryLockProtection({ children, entryType }) {
   }, [isLocked, isUnlocked, shouldBlur, entryType, isLoading]);
 
   const handleClose = () => {
-    setShowUnlockPrompt(false);
+    router.back();
   };
 
   // Show loading state while lock context is initializing

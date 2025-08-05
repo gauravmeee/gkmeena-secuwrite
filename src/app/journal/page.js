@@ -260,7 +260,7 @@ export default function JournalPage() {
         itemType={`${selectedEntries.size} ${selectedEntries.size === 1 ? 'entry' : 'entries'}`}
       />
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold text-white">My Journal</h1>
             {draftsCount > 0 && (
@@ -268,14 +268,14 @@ export default function JournalPage() {
                 href="/journal/draft"
                 className="text-red-500 hover:text-red-400 transition-colors flex items-center gap-1"
               >
-                <span>Drafts</span>
-                <span className="bg-red-100 text-red-500 px-2 py-0.5 rounded text-sm">
+                <span className="hidden sm:inline">Drafts</span>
+                <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs font-medium">
                   {draftsCount}
                 </span>
               </Link>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {user && processedEntries.length > 0 && (
               <>
                 <button
