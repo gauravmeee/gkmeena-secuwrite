@@ -293,10 +293,10 @@ export default function DiaryPage() {
         itemType={`${selectedEntries.size} diary ${selectedEntries.size === 1 ? 'entry' : 'entries'}`}
       />
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold">My Diary</h1>
-            {user && draftsCount > 0 && (
+            {user && (
               <Link
                 href="/diary/draft"
                 className="text-red-500 hover:text-red-400 transition-colors flex items-center gap-1"
