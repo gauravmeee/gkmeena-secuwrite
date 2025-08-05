@@ -10,6 +10,7 @@ import { supabase } from "../../lib/supabase";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import NoEntriesState from "../components/NoEntriesState";
 import SignInPrompt from "../components/SignInPrompt";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useRouter } from "next/navigation";
 
 // Function to strip HTML tags for preview
@@ -267,6 +268,22 @@ export default function DiaryPage() {
     }
   };
 
+  // Show loading spinner while data is being fetched
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl font-bold">My Diary</h1>
+            </div>
+          </div>
+          <LoadingSpinner />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
       <DeleteConfirmationModal 
@@ -297,10 +314,10 @@ export default function DiaryPage() {
               <>
                 <button
                   onClick={handleToggleSelectionMode}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors cursor-pointer border-2 ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors cursor-pointer ${
                     isSelectionMode
-                      ? "bg-gray-600 text-white hover:bg-gray-700 border-transparent"
-                      : "border-green-500 text-green-500 hover:border-green-400 hover:text-green-400 bg-gray-800/40"
+                      ? "bg-gray-600 text-white hover:bg-gray-700"
+                      : "bg-red-600 text-white hover:bg-red-700"
                   }`}
                 >
                   {isSelectionMode ? <FiX size={18} /> : <FiTrash2 size={18} />}

@@ -23,22 +23,7 @@ export default function Footer() {
               <a href="https://www.linkedin.com/in/gauravmeee/" className="text-gray-500 hover:text-primary transition-colors">
                 <FiLinkedin size={14} />
               </a>
-            </div>
-          </div>
-          
-          {/* Links - Horizontal */}
-          <div className="flex items-center gap-4">
-            <Link href="/about" className="text-xs hover:text-primary transition-colors">About</Link>
-            <Link href="/privacy" className="text-xs hover:text-primary transition-colors">Privacy</Link>
-            <a 
-              href="https://mycodebank.vercel.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs hover:text-primary transition-colors flex items-center gap-1"
-            >
-              <span>More Resources</span>
-              <FiExternalLink size={10} />
-            </a>
+              
             <a 
               href="https://gkmeena.netlify.app/"
               target="_blank"
@@ -48,6 +33,13 @@ export default function Footer() {
               <span>Know me</span>
               <FiExternalLink size={10} />
             </a>
+            </div>
+          </div>
+          
+          {/* Links - Horizontal */}
+          <div className="flex items-center gap-4">
+            <Link href="/about" className="text-xs hover:text-primary transition-colors">About</Link>
+            <Link href="/privacy" className="text-xs hover:text-primary transition-colors">Privacy</Link>
             <p className="text-xs flex items-center gap-1">
               <span>Made with</span> <FiHeart size={10} className="text-red-500" /> <span>by GKmeena</span>
             </p>

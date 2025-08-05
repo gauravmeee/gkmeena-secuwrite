@@ -9,6 +9,7 @@ import databaseUtils from "../../lib/database";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import NoEntriesState from "../components/NoEntriesState";
 import SignInPrompt from "../components/SignInPrompt";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useRouter } from "next/navigation";
 
 const stripHtml = (html) => {
@@ -114,13 +115,26 @@ export default function JournalPage() {
   }, [user]);
 
   useEffect(() => {
-    const loadData = async () => {
-      if (!user) return;
+    async function loadData() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
+      setLoading(true);
       try {
         // Load journal entries
         const journalEntries = await databaseUtils.getJournalEntries(user.id);
         setEntries(journalEntries || []);
+
+        // Process entries for display
+        const processed = (journalEntries || []).map((entry) => ({
+          ...entry,
+          preview: generatePreview(entry.content),
+          dateTime: formatDateTime(entry.timestamp || entry.date || Date.now()),
+        }));
+
+        setProcessedEntries(processed);
 
         // Count drafts
         const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
@@ -131,7 +145,7 @@ export default function JournalPage() {
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     loadData();
   }, [user]);
@@ -158,36 +172,6 @@ export default function JournalPage() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [user]);
-
-  useEffect(() => {
-    async function loadEntries() {
-      setLoading(true);
-      try {
-        let entries = [];
-
-        if (user) {
-          const cloudEntries = await databaseUtils.getJournalEntries(user.id);
-          entries = cloudEntries;
-        } else if (typeof window !== "undefined") {
-          entries = JSON.parse(localStorage.getItem("journalEntries") || "[]");
-        }
-
-        const processed = entries.map((entry) => ({
-          ...entry,
-          preview: generatePreview(entry.content),
-          dateTime: formatDateTime(entry.timestamp || entry.date || Date.now()),
-        }));
-
-        setProcessedEntries(processed);
-      } catch (error) {
-        console.error("Error loading entries:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadEntries();
   }, [user]);
 
   const totalPages = Math.ceil(processedEntries.length / entriesPerPage);
@@ -251,6 +235,22 @@ export default function JournalPage() {
     return <SignInPrompt type="Journal" />;
   }
 
+  // Show loading spinner while data is being fetched
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl font-bold text-white">My Journal</h1>
+            </div>
+          </div>
+          <LoadingSpinner />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
       <DeleteConfirmationModal
@@ -280,10 +280,10 @@ export default function JournalPage() {
               <>
                 <button
                   onClick={handleToggleSelectionMode}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors cursor-pointer border-2 ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors cursor-pointer ${
                     isSelectionMode
-                      ? "bg-gray-600 text-white hover:bg-gray-700 border-transparent"
-                      : "border-green-500 text-green-500 hover:border-green-400 hover:text-green-400 bg-gray-800/40"
+                      ? "bg-gray-600 text-white hover:bg-gray-700"
+                      : "bg-red-600 text-white hover:bg-red-700"
                   }`}
                 >
                   {isSelectionMode ? <FiX size={18} /> : <FiTrash2 size={18} />}
@@ -389,7 +389,6 @@ export default function JournalPage() {
           </>
         )}
       </main>
-
     </div>
   );
 }

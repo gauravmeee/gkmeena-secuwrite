@@ -114,90 +114,84 @@ export default function JournalEntryPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black text-white">
-        <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (!entry) {
-    return (
-      <div className="min-h-screen bg-black text-white">
-        <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="flex flex-col justify-center items-center h-64 gap-4">
-            <p className="text-xl">Entry not found</p>
-            <Link href="/journal" className="text-primary hover:underline">
-              Return to Journal
-            </Link>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   return (
     <EntryLockProtection entryType="journal">
-      <div className="min-h-screen bg-black text-white">
-        <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
-        <div className="flex items-center justify-between mb-6">
-                      <Link href="/journal" className="flex items-center gap-2 text-primary hover:underline">
-              <FiArrowLeft size={16} />
-              <span>Back</span>
-            </Link>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/journal/edit/${entry.id}`}
-              className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
-            >
-              <FiEdit2 size={16} />
-              <span className="hidden sm:inline">Edit</span>
-            </Link>
-            <button
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors cursor-pointer"
-            >
-              <FiTrash2 size={16} />
-              <span className="hidden sm:inline">Delete</span>
-            </button>
-          </div>
+      {loading ? (
+        <div className="min-h-screen bg-black text-white">
+          <main className="max-w-4xl mx-auto pt-24 px-4">
+            <div className="flex justify-center items-center h-64">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
+                <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
+                <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
+              </div>
+            </div>
+          </main>
         </div>
+      ) : !entry ? (
+        <div className="min-h-screen bg-black text-white">
+          <main className="max-w-4xl mx-auto pt-24 px-4">
+            <div className="flex flex-col justify-center items-center h-64 gap-4">
+              <p className="text-xl">Entry not found</p>
+              <Link href="/journal" className="text-primary hover:underline">
+                Return to Journal
+              </Link>
+            </div>
+          </main>
+        </div>
+      ) : (
+        <div className="min-h-screen bg-black text-white">
+          <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
+          <div className="flex items-center justify-between mb-6">
+                        <Link href="/journal" className="flex items-center gap-2 text-primary hover:underline">
+                <FiArrowLeft size={16} />
+                <span>Back</span>
+              </Link>
 
-        {/* Journal entry display */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[calc(100vh-16rem)] flex flex-col">
-          <div className="bg-gray-800 border-b border-gray-700 p-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl font-semibold text-white">{entry.title}</h1>
-              <div className="text-gray-300 text-sm">{formatDateTime(entry.created_at || entry.date)}</div>
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/journal/edit/${entry.id}`}
+                className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
+              >
+                <FiEdit2 size={16} />
+                <span className="hidden sm:inline">Edit</span>
+              </Link>
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors cursor-pointer"
+              >
+                <FiTrash2 size={16} />
+                <span className="hidden sm:inline">Delete</span>
+              </button>
             </div>
           </div>
 
-          <div className="p-6 flex-1 bg-white">
-            <div
-              className="prose prose-gray max-w-none text-gray-800"
-              dangerouslySetInnerHTML={{ __html: entry.content }}
-            />
-          </div>
-        </div>
-      </main>
+          {/* Journal entry display */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[calc(100vh-16rem)] flex flex-col">
+            <div className="bg-gray-800 border-b border-gray-700 p-4">
+              <div className="flex items-center justify-between">
+                <h1 className="text-xl font-semibold text-white">{entry.title}</h1>
+                <div className="text-gray-300 text-sm">{formatDateTime(entry.created_at || entry.date)}</div>
+              </div>
+            </div>
 
-      <DeleteConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDelete}
-        itemType="journal entry"
-      />
-        </div>
-      </EntryLockProtection>
+            <div className="p-6 flex-1 bg-white">
+              <div
+                className="prose prose-gray max-w-none text-gray-800"
+                dangerouslySetInnerHTML={{ __html: entry.content }}
+              />
+            </div>
+          </div>
+        </main>
+
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDelete}
+          itemType="journal entry"
+        />
+          </div>
+      )}
+    </EntryLockProtection>
   );
 }

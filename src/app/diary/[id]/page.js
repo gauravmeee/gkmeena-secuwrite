@@ -264,172 +264,166 @@ export default function DiaryEntryPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black text-white">
-        <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (!entry) {
-    return (
-      <div className="min-h-screen bg-black text-white">
-        <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="flex flex-col justify-center items-center h-64 gap-4">
-            <p className="text-xl">Entry not found</p>
-            <Link href="/diary" className="text-primary hover:underline">
-              Return to Diary
-            </Link>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   return (
     <EntryLockProtection entryType="diary">
-      <div className="min-h-screen bg-black text-white">
-        
-        <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
-        <div className="flex items-center justify-between mb-6">
-                      <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
-              <FiArrowLeft size={16} />
-              <span>Back</span>
-            </Link>
-          
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/diary/edit/${entry.id || params.id}`}
-              className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
-            >
-                <>
-                  <FiEdit2 size={16} />
-                  <span className="hidden sm:inline">Edit</span>
-                </>
-
-            </Link>
-            <button
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors cursor-pointer"
-            >
-              <FiTrash2 size={16} />
-              <span className="hidden sm:inline">Delete</span>
-            </button>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
-          <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
-            {entry.title && (
-              <h1 className="text-xl font-serif text-gray-800">{entry.title}</h1>
-            )}
-          </div>
-          
-          <div className={entryType === 'image' ? 'bg-white p-8' : 'lined-paper p-8 min-h-[70vh] bg-white'}>
-            <div className="mb-6 text-left">
-              <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">
-                {entry.date || (() => {
-                  const now = new Date();
-                  const day = now.getDate();
-                  
-                  // Function to add ordinal suffix
-                  const getOrdinalSuffix = (d) => {
-                    if (d > 3 && d < 21) return 'th';
-                    switch (d % 10) {
-                      case 1: return 'st';
-                      case 2: return 'nd';
-                      case 3: return 'rd';
-                      default: return 'th';
-                    }
-                  };
-                  
-                  return `${day}${getOrdinalSuffix(day)} ${now.toLocaleDateString('en-US', { 
-                    month: 'long', 
-                    year: 'numeric' 
-                  }).split(' ')[0]} ${now.getFullYear()}`;
-                })()}
-              </div>
-              <div className="text-xl font-handwriting text-gray-800 mb-1">
-                {entry.day || new Date().toLocaleDateString('en-US', { weekday: 'long' })}
-              </div>
-              <div className="text-xl font-handwriting text-gray-800">
-                {entry.time || new Date().toLocaleTimeString('en-US', { 
-                  hour: 'numeric', 
-                  minute: '2-digit', 
-                  hour12: true 
-                })}
+      {loading ? (
+        <div className="min-h-screen bg-black text-white">
+          <main className="max-w-4xl mx-auto pt-24 px-4">
+            <div className="flex justify-center items-center h-64">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
+                <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
+                <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
               </div>
             </div>
+          </main>
+        </div>
+      ) : !entry ? (
+        <div className="min-h-screen bg-black text-white">
+          <main className="max-w-4xl mx-auto pt-24 px-4">
+            <div className="flex flex-col justify-center items-center h-64 gap-4">
+              <p className="text-xl">Entry not found</p>
+              <Link href="/diary" className="text-primary hover:underline">
+                Return to Diary
+              </Link>
+            </div>
+          </main>
+        </div>
+      ) : (
+        <div className="min-h-screen bg-black text-white">
+          
+          <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
+          <div className="flex items-center justify-between mb-6">
+                        <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
+                <FiArrowLeft size={16} />
+                <span>Back</span>
+              </Link>
+            
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/diary/edit/${entry.id || params.id}`}
+                className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
+              >
+                  <>
+                    <FiEdit2 size={16} />
+                    <span className="hidden sm:inline">Edit</span>
+                  </>
 
-            <div className="font-serif text-lg text-gray-800">
-              <div className="mt-10 font-handwriting text-xl">Dear Diary,</div>
-              
-              {entryType === 'image' ? (
-                <div className="mt-6">
-                  <img
-                    src={entry.content}
-                    alt="Diary entry"
-                    className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
-                    onError={(e) => {
-                      console.warn('Image loading error:', {
-                        src: e.target.src
-                      });
-                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="whitespace-pre-wrap line-height-loose font-handwriting text-xl">
-                  {entry.content}
-                </div>
+              </Link>
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors cursor-pointer"
+              >
+                <FiTrash2 size={16} />
+                <span className="hidden sm:inline">Delete</span>
+              </button>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
+            <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
+              {entry.title && (
+                <h1 className="text-xl font-serif text-gray-800">{entry.title}</h1>
               )}
             </div>
+            
+            <div className={entryType === 'image' ? 'bg-white p-8' : 'lined-paper p-8 min-h-[70vh] bg-white'}>
+              <div className="mb-6 text-left">
+                <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">
+                  {entry.date || (() => {
+                    const now = new Date();
+                    const day = now.getDate();
+                    
+                    // Function to add ordinal suffix
+                    const getOrdinalSuffix = (d) => {
+                      if (d > 3 && d < 21) return 'th';
+                      switch (d % 10) {
+                        case 1: return 'st';
+                        case 2: return 'nd';
+                        case 3: return 'rd';
+                        default: return 'th';
+                      }
+                    };
+                    
+                    return `${day}${getOrdinalSuffix(day)} ${now.toLocaleDateString('en-US', { 
+                      month: 'long', 
+                      year: 'numeric' 
+                    }).split(' ')[0]} ${now.getFullYear()}`;
+                  })()}
+                </div>
+                <div className="text-xl font-handwriting text-gray-800 mb-1">
+                  {entry.day || new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+                </div>
+                <div className="text-xl font-handwriting text-gray-800">
+                  {entry.time || new Date().toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit', 
+                    hour12: true 
+                  })}
+                </div>
+              </div>
+
+              <div className="font-serif text-lg text-gray-800">
+                <div className="mt-10 font-handwriting text-xl">Dear Diary,</div>
+                
+                {entryType === 'image' ? (
+                  <div className="mt-6">
+                    <img
+                      src={entry.content}
+                      alt="Diary entry"
+                      className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
+                      onError={(e) => {
+                        console.warn('Image loading error:', {
+                          src: e.target.src
+                        });
+                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="whitespace-pre-wrap line-height-loose font-handwriting text-xl">
+                    {entry.content}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </main>
-      
-      <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");
-
-        .font-handwriting {
-          font-family: "Kalam", "Caveat", "Dancing Script", cursive;
-        }
-
-        .lined-paper {
-          background-color: white;
-          background-image: 
-            linear-gradient(90deg, transparent 39px, #d6aed6 39px, #d6aed6 41px, transparent 41px),
-            linear-gradient(#e5e7eb 1px, transparent 1px);
-          background-size: 100% 2rem;
-          line-height: 2rem;
-          padding-left: 45px !important;
-        }
+        </main>
         
-        .line-height-loose {
-          line-height: 2rem;
-          padding-top: 0.5rem;
-        }
-      `}</style>
-      
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal 
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDelete}
-        itemType="diary entry"
-      />
-      
+        <style jsx global>{`
+          @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");
 
-        </div>
-      </EntryLockProtection>
+          .font-handwriting {
+            font-family: "Kalam", "Caveat", "Dancing Script", cursive;
+          }
+
+          .lined-paper {
+            background-color: white;
+            background-image: 
+              linear-gradient(90deg, transparent 39px, #d6aed6 39px, #d6aed6 41px, transparent 41px),
+              linear-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 100% 2rem;
+            line-height: 2rem;
+            padding-left: 45px !important;
+          }
+          
+          .line-height-loose {
+            line-height: 2rem;
+            padding-top: 0.5rem;
+          }
+        `}</style>
+        
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmationModal 
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDelete}
+          itemType="diary entry"
+        />
+        
+
+          </div>
+      )}
+    </EntryLockProtection>
   );
 } 

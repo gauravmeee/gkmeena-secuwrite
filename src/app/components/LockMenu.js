@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FiLock, FiUnlock, FiSettings, FiKey, FiX } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { useLock } from "../../context/LockContext";
 import LockModal from "./LockModal";
 
-export default function LockMenu() {
+export default function LockMenu({ isMobile = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [modalMode, setModalMode] = useState("unlock");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const menuRef = useRef(null);
   
   const { user } = useAuth();
   const { 
@@ -19,8 +20,25 @@ export default function LockMenu() {
     lockJournal,
     removePassword,
     lock,
-    setLockJournal
+    updateLockJournal
   } = useLock();
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   const handleMenuClick = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -67,31 +85,46 @@ export default function LockMenu() {
 
   return (
     <>
-      <div className="relative">
+      <div className="relative" ref={menuRef}>
         <button
           onClick={handleMenuClick}
-          className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors border-2 ${
+          className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${
+            isMobile 
+              ? "w-full justify-start p-4 rounded-lg hover:bg-gray-800/30"
+              : "border-2"
+          } ${
             isLocked && !isUnlocked
-              ? "border-green-500 text-green-500 hover:border-green-400 hover:text-green-400 bg-gray-800/40"
-              : "border-transparent bg-gray-800/40 text-gray-300 hover:text-white hover:bg-gray-700/50"
+              ? isMobile 
+                ? "text-green-500"
+                : "border-transparent text-green-500 hover:text-green-400 bg-gray-800/40"
+              : isMobile
+                ? "text-gray-300"
+                : "border-transparent bg-gray-800/40 text-gray-300 hover:text-white hover:bg-gray-700/50"
           }`}
         >
           {isLocked && !isUnlocked ? (
-            <FiLock size={16} />
+            <FiLock size={isMobile ? 22 : 16} />
           ) : (
-            <FiUnlock size={16} />
+            <FiUnlock size={isMobile ? 22 : 16} />
+          )}
+          {isMobile && (
+            <span className="text-lg">
+              {!hasPassword ? "Set Lock" : (isLocked && !isUnlocked ? "Unlock" : "Lock")}
+            </span>
           )}
         </button>
 
         {isMenuOpen && (
-          <div className="absolute right-0 top-full mt-2 w-48 bg-black/90 backdrop-blur-md rounded-lg shadow-lg overflow-hidden z-50 border border-gray-800/30">
+          <div className={`${isMobile ? 'relative mt-2' : 'absolute right-0 top-full mt-2 w-48'} bg-black/90 backdrop-blur-md rounded-lg shadow-lg overflow-hidden z-50 border border-gray-800/30`}>
             {!hasPassword ? (
               // Case 1: No password set
               <button
                 onClick={() => handleMenuItemClick("set")}
-                className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left"
+                className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left ${
+                  isMobile ? 'text-lg' : ''
+                }`}
               >
-                <FiLock size={16} />
+                <FiLock size={isMobile ? 22 : 16} />
                 <span>Set Lock</span>
               </button>
             ) : (
@@ -102,17 +135,21 @@ export default function LockMenu() {
                   <>
                                          <button
                        onClick={() => handleMenuItemClick("unlock")}
-                       className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left"
+                       className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left ${
+                         isMobile ? 'text-lg' : ''
+                       }`}
                      >
-                       <FiUnlock size={16} />
+                       <FiUnlock size={isMobile ? 22 : 16} />
                        <span>Unlock</span>
                      </button>
                      
                      <button
                        onClick={() => handleMenuItemClick("change")}
-                       className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left"
+                       className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left ${
+                         isMobile ? 'text-lg' : ''
+                       }`}
                      >
-                       <FiKey size={16} />
+                       <FiKey size={isMobile ? 22 : 16} />
                        <span>Reset Password</span>
                      </button>
                   </>
@@ -121,9 +158,11 @@ export default function LockMenu() {
                    <>
                      <button
                        onClick={() => handleMenuItemClick("lock")}
-                       className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left"
+                       className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left ${
+                         isMobile ? 'text-lg' : ''
+                       }`}
                      >
-                       <FiLock size={16} />
+                       <FiLock size={isMobile ? 22 : 16} />
                        <span>Lock</span>
                      </button>
                      
@@ -133,25 +172,29 @@ export default function LockMenu() {
                            type="checkbox"
                            checked={lockJournal}
                            onChange={() => handleMenuItemClick("toggleJournal")}
-                           className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                           className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} text-primary rounded border-gray-300 focus:ring-primary`}
                          />
-                         <span className="text-sm">Also Lock Journal</span>
+                         <span className={isMobile ? 'text-base' : 'text-sm'}>Also Lock Journal</span>
                        </label>
                      </div>
                      
                      <button
                        onClick={() => handleMenuItemClick("change")}
-                       className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left"
+                       className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left ${
+                         isMobile ? 'text-lg' : ''
+                       }`}
                      >
-                       <FiKey size={16} />
+                       <FiKey size={isMobile ? 22 : 16} />
                        <span>Change Password</span>
                      </button>
                      
                      <button
                        onClick={() => handleMenuItemClick("remove")}
-                       className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left text-red-400 hover:text-red-300"
+                       className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left text-red-400 hover:text-red-300 ${
+                         isMobile ? 'text-lg' : ''
+                       }`}
                      >
-                       <FiX size={16} />
+                       <FiX size={isMobile ? 22 : 16} />
                        <span>Remove Lock</span>
                      </button>
                    </>

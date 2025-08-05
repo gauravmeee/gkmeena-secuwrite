@@ -23,8 +23,8 @@ export default function EntryLockProtection({ children, entryType }) {
     }
   }, [isLocked, isUnlocked, shouldBlur, entryType, isLoading]);
 
-  const handleGoBack = () => {
-    router.back();
+  const handleClose = () => {
+    setShowUnlockPrompt(false);
   };
 
   // Show loading state while lock context is initializing
@@ -47,7 +47,7 @@ export default function EntryLockProtection({ children, entryType }) {
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <LockModal
           isOpen={true}
-          onClose={handleGoBack}
+          onClose={handleClose}
           mode="unlock"
         />
       </div>

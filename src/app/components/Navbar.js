@@ -63,7 +63,7 @@ export default function Navbar() {
           
           {user ? (
             <>
-              <LockMenu />
+              <LockMenu isMobile={false} />
               <div className="relative group">
                 <button className="flex items-center gap-2 px-4 py-2 bg-gray-800/40 backdrop-blur-sm rounded-full hover:bg-gray-700/50 transition-all duration-200 ml-2">
                   <span className="text-sm font-medium truncate max-w-32">
@@ -140,6 +140,12 @@ export default function Navbar() {
                 <div className="px-4 py-3 text-sm text-gray-400 bg-gray-800/50 rounded-lg">
                   {user.email}
                 </div>
+                
+                {/* Mobile Lock Menu */}
+                <div className="mt-3">
+                  <LockMenu isMobile={true} />
+                </div>
+                
                 <button 
                   onClick={() => {
                     signOut();
