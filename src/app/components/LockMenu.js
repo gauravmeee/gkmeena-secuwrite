@@ -6,7 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useLock } from "../../context/LockContext";
 import LockModal from "./LockModal";
 
-export default function LockMenu({ isMobile = false }) {
+export default function LockMenu({ isMobile = false, isCompact = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [modalMode, setModalMode] = useState("unlock");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -89,25 +89,31 @@ export default function LockMenu({ isMobile = false }) {
         <button
           onClick={handleMenuClick}
           className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${
-            isMobile 
+            isMobile && !isCompact
               ? "w-full justify-start p-4 rounded-lg hover:bg-gray-800/30"
-              : "border-2"
+              : isCompact
+                ? "justify-center p-2 rounded-full bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm"
+                : "border-2"
           } ${
             isLocked && !isUnlocked
-              ? isMobile 
+              ? isMobile && !isCompact
                 ? "text-green-500"
-                : "border-transparent text-green-500 hover:text-green-400 bg-gray-800/40"
-              : isMobile
+                : isCompact
+                  ? "text-green-500 hover:text-green-400"
+                  : "border-transparent text-green-500 hover:text-green-400 bg-gray-800/40"
+              : isMobile && !isCompact
                 ? "text-gray-300"
-                : "border-transparent bg-gray-800/40 text-gray-300 hover:text-white hover:bg-gray-700/50"
+                : isCompact
+                  ? "text-gray-300 hover:text-white"
+                  : "border-transparent bg-gray-800/40 text-gray-300 hover:text-white hover:bg-gray-700/50"
           }`}
         >
           {isLocked && !isUnlocked ? (
-            <FiLock size={isMobile ? 22 : 16} />
+            <FiLock size={isCompact ? 20 : (isMobile ? 22 : 16)} />
           ) : (
-            <FiUnlock size={isMobile ? 22 : 16} />
+            <FiUnlock size={isCompact ? 20 : (isMobile ? 22 : 16)} />
           )}
-          {isMobile && (
+          {isMobile && !isCompact && (
             <span className="text-lg">
               {!hasPassword ? "Set Lock" : (isLocked && !isUnlocked ? "Unlock" : "Lock")}
             </span>
@@ -115,7 +121,7 @@ export default function LockMenu({ isMobile = false }) {
         </button>
 
         {isMenuOpen && (
-          <div className={`${isMobile ? 'relative mt-2' : 'absolute right-0 top-full mt-2 w-48'} bg-black/90 backdrop-blur-md rounded-lg shadow-lg overflow-hidden z-50 border border-gray-800/30`}>
+          <div className={`${isMobile && !isCompact ? 'relative mt-2' : 'absolute right-0 top-full mt-2 w-48'} bg-black/90 backdrop-blur-md rounded-lg shadow-lg overflow-hidden z-50 border border-gray-800/30`}>
             {!hasPassword ? (
               // Case 1: No password set
               <button

@@ -7,6 +7,7 @@ import LockModal from "./LockModal";
 
 export default function EntryLockProtection({ children, entryType }) {
   const [showUnlockPrompt, setShowUnlockPrompt] = useState(false);
+  const [lockCheckComplete, setLockCheckComplete] = useState(false);
   const router = useRouter();
   
   const { isLocked, isUnlocked, shouldBlur, isLoading } = useLock();
@@ -20,22 +21,30 @@ export default function EntryLockProtection({ children, entryType }) {
       } else {
         setShowUnlockPrompt(false);
       }
+      setLockCheckComplete(true);
     }
   }, [isLocked, isUnlocked, shouldBlur, entryType, isLoading]);
 
-  const handleClose = () => {
-    router.back();
+  const handleClose = (wasSuccessful = false) => {
+    // Only redirect back if the user closed/cancelled the modal
+    // If unlock was successful, stay on the current page
+    if (!wasSuccessful) {
+      router.back();
+    }
   };
 
-  // Show loading state while lock context is initializing
-  if (isLoading) {
+  // Show loading state while lock context is initializing or lock check is not complete
+  if (isLoading || !lockCheckComplete) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white">
+      <div className="min-h-screen bg-black text-white">
         <div className="flex justify-center items-center h-screen">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-            <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-            <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
+          <div className="text-center">
+            <div className="flex items-center space-x-2 mb-4">
+              <div className="w-4 h-4 rounded-full bg-primary/60 animate-pulse"></div>
+              <div className="w-4 h-4 rounded-full bg-primary/60 animate-pulse delay-150"></div>
+              <div className="w-4 h-4 rounded-full bg-primary/60 animate-pulse delay-300"></div>
+            </div>
+            <p className="text-gray-400 text-sm">Loading security settings...</p>
           </div>
         </div>
       </div>

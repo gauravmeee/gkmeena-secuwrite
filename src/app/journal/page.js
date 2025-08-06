@@ -10,6 +10,7 @@ import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import NoEntriesState from "../components/NoEntriesState";
 import SignInPrompt from "../components/SignInPrompt";
 import LoadingSpinner from "../components/LoadingSpinner";
+import LockOverlay from "../components/LockOverlay";
 import { useRouter } from "next/navigation";
 
 const stripHtml = (html) => {
@@ -263,15 +264,17 @@ export default function JournalPage() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold text-white">My Journal</h1>
-            <Link
-              href="/journal/draft"
-              className="text-red-500 hover:text-red-400 transition-colors flex items-center gap-1"
-            >
-              <span className="hidden sm:inline">Drafts</span>
-              <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs font-medium">
-                {draftsCount}
-              </span>
-            </Link>
+            {user && draftsCount > 0 && (
+              <Link
+                href="/journal/draft"
+                className="text-red-500 hover:text-red-400 transition-colors flex items-center gap-1"
+              >
+                <span className="hidden sm:inline">Drafts</span>
+                <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs font-medium">
+                  {draftsCount}
+                </span>
+              </Link>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             {user && processedEntries.length > 0 && (
@@ -328,54 +331,53 @@ export default function JournalPage() {
                   currentPage * entriesPerPage
                 )
                 .map((entry) => (
-                  <div
-                    key={entry.id || entry.timestamp}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-                  >
-                    <div className="bg-gray-800 border-b border-gray-700 p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {isSelectionMode && (
-                            <input
-                              type="checkbox"
-                              checked={selectedEntries.has(entry.id)}
-                              onChange={(e) => {
-                                const newSelected = new Set(selectedEntries);
-                                if (e.target.checked) {
-                                  newSelected.add(entry.id);
-                                } else {
-                                  newSelected.delete(entry.id);
-                                }
-                                setSelectedEntries(newSelected);
-                              }}
-                              className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
-                            />
-                          )}
-                          <h2 className="text-lg font-semibold text-white">
-                            {entry.title}
-                          </h2>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-400">
-                          <span>{entry.dateTime}</span>
+                  <LockOverlay key={entry.id || entry.timestamp} entryType="journal">
+                    <div
+                      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+                    >
+                      <div className="bg-gray-800 border-b border-gray-700 p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {isSelectionMode && (
+                              <input
+                                type="checkbox"
+                                checked={selectedEntries.has(entry.id)}
+                                onChange={(e) => {
+                                  const newSelected = new Set(selectedEntries);
+                                  if (e.target.checked) {
+                                    newSelected.add(entry.id);
+                                  } else {
+                                    newSelected.delete(entry.id);
+                                  }
+                                  setSelectedEntries(newSelected);
+                                }}
+                                className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                              />
+                            )}
+                            <h2 className="text-lg font-semibold text-white">
+                              {entry.title}
+                            </h2>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <span>{entry.dateTime}</span>
+                          </div>
                         </div>
                       </div>
+                      <div className="p-4">
+                        <Link
+                          href={`/journal/${entry.id}`}
+                          className="block"
+                        >
+                          <div className="prose prose-gray max-w-none text-gray-800">
+                            <div
+                              className="line-clamp-5 [&_img]:max-w-[200px] [&_img]:max-h-[150px] [&_img]:object-cover [&_img]:my-2"
+                              dangerouslySetInnerHTML={{ __html: entry.preview.content }}
+                            />
+                          </div>
+                        </Link>
+                      </div>
                     </div>
-                    <div className="p-4">
-                      <Link
-                        href={`/journal/${entry.id}`}
-                        className="block"
-                      >
-                        <div className={`prose prose-gray max-w-none text-gray-800 ${
-                          shouldBlur('journal') ? 'blur-sm' : ''
-                        }`}>
-                          <div
-                            className="line-clamp-5 [&_img]:max-w-[200px] [&_img]:max-h-[150px] [&_img]:object-cover [&_img]:my-2"
-                            dangerouslySetInnerHTML={{ __html: entry.preview.content }}
-                          />
-                        </div>
-                      </Link>
-                    </div>
-                  </div>
+                  </LockOverlay>
                 ))}
             </div>
 

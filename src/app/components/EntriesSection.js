@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FiCalendar, FiBook, FiEdit3, FiClock, FiChevronRight } from "react-icons/fi";
 import CreateFirstEntryDialog from "./CreateFirstEntryDialog";
 import EntryTypeCard from "./EntryTypeCard";
+import LockOverlay from "./LockOverlay";
 import { useAuth } from "../../context/AuthContext";
 import { useLock } from "../../context/LockContext";
 import databaseUtils from "../../lib/database";
@@ -217,55 +218,66 @@ export default function EntriesSection({ viewMode, entryTypes }) {
               const typeColor = getEntryTypeColor(entry.type);
               
               return (
-                <Link 
-                  key={entry.id || entry.timestamp} 
-                  href={entryLink}
-                  className="group"
-                >
-                  <div className="bg-gray-900/70 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800 p-6 h-full 
-                    hover:border-primary/30 hover:shadow-lg transition-all duration-200 group-hover:translate-y-[-2px]">
-                    <div className="flex items-start flex-col h-full">
-                      <div className="flex w-full items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-2 h-2 rounded-full ${typeColor}`}></span>
-                          <span className="text-sm uppercase tracking-wider text-gray-400 font-medium">
-                            {getEntryTypeLabel(entry.type)}
-                          </span>
+                <div key={entry.id || entry.timestamp} className="group h-full">
+                  <LockOverlay entryType={entry.type} className="h-full">
+                    <div className={`rounded-xl shadow-sm border p-6 h-full transition-all duration-200 group-hover:translate-y-[-2px] ${
+                      shouldBlur(entry.type) 
+                        ? 'bg-white border-gray-300' 
+                        : 'bg-gray-900/70 backdrop-blur-sm border-gray-800 hover:border-primary/30 hover:shadow-lg'
+                    }`}>
+                      <Link href={entryLink} className="block h-full">
+                                              <div className="flex items-start flex-col h-full">
+                          <div className="flex w-full items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className={`w-2 h-2 rounded-full ${typeColor}`}></span>
+                              <span className={`text-sm uppercase tracking-wider font-medium ${
+                                shouldBlur(entry.type) ? 'text-gray-600' : 'text-gray-400'
+                              }`}>
+                                {getEntryTypeLabel(entry.type)}
+                              </span>
+                            </div>
+                            <div className={`flex items-center text-sm ${
+                              shouldBlur(entry.type) ? 'text-gray-500' : 'text-gray-500'
+                            }`}>
+                            <FiClock size={12} className="mr-1" />
+                            <span>
+                              {entry.date && `${entry.date}`}
+                              {entry.time && ` | ${entry.time}`}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <FiClock size={12} className="mr-1" />
-                          <span>
-                            {entry.date && `${entry.date}`}
-                            {entry.time && ` | ${entry.time}`}
-                          </span>
+                        
+                                                {entry.hasManualTitle && entry.title ? (
+                          <h3 className={`text-lg font-semibold mb-3 group-hover:text-primary transition-colors line-clamp-2 ${
+                            shouldBlur(entry.type) ? 'text-gray-800' : 'text-white'
+                          }`}>
+                            {entry.title}
+                          </h3>
+                        ) : entry.title ? (
+                          <h3 className={`text-lg font-semibold mb-3 group-hover:text-primary transition-colors line-clamp-2 ${
+                            shouldBlur(entry.type) ? 'text-gray-800' : 'text-white'
+                          }`}>
+                            {entry.title}
+                          </h3>
+                        ) : (
+                          <div className="h-6 mb-2"></div> 
+                        )}
+                        
+                        <p className={`font-handwriting italic text-sm line-clamp-3 mb-4 flex-grow ${
+                          shouldBlur(entry.type) ? 'text-gray-600' : 'text-gray-400'
+                        }`}>
+                          {entry.preview}
+                        </p>
+                        
+                        <div className="flex items-center gap-1 text-primary text-sm mt-auto pt-2 group-hover:underline">
+                          <span>Read more</span>
+                          <FiChevronRight size={14} className="transition-transform group-hover:translate-x-1" />
                         </div>
                       </div>
-                      
-                      {entry.hasManualTitle && entry.title ? (
-                        <h3 className="text-lg font-semibold mb-3 group-hover:text-primary transition-colors line-clamp-2">
-                          {entry.title}
-                        </h3>
-                      ) : entry.title ? (
-                        <h3 className="text-lg font-semibold mb-3 group-hover:text-primary transition-colors line-clamp-2">
-                          {entry.title}
-                        </h3>
-                      ) : (
-                        <div className="h-6 mb-2"></div> 
-                      )}
-                      
-                      <p className={`font-handwriting italic text-gray-400 text-sm line-clamp-3 mb-4 flex-grow ${
-                        shouldBlur(entry.type) ? 'blur-sm' : ''
-                      }`}>
-                        {entry.preview}
-                      </p>
-                      
-                      <div className="flex items-center gap-1 text-primary text-sm mt-auto pt-2 group-hover:underline">
-                        <span>Read more</span>
-                        <FiChevronRight size={14} className="transition-transform group-hover:translate-x-1" />
-                      </div>
+                      </Link>
                     </div>
-                  </div>
-                </Link>
+                  </LockOverlay>
+                </div>
               );
             })}
           </div>

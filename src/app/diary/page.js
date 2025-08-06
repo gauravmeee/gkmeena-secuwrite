@@ -11,6 +11,7 @@ import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import NoEntriesState from "../components/NoEntriesState";
 import SignInPrompt from "../components/SignInPrompt";
 import LoadingSpinner from "../components/LoadingSpinner";
+import LockOverlay from "../components/LockOverlay";
 import { useRouter } from "next/navigation";
 
 // Function to strip HTML tags for preview
@@ -296,7 +297,7 @@ export default function DiaryPage() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold">My Diary</h1>
-            {user && (
+            {user && draftsCount > 0 && (
               <Link
                 href="/diary/draft"
                 className="text-red-500 hover:text-red-400 transition-colors flex items-center gap-1"
@@ -377,87 +378,84 @@ export default function DiaryPage() {
           <>
             <div className="grid grid-cols-1 gap-5">
               {currentEntries.map((entry) => (
-                <div
-                  key={entry.id || entry.timestamp}
-                  className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden"
-                >
-                  <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {isSelectionMode && (
-                          <input
-                            type="checkbox"
-                            checked={selectedEntries.has(entry.id)}
-                            onChange={(e) => {
-                              const newSelected = new Set(selectedEntries);
-                              if (e.target.checked) {
-                                newSelected.add(entry.id);
-                              } else {
-                                newSelected.delete(entry.id);
-                              }
-                              setSelectedEntries(newSelected);
-                            }}
-                            className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
-                          />
-                        )}
-                        {entry.displayTitle && (
-                          entry.isDraft ? (
-                            <Link href="/diary/draft/edit">
-                              <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
-                                {entry.displayTitle}
-                                <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
-                                  Draft
-                                </span>
-                              </h2>
-                            </Link>
-                          ) : (
-                            <Link href={`/diary/${entry.id}`}>
-                              <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
-                                {entry.displayTitle}
-                              </h2>
-                            </Link>
-                          )
-                        )}
-                      </div>
-
-                      <div className="font-handwriting text-gray-800">
-                        {entry.displayDate} | {entry.displayTime}
-                      </div>
-                    </div>
-                  </div>
-                  <div className={entry.entry_type === 'image' ? 'bg-white p-8' : 'lined-paper flex items-start justify-between gap-4 p-5 bg-white'}>
-                    <div className="flex-1 text-gray-800">
-                      <Link
-                        href={`/diary/${entry.id}`}
-                        className="block"
-                      >
-                        {entry.entry_type === 'image' ? (
-                          <div className="space-y-4">
-                            <img
-                              src={entry.content}
-                              alt="Diary entry"
-                              className={`w-full max-h-48 object-cover object-top rounded-lg shadow-sm ${
-                                shouldBlur('diary') ? 'blur-md' : ''
-                              }`}
-                              onError={(e) => {
-                                console.warn('Image loading error:', {
-                                  src: e.target.src
-                                });
-                                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
+                <LockOverlay key={entry.id || entry.timestamp} entryType="diary">
+                  <div
+                    className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden"
+                  >
+                    <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {isSelectionMode && (
+                            <input
+                              type="checkbox"
+                              checked={selectedEntries.has(entry.id)}
+                              onChange={(e) => {
+                                const newSelected = new Set(selectedEntries);
+                                if (e.target.checked) {
+                                  newSelected.add(entry.id);
+                                } else {
+                                  newSelected.delete(entry.id);
+                                }
+                                setSelectedEntries(newSelected);
                               }}
+                              className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
                             />
-                          </div>
-                        ) : (
-                          <p className={`pt-2 font-handwriting text-xl ${
-                            shouldBlur('diary') ? 'blur-sm' : ''
-                          }`}>
-                            {entry.preview}
-                          </p>
-                        )}
-                      </Link>
+                          )}
+                          {entry.displayTitle && (
+                            entry.isDraft ? (
+                              <Link href="/diary/draft/edit">
+                                <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
+                                  {entry.displayTitle}
+                                  <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
+                                    Draft
+                                  </span>
+                                </h2>
+                              </Link>
+                            ) : (
+                              <Link href={`/diary/${entry.id}`}>
+                                <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
+                                  {entry.displayTitle}
+                                </h2>
+                              </Link>
+                            )
+                          )}
+                        </div>
+
+                        <div className="font-handwriting text-gray-800">
+                          {entry.displayDate} | {entry.displayTime}
+                        </div>
+                      </div>
+                    </div>
+                    <div className={entry.entry_type === 'image' ? 'bg-white p-8' : 'lined-paper flex items-start justify-between gap-4 p-5 bg-white'}>
+                      <div className="flex-1 text-gray-800">
+                        <Link
+                          href={`/diary/${entry.id}`}
+                          className="block"
+                        >
+                          {entry.entry_type === 'image' ? (
+                            <div className="space-y-4">
+                              <img
+                                src={entry.content}
+                                alt="Diary entry"
+                                                              className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"
+                                onError={(e) => {
+                                  console.warn('Image loading error:', {
+                                    src: e.target.src
+                                  });
+                                  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDExMEwxMzAgMTQwSDEwMFYxODBIMTAwVjE0MEg3MFYxMTBIMTAwWiIgZmlsbD0iI0E1QjVCMiIvPjwvc3ZnPg==';
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <p className="pt-2 font-handwriting text-xl">
+                              {entry.preview}
+                            </p>
+                          )}
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </LockOverlay>
               ))}
             </div>
 

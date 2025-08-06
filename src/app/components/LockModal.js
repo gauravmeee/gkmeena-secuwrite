@@ -62,7 +62,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
         const result = await setGlobalPassword(password, lockJournal);
         if (result.success) {
           clearPasswordFields();
-          onClose();
+          onClose(true); // Pass true for successful operation
         } else {
           setError(result.error);
           // Show setup instructions if table doesn't exist
@@ -83,7 +83,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
         const result = await changePassword(password);
         if (result.success) {
           clearPasswordFields();
-          onClose();
+          onClose(true); // Pass true for successful operation
         } else {
           setError(result.error);
           if (result.error && result.error.includes('Database table not set up')) {
@@ -94,7 +94,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
         const result = await unlock(password);
         if (result.success) {
           clearPasswordFields();
-          onClose();
+          onClose(true); // Pass true for successful operation
         } else {
           setError(result.error);
           // Clear password field on failed attempt for security
@@ -115,7 +115,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
       const result = await removePassword();
       if (result.success) {
         clearPasswordFields();
-        onClose();
+        onClose(true); // Pass true for successful operation
       } else {
         setError(result.error);
         if (result.error && result.error.includes('Database table not set up')) {
@@ -132,12 +132,12 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
   const handleLock = () => {
     lock();
     clearPasswordFields();
-    onClose();
+    onClose(true); // Pass true for successful operation
   };
 
   const handleClose = () => {
     clearPasswordFields();
-    onClose();
+    onClose(false); // Pass false for user cancellation
   };
 
   if (!isOpen) return null;

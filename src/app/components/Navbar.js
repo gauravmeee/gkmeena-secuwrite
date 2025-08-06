@@ -97,14 +97,23 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <button 
-          className="md:hidden flex items-center justify-center p-2 rounded-full text-gray-300 hover:text-white bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm" 
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-        </button>
+        {/* Mobile Menu Button and Lock Button */}
+        <div className="md:hidden flex flex-col items-center gap-2">
+          <button 
+            className="flex items-center justify-center p-2 rounded-full text-gray-300 hover:text-white bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm" 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+          </button>
+          
+          {/* Mobile Lock Button - positioned below hamburger */}
+          {user && (
+            <div className="relative">
+              <LockMenu isMobile={true} isCompact={true} />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Mobile Navigation */}
@@ -139,11 +148,6 @@ export default function Navbar() {
               <div className="mt-4 border-t border-gray-800/30 pt-4">
                 <div className="px-4 py-3 text-sm text-gray-400 bg-gray-800/50 rounded-lg">
                   {user.email}
-                </div>
-                
-                {/* Mobile Lock Menu */}
-                <div className="mt-3">
-                  <LockMenu isMobile={true} />
                 </div>
                 
                 <button 
