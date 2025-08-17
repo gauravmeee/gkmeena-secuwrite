@@ -42,22 +42,22 @@ export default function FloatingActionButton() {
     <div className="fab-container">
       <button
         onClick={toggleModal}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-xl hover:bg-primary/90 transition-all z-30 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+        className="fab-writing fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center shadow-xl hover:shadow-2xl transition-all z-30 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
       >
         {isModalOpen ? <FiX size={24} /> : <FiPlus size={24} />}
       </button>
       
       {isModalOpen && (
-        <div className="fixed bottom-24 right-6 bg-gray-900 border border-gray-800 rounded-lg shadow-2xl p-4 w-64 z-20 fab-container transform transition-all duration-200 ease-out">
-          <h3 className="text-lg font-semibold mb-3 text-white">Create New</h3>
+        <div className="fixed bottom-24 right-6 bg-card-bg/95 backdrop-blur-md border border-border/30 rounded-lg shadow-2xl p-4 w-64 z-20 fab-container transform transition-all duration-200 ease-out">
+          <h3 className="text-lg font-semibold mb-3 text-foreground">Create New</h3>
           <div className="grid gap-1">
             {entryTypes.map((type) => (
               <button
                 key={type.name}
                 onClick={() => navigateTo(type.path)}
-                className="flex items-center gap-3 p-3 rounded-md transition-all duration-150 hover:bg-gray-800 group w-full text-left"
+                className="flex items-center gap-3 p-3 rounded-md transition-all duration-150 hover:bg-border/30 group w-full text-left text-foreground"
               >
-                <span className="text-primary group-hover:text-white transition-colors">{type.icon}</span>
+                <span className="text-primary group-hover:text-secondary transition-colors">{type.icon}</span>
                 <span className="group-hover:translate-x-1 transition-transform duration-150">{type.name}</span>
               </button>
             ))}

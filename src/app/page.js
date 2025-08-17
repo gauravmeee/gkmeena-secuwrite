@@ -1,46 +1,34 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import EntryTypeCard from "./components/EntryTypeCard";
 import HeroSection from "./components/HeroSection";
 import EntriesSection from "./components/EntriesSection";
-import ToggleSwitch from "./components/ToggleSwitch";
+
 import FloatingActionButton from "./components/FloatingActionButton";
 import CreateFirstEntryDialog from "./components/CreateFirstEntryDialog";
 import { useAuth } from "../context/AuthContext";
 import databaseUtils from "../lib/database";
-import { FiMessageSquare, FiChevronRight } from "react-icons/fi";
+import { FiBook, FiEdit } from "react-icons/fi";
 import emailjs from '@emailjs/browser';
-import Link from "next/link";
-import FeedbackSection from "./components/FeedbackSection";
-import EncryptionMigration from '../components/EncryptionMigration';
 
+import { LazyEncryptionMigration } from "../utils/componentUtils";
+import { SimpleCache, debounce } from "../utils/componentUtils";
 
-// Cache for entry counts
-const CACHE_TIME = 5 * 60 * 1000; // 5 minutes
-let countCache = {
-  data: null,
-  timestamp: null,
-  userId: null
-};
+// Optimized cache for entry counts
+const countCache = new SimpleCache(5 * 60 * 1000); // 5 minutes
 
 export default function Home() {
-  const [viewMode, setViewMode] = useState(1);
   const [entryCounts, setEntryCounts] = useState({
     journal: 0,
     diary: 0,
-    stories: 0,
-    songs: 0,
-    quotes: 0
   });
   const [loading, setLoading] = useState(true);
   const { user, toggleAuthModal } = useAuth();
   
   // Feedback state
   const [feedback, setFeedback] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [feedbackError, setFeedbackError] = useState("");
-  const [sendingFeedback, setSendingFeedback] = useState(false);
+
+
   
   // Memoize the entry types to prevent unnecessary re-renders
   const entryTypes = useMemo(() => [
@@ -60,90 +48,111 @@ export default function Home() {
     }
   ], [entryCounts.journal, entryCounts.diary]);
 
+  // Debounced feedback submission
+  const debouncedFeedbackSubmit = useMemo(
+    () => debounce(async (feedbackText) => {
+      if (!feedbackText.trim()) return;
+      
+      setSendingFeedback(true);
+      setFeedbackError("");
+      
+      try {
+        const userIdentifier = user ? (user.email || user.user_metadata?.name || user.id || "Anonymous") : "Anonymous";
+        
+        const templateParams = {
+          message: feedbackText,
+          from_name: userIdentifier,
+          user_info: user ? `User ID: ${user.id}` : "Not logged in"
+        };
+        
+        const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+        const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+        const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+        
+        await emailjs.send(serviceId, templateId, templateParams, publicKey);
+        
+        setSubmitted(true);
+        setFeedback("");
+        setTimeout(() => setSubmitted(false), 3000);
+      } catch (error) {
+        console.error('Failed to send feedback:', error);
+        setFeedbackError("Failed to send feedback. Please try again later.");
+      } finally {
+        setSendingFeedback(false);
+      }
+    }, 300),
+    [user]
+  );
+
   useEffect(() => {
     async function loadEntryCounts() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
       
       try {
         // Check cache first
-        if (user && 
-            countCache.data && 
-            countCache.timestamp && 
-            Date.now() - countCache.timestamp < CACHE_TIME &&
-            countCache.userId === user.id) {
-          setEntryCounts(countCache.data);
+        const cacheKey = `entryCounts_${user.id}`;
+        const cachedCounts = countCache.get(cacheKey);
+        
+        if (cachedCounts) {
+          setEntryCounts(cachedCounts);
           setLoading(false);
           return;
         }
 
-        let counts = {
-          journal: 0,
-          diary: 0,
-          stories: 0,
-          songs: 0,
-          quotes: 0
+        // Get counts in parallel for better performance
+        const [journalEntries, diaryEntries] = await Promise.all([
+          databaseUtils.getJournalEntries(user.id),
+          databaseUtils.getDiaryEntries(user.id)
+        ]);
+
+        const counts = {
+          journal: journalEntries.length,
+          diary: diaryEntries.length,
         };
-        
-        // If user is logged in, get counts from Supabase
-        if (user) {
-          // Get counts in parallel
-          const [journalEntries, diaryEntries] = await Promise.all([
-            databaseUtils.getJournalEntries(user.id),
-            databaseUtils.getDiaryEntries(user.id)
-          ]);
 
-          counts = {
-            ...counts,
-            journal: journalEntries.length,
-            diary: diaryEntries.length
-          };
-
-          // Update cache
-          countCache = {
-            data: counts,
-            timestamp: Date.now(),
-            userId: user.id
-          };
-        } 
-        // Otherwise fall back to localStorage
-        else if (typeof window !== "undefined") {
-          const journalEntries = JSON.parse(localStorage.getItem("journalEntries") || "[]");
-          const diaryEntries = JSON.parse(localStorage.getItem("diaryEntries") || "[]");
-          
-          counts = {
-            ...counts,
-            journal: journalEntries.length,
-            diary: diaryEntries.length
-          };
-        }
-        
+        // Cache the results
+        countCache.set(cacheKey, counts);
         setEntryCounts(counts);
       } catch (error) {
-        console.error("Error loading entry counts:", error);
+        console.error('Error loading entry counts:', error);
       } finally {
         setLoading(false);
       }
     }
-    
+
     loadEntryCounts();
   }, [user]);
+
+  const handleFeedbackSubmit = (e) => {
+    e.preventDefault();
+    debouncedFeedbackSubmit(feedback);
+  };
 
   // Define ContentSection component inside Home
   const ContentSection = () => {
     // Check for user first
     if (!user) {
       return (
-        <div className="flex justify-center items-center py-8 sm:py-16">
+        <div className="h-screen min-h-screen flex justify-center items-center">
           <div className="text-center max-w-md mx-auto">
+            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FiBook className="text-white text-2xl" />
+            </div>
+            <h2 className="text-xl font-bold text-foreground mb-3">Start Your Writing Journey</h2>
+            <p className="text-muted-text text-sm mb-4">
+              Sign in to create and manage your personal entries securely
+            </p>
             <button
               onClick={toggleAuthModal}
-              className="text-primary hover:text-primary/90 text-base sm:text-lg font-medium transition-colors"
+              className="btn-writing"
             >
-              Sign in to view your entries
+              Sign in to get started
             </button>
-            <p className="text-gray-400 text-xs sm:text-sm mt-2 sm:mt-4">
-              Create and manage your personal entries securely
-            </p>
           </div>
         </div>
       );
@@ -153,14 +162,18 @@ export default function Home() {
     const hasAnyEntries = Object.values(entryCounts).some(count => count > 0);
     if (!hasAnyEntries) {
       return (
-        <div className="flex justify-center items-center py-8 sm:py-16">
+        <div className="h-screen min-h-screen flex justify-center items-center">
           <div className="text-center max-w-md mx-auto">
-            <div className="flex justify-center mb-4 sm:mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FiEdit className="text-white text-2xl" />
+            </div>
+            <h2 className="text-xl font-bold text-foreground mb-3">Create Your First Entry</h2>
+            <p className="text-muted-text text-sm mb-4">
+              You don't have any entries yet. Create your first one to get started!
+            </p>
+            <div className="flex justify-center">
               <CreateFirstEntryDialog />
             </div>
-            <p className="text-gray-400 text-sm sm:text-base">
-              You don&apos;t have any entries yet. Create your first one to get started!
-            </p>
           </div>
         </div>
       );
@@ -168,86 +181,13 @@ export default function Home() {
 
     // If we have entries, show the content
     return (
-      <div className="py-6 sm:py-12">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 sm:mb-8 gap-2 sm:gap-4 relative z-0">
-            <div>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">
-                {viewMode === 1 ? "Recent Entries" : "Category-wise Entries"}
-              </h2>
-              <p className="text-gray-400 text-xs sm:text-sm">
-                {viewMode === 1 
-                  ? "Your latest thoughts and experiences" 
-                  : "Browse your entries by category"}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 sm:gap-4">
-              <Link 
-                href="/journal" 
-                className="text-primary hover:text-primary/90 flex items-center gap-1 transition-colors group text-xs sm:text-sm"
-              >
-                <span>View all journals</span>
-                <FiChevronRight size={12} className="transition-transform group-hover:translate-x-1" />
-              </Link>
-              <Link 
-                href="/diary" 
-                className="text-primary hover:text-primary/90 flex items-center gap-1 transition-colors group text-xs sm:text-sm"
-              >
-                <span>View all diaries</span>
-                <FiChevronRight size={12} className="transition-transform group-hover:translate-x-1" />
-              </Link>
-            </div>
-          </div>
-
-          <EntriesSection viewMode={viewMode} entryTypes={entryTypes} />
-        </div>
-      </div>
+      <EntriesSection viewMode={1} entryTypes={entryTypes} />
     );
-  };
-
-  // Handle feedback submission
-  const handleFeedbackSubmit = (e) => {
-    e.preventDefault();
-    setSendingFeedback(true);
-    setFeedbackError("");
-    
-    // Get user information
-    const userIdentifier = user ? (user.email || user.user_metadata?.name || user.id || "Anonymous") : "Anonymous";
-    
-    // Prepare template parameters
-    const templateParams = {
-      message: feedback,
-      from_name: userIdentifier,
-      user_info: user ? `User ID: ${user.id}` : "Not logged in"
-    };
-    
-    // Get EmailJS credentials from environment variables
-    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
-    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-    
-    // Send the email using EmailJS
-    emailjs.send(serviceId, templateId, templateParams, publicKey)
-      .then((result) => {
-        console.log('Email sent successfully:', result.text);
-        setSubmitted(true);
-        setSendingFeedback(false);
-        
-        // Reset form after 3 seconds
-        setTimeout(() => {
-          setFeedback("");
-          setSubmitted(false);
-        }, 3000);
-      }, (error) => {
-        console.error('Failed to send email:', error.text);
-        setFeedbackError("Failed to send feedback. Please try again later.");
-        setSendingFeedback(false);
-      });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-background text-foreground">
         <main className="max-w-7xl mx-auto pt-24 px-4">
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2">
@@ -262,40 +202,21 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="bg-background text-foreground">
       {/* Hero Section */}
       <HeroSection />
       
       {/* Main Content Section */}
       <div id="content-section" className="relative">
-        {/* Toggle Switch with improved positioning and styling */}
-        <div className="bg-black/80 backdrop-blur-sm py-1 border-b border-gray-800">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8">
-            <ToggleSwitch 
-              option1="Recent Entries" 
-              option2="Categories" 
-              onChange={setViewMode}
-            />
-          </div>
-        </div>
-        
         {/* Content Section Component */}
         <ContentSection />
       </div>
       
-
-      
-      {/* Feedback Section with improved styling */}
-      <section className="mt-16">
-        <FeedbackSection />
-      </section>
-      
       {/* Floating Action Button */}
       {user && <FloatingActionButton />}
-
-      {user && (
-        <EncryptionMigration userId={user.id} />
-      )}
+      
+      {/* Lazy load encryption migration */}
+      {user && <LazyEncryptionMigration userId={user.id} />}
     </div>
   );
 }

@@ -88,25 +88,10 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
       <div className="relative" ref={menuRef}>
         <button
           onClick={handleMenuClick}
-          className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${
-            isMobile && !isCompact
-              ? "w-full justify-start p-4 rounded-lg hover:bg-gray-800/30"
-              : isCompact
-                ? "justify-center p-2 rounded-full bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm"
-                : "border-2"
-          } ${
-            isLocked && !isUnlocked
-              ? isMobile && !isCompact
-                ? "text-green-500"
-                : isCompact
-                  ? "text-green-500 hover:text-green-400"
-                  : "border-transparent text-green-500 hover:text-green-400 bg-gray-800/40"
-              : isMobile && !isCompact
-                ? "text-gray-300"
-                : isCompact
-                  ? "text-gray-300 hover:text-white"
-                  : "border-transparent bg-gray-800/40 text-gray-300 hover:text-white hover:bg-gray-700/50"
+          className={`flex items-center gap-2 w-9 h-9 px-2 py-2  rounded-md bg-card-bg border border-border text-muted-text transition-all duration-200 hover:bg-border/30 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+            isLocked && !isUnlocked ? "text-green-500 hover:text-green-400" : "text-gray-300 hover:text-white"
           }`}
+          
         >
           {isLocked && !isUnlocked ? (
             <FiLock size={isCompact ? 20 : (isMobile ? 22 : 16)} />

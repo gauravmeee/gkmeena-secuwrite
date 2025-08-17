@@ -4,15 +4,12 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FiPlus, FiTrash2, FiX, FiCamera, FiEdit2, FiImage } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
-import { useLock } from "../../context/LockContext";
 import databaseUtils from "../../lib/database";
 import { supabase } from "../../lib/supabase";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import NoEntriesState from "../components/NoEntriesState";
 import SignInPrompt from "../components/SignInPrompt";
-import LoadingSpinner from "../components/LoadingSpinner";
 import LockOverlay from "../components/LockOverlay";
-import { useRouter } from "next/navigation";
 
 // Function to strip HTML tags for preview
 const stripHtml = (html) => {
@@ -40,12 +37,11 @@ export default function DiaryPage() {
   const [selectedEntries, setSelectedEntries] = useState(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const { user, toggleAuthModal } = useAuth();
-  const { shouldBlur } = useLock();
+  const { user} = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(10);
   const [draftsCount, setDraftsCount] = useState(0);
-  const router = useRouter();
+
 
   // Load entries
   useEffect(() => {
@@ -131,7 +127,7 @@ export default function DiaryPage() {
   // Show loading while entries are being loaded
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30">
         <main className="max-w-4xl mx-auto pt-24 px-4">
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2">
@@ -243,50 +239,9 @@ export default function DiaryPage() {
     }
   };
 
-  const handleDelete = async (entryId) => {
-    try {
-      if (user) {
-        // Check if this is a UUID (Supabase ID)
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entryId);
-        
-        if (isUuid) {
-          // Delete entry from Supabase
-          await databaseUtils.deleteDiaryEntry(entryId, user.id);
-          
-          // Update local state
-          setProcessedEntries((entries) => entries.filter(e => e.id !== entryId));
-          return;
-        }
-      }
-      
-      // Fall back to localStorage
-      const updatedEntries = processedEntries.filter(e => e.id !== entryId);
-      localStorage.setItem("diaryEntries", JSON.stringify(updatedEntries));
-      setProcessedEntries(updatedEntries);
-    } catch (error) {
-      console.error("Error deleting entry:", error);
-      alert("Could not delete entry. Please try again.");
-    }
-  };
-
-  // Show loading spinner while data is being fetched
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black text-white">
-        <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <h1 className="text-3xl font-bold">My Diary</h1>
-            </div>
-          </div>
-          <LoadingSpinner />
-        </main>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="px-5 min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30"> 
       <DeleteConfirmationModal 
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -340,7 +295,7 @@ export default function DiaryPage() {
             )}
 
             {user && (
-              <div className="flex items-center bg-primary rounded-md overflow-hidden">
+              <div className="flex items-center bg-blue-500 rounded-md overflow-hidden">
                 <Link
                   href="/diary/new?type=text"
                   onClick={() => {
@@ -348,7 +303,7 @@ export default function DiaryPage() {
                       sessionStorage.setItem(`diary_new_session_${user.id}`, 'true');
                     }
                   }}
-                  className="flex items-center gap-2 text-white px-4 py-2 hover:bg-primary/90 transition-colors"
+                  className="flex items-center gap-2 text-white px-4 py-2 hover:bg-blue-500/90 transition-colors"
                   title="New Text Entry"
                 >
                   <FiPlus size={16} />
@@ -362,7 +317,7 @@ export default function DiaryPage() {
                       sessionStorage.setItem(`diary_new_session_${user.id}`, 'true');
                     }
                   }}
-                  className="flex items-center gap-2 text-white px-4 py-2 hover:bg-primary/90 transition-colors"
+                  className="flex items-center gap-2 text-white px-4 py-2 transition-colors hover:bg-blue-500/90"
                   title="New Image Entry"
                 >
                   <FiCamera size={16} />

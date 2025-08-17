@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FiMessageSquare } from "react-icons/fi";
+import { FiMessageSquare, FiChevronUp, FiChevronDown } from "react-icons/fi";
 import emailjs from '@emailjs/browser';
 import { useAuth } from "../../context/AuthContext";
 
@@ -8,6 +8,7 @@ export default function FeedbackSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
   const [error, setError] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false);
   const { user } = useAuth();
 
   const handleSubmit = async (e) => {
@@ -37,6 +38,10 @@ export default function FeedbackSection() {
       
       setSubmitStatus("success");
       setFeedback("");
+      setTimeout(() => {
+        setSubmitStatus(null);
+        setIsExpanded(false);
+      }, 3000);
     } catch (error) {
       console.error('Failed to send feedback:', error);
       setError("Failed to send feedback. Please try again later.");
@@ -47,55 +52,78 @@ export default function FeedbackSection() {
   };
 
   return (
-    <div className="bg-gray-900/50 border-t border-gray-800">
-      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
-        <div className="space-y-4 sm:space-y-6">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <FiMessageSquare size={20} className="text-primary sm:text-2xl" />
-            <h2 className="text-xl sm:text-2xl font-bold">Feedback & Suggestions</h2>
+    <div className="bg-card-bg/50 border-t border-border/30">
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FiMessageSquare size={18} className="text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">Feedback & Suggestions</h2>
+            </div>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-1 text-muted-text hover:text-foreground transition-colors text-sm"
+            >
+              {isExpanded ? (
+                <>
+                  <span>Hide</span>
+                  <FiChevronUp size={16} />
+                </>
+              ) : (
+                <>
+                  <span>Show</span>
+                  <FiChevronDown size={16} />
+                </>
+              )}
+            </button>
           </div>
 
-          {submitStatus === "success" ? (
-            <div className="bg-green-900/30 border border-green-800 rounded-lg p-3 sm:p-4 text-green-400">
-              <p className="font-medium text-sm sm:text-base">Thank you for your feedback!</p>
-              <p className="text-xs sm:text-sm mt-1">Your message has been sent successfully.</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-              <textarea
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Share your suggestions..."
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 sm:p-4 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                required
-                maxLength={500}
-              />
+          {isExpanded && (
+            <>
+              {submitStatus === "success" ? (
+                <div className="bg-success-light border border-success/20 rounded-lg p-3 text-success">
+                  <p className="font-medium text-sm">Thank you for your feedback!</p>
+                  <p className="text-xs mt-1">Your message has been sent successfully.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <textarea
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Share your suggestions..."
+                    className="w-full bg-paper-bg border border-border-light rounded-lg p-3 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
+                    required
+                    maxLength={300}
+                    rows={3}
+                  />
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <p className="text-xs sm:text-sm text-gray-500">
-                  {feedback.length}/500 characters
-                </p>
-                {error && (
-                  <p className="text-xs sm:text-sm text-red-400">
-                    {error}
-                  </p>
-                )}
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !feedback.trim()}
-                  className="bg-primary hover:bg-primary/90 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base cursor-pointer"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                      <span>Sending...</span>
-                    </>
-                  ) : (
-                    "Send Feedback"
-                  )}
-                </button>
-              </div>
-            </form>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <p className="text-xs text-muted-text">
+                      {feedback.length}/300 characters
+                    </p>
+                    {error && (
+                      <p className="text-xs text-danger">
+                        {error}
+                      </p>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || !feedback.trim()}
+                      className="btn-writing disabled:opacity-70 disabled:cursor-not-allowed text-sm"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                          <span>Sending...</span>
+                        </>
+                      ) : (
+                        "Send Feedback"
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </>
           )}
         </div>
       </div>

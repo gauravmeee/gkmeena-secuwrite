@@ -1,115 +1,195 @@
+/* --------------------------------------------------------
+   Import Tailwind base utilities + reset
+-------------------------------------------------------- */
 @import "tailwindcss";
 
+/* --------------------------------------------------------
+   Default Theme (Light) - Used as base
+   If no .light/.dark is applied, this acts as fallback.
+-------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #6366f1;
-  --secondary: #a855f7;
-  --accent: #ec4899;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --card-bg: #f9fafb;
-  --border: #e5e7eb;
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-  
+  /* Base color system */
+  --background: #ffffff;        /* Tailwind white */
+  --foreground: #1f2937;        /* Tailwind gray-800 */
+  --primary: #059669;           /* Tailwind emerald-600 */
+  --secondary: #0d9488;         /* Tailwind teal-700 */
+  --tertiary: #facc15;          /* Tailwind yellow-400 */
+  --accent: #7c3aed;            /* Tailwind violet-600 */
+  --success: #059669;           /* Tailwind emerald-600 */
+  --warning: #d97706;           /* Tailwind orange-600 */
+  --danger: #dc2626;            /* Tailwind red-600 */
+  --card-bg: #f9fafb;           /* Tailwind gray-50 */
+  --border: #e5e7eb;            /* Tailwind gray-200 */
+
+  /* Writing app specific colors */
+  --paper-bg: #ffffff;
+  --ink-color: #1f2937;
+  --muted-text: #6b7280;
+  --highlight: #dbeafe;
+  --success-light: #d1fae5;
+  --warning-light: #fef3c7;
+  --border-light: #f3f4f6;
+
+  /* Layout + UI tokens */
   --container-padding: 1.5rem;
   --content-width: 1120px;
   --default-transition: 0.3s ease;
   --rounded-sm: 0.375rem;
   --rounded-md: 0.5rem;
   --rounded-lg: 0.75rem;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08);
   --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
 }
 
+/* --------------------------------------------------------
+   Dark by SYSTEM preference 
+   Only applies when user has not explicitly chosen theme.
+   If user sets .light or .dark → this is ignored.
+-------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1a1a1a;
+    --foreground: #f8fafc;
+    --card-bg: #2a2a2a;
+    --border: #3a3a3a;
+
+    --paper-bg: #2a2a2a;
+    --ink-color: #f1f5f9;
+    --muted-text: #94a3b8;
+    --highlight: #1e40af;
+    --success-light: #064e3b;
+    --warning-light: #451a03;
+    --border-light: #3a3a3a;
+  }
+}
+
+/* --------------------------------------------------------
+   Explicit Light Theme Override
+   Applied when <body class="light">
+   Forces light mode regardless of system preference
+-------------------------------------------------------- */
+.light {
+  --background: #ffffff;
+  --foreground: #1f2937;
+  --card-bg: #f9fafb;
+  --border: #e5e7eb;
+
+  --paper-bg: #ffffff;
+  --ink-color: #1f2937;
+  --muted-text: #6b7280;
+  --highlight: #dbeafe;
+  --success-light: #d1fae5;
+  --warning-light: #fef3c7;
+  --border-light: #f3f4f6;
+}
+
+/* --------------------------------------------------------
+   Explicit Dark Theme Override
+   Applied when <body class="dark">
+   Forces dark mode regardless of system preference
+-------------------------------------------------------- */
+.dark {
+  --background: #1a1a1a;
+  --foreground: #f8fafc;
+  --card-bg: #2a2a2a;
+  --border: #3a3a3a;
+
+  --paper-bg: #2a2a2a;
+  --ink-color: #f1f5f9;
+  --muted-text: #94a3b8;
+  --highlight: #1e40af;
+  --success-light: #064e3b;
+  --warning-light: #451a03;
+  --border-light: #3a3a3a;
+}
+
+/* --------------------------------------------------------
+   Map custom CSS variables to Tailwind theme tokens.
+   Allows classes like bg-background / text-foreground
+-------------------------------------------------------- */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
+  --color-tertiary: var(--tertiary);
   --color-accent: var(--accent);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   --color-card-bg: var(--card-bg);
   --color-border: var(--border);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --card-bg: #141414;
-    --border: #2a2a2a;
-    --foreground-rgb: 255, 255, 255;
-    --background-rgb: 0, 0, 0;
-  }
-}
-
+/* --------------------------------------------------------
+   Base styles
+-------------------------------------------------------- */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-/* For lined paper effect on diary page */
+/* --------------------------------------------------------
+   Your app-specific styles (unchanged)
+   - .lined-paper
+   - .modal-backdrop
+   - .font-homemade-apple
+   - Animations
+   - .writing-card
+   - Buttons, Inputs, Nav, FAB
+-------------------------------------------------------- */
+/* (Keep your styles exactly as you wrote, no duplication here) */
+
+
+/* Writing app specific styles */
 .lined-paper {
-  background-color: white;
-  background-image: linear-gradient(#eee 0.1em, transparent 0.1em);
+  background-color: var(--paper-bg);
+  background-image: 
+    linear-gradient(90deg, transparent 79px, var(--border-light) 79px, var(--border-light) 81px, transparent 81px),
+    linear-gradient(var(--border-light) 0.1em, transparent 0.1em);
   background-size: 100% 1.2em;
   border-radius: var(--rounded-md);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  color: #333;
+  box-shadow: var(--shadow-md);
+  color: var(--ink-color);
+  padding: 2rem;
+  border-left: 3px solid var(--primary);
 }
 
-/* Transitions and animations */
-.page-transition {
-  transition: all var(--default-transition);
+.dark .lined-paper {
+  background-image: 
+    linear-gradient(90deg, transparent 79px, #475569 79px, #475569 81px, transparent 81px),
+    linear-gradient(#475569 0.1em, transparent 0.1em);
+  border-left-color: var(--primary);
 }
 
-/* Glass effect for modern UI components */
-.glass-effect {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
 
-.dark .glass-effect {
-  background: rgba(0, 0, 0, 0.6);
-}
-
-/* Modal backdrop */
 .modal-backdrop {
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
+}
+
+.dark .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
 }
 
 .font-homemade-apple {
   font-family: var(--font-homemade-apple);
   font-size: 1.2rem;
   letter-spacing: 0.02em;
+  color: var(--primary);
 }
 
-/* Animation keyframes */
+/* Writing app animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
-}
-
-@keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
 }
 
 @keyframes slideUpIn {
@@ -119,284 +199,142 @@ body {
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.7; }
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
 }
 
-/* Modern gradient effects */
-.gradient-text {
-  background: linear-gradient(to right, var(--primary), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
-}
-
-.gradient-border {
-  position: relative;
-  border-radius: var(--rounded-md);
-}
-
-.gradient-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: var(--rounded-md);
-  padding: 1px;
-  background: linear-gradient(to right, var(--primary), var(--secondary));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+@keyframes blink {
+  0%, 50% { border-color: transparent; }
+  51%, 100% { border-color: var(--primary); }
 }
 
 /* Animation utilities */
-.animate-fadeIn { animation: fadeIn 0.2s ease-out; }
-.animate-scaleIn { animation: scaleIn 0.2s ease-out; }
-.animate-slideUpIn { animation: slideUpIn 0.3s ease-out; }
+.animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+.animate-slideUpIn { animation: slideUpIn 0.4s ease-out; }
 .animate-pulse-custom { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-.animate-spin-slow { animation: spin 3s linear infinite; }
+.animate-typewriter { animation: typewriter 2s steps(40, end); }
+.animate-blink { animation: blink 1s infinite; }
 
+/* Writing app specific components */
+.writing-card {
+  background: var(--paper-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--rounded-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--default-transition);
+    position: relative;
+  overflow: hidden;
+}
 
-/* Journal New Journal Entry Text Editor*/
-  .rdw-editor-main {
-    height: 400px;
-    overflow: auto;
-    box-sizing: border-box;
-  }
-  
-  .rdw-editor-wrapper {
-    width: 100%;
-    box-sizing: border-box;
-  }
-  
-  .rdw-editor-toolbar {
-    padding: 10px;
-    border-radius: 5px 5px 0 0;
-    border: 1px solid #F1F1F1;
-    border-bottom: none;
-    background: white;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-bottom: 0;
-    z-index: 10;
-  }
-  
-  .rdw-option-wrapper {
-    border: 1px solid #F1F1F1;
-    padding: 5px;
-    min-width: 25px;
-    height: 25px;
-    border-radius: 2px;
-    margin: 0 4px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    background: white;
-    text-transform: capitalize;
-  }
-  
-  .rdw-option-wrapper:hover {
-    box-shadow: 1px 1px 0px #BFBDBD;
-  }
-  
-  .rdw-option-active {
-    box-shadow: 1px 1px 0px #BFBDBD inset;
-    background-color: #F1F1F1;
-  }
-  
-  .rdw-dropdown-wrapper {
-    height: 30px;
-    background: white;
-    cursor: pointer;
-    border: 1px solid #F1F1F1;
-    border-radius: 2px;
-    margin: 0 3px;
-    text-transform: capitalize;
-    background: white;
-    position: relative;
-    display: flex;
-    align-items: center;
-    min-width: 50px;
-  }
-  
-  .rdw-dropdown-wrapper:hover {
-    box-shadow: 1px 1px 0px #BFBDBD;
-    background-color: #FFFFFF;
-  }
-  
-  .rdw-dropdown-wrapper:active {
-    box-shadow: 1px 1px 0px #BFBDBD inset;
-  }
-  
-  .rdw-dropdown-carettoopen {
-    height: 0px;
-    width: 0px;
+.writing-card::before {
+  content: '';
     position: absolute;
-    top: 35%;
-    right: 10%;
-    border-top: 6px solid black;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-  }
-  
-  .rdw-dropdown-carettoclose {
-    height: 0px;
-    width: 0px;
-    position: absolute;
-    top: 35%;
-    right: 10%;
-    border-bottom: 6px solid black;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-  }
-  
-  .rdw-dropdown-selectedtext {
-    display: flex;
-    position: relative;
+  top: 0;
+  left: 0;
+  width: 4px;
     height: 100%;
-    align-items: center;
-    padding: 0 5px;
-  }
-  
-  .rdw-dropdown-optionwrapper {
-    z-index: 100;
-    position: absolute;
-    top: 32px;
-    left: 0;
-    border: 1px solid #F1F1F1;
-    border-radius: 2px;
-    background: white;
-    width: 98%;
-    max-height: 250px;
-    overflow-y: scroll;
-  }
-  
-  .rdw-dropdownoption-default {
-    min-height: 25px;
-    display: flex;
-    align-items: center;
-    padding: 0 5px;
-    white-space: nowrap;
-  }
-  
-  .rdw-dropdownoption-highlighted {
-    background-color: #F1F1F1;
-  }
-  
-  .rdw-dropdownoption-active {
-    background-color: #f5f5f5;
-  }
-  
-  .rdw-dropdownoption-disabled {
-    opacity: 0.3;
-    cursor: default;
-  }
-  
-  .rdw-colorpicker-modal {
-    position: absolute;
-    top: 35px;
-    left: 5px;
-    display: flex;
-    flex-direction: column;
-    width: 175px;
-    height: 175px;
-    border: 1px solid #F1F1F1;
-    border-radius: 2px;
-    z-index: 100;
-    background: white;
-    box-shadow: 3px 3px 5px #BFBDBD;
-  }
-  
-  .rdw-colorpicker-option {
-    width: 22px;
-    height: 22px;
-    margin: 3px;
-    border-radius: 3px;
-    cursor: pointer;
-  }
-  
-  .rdw-link-modal {
-    position: absolute;
-    top: 35px;
-    left: 5px;
-    display: flex;
-    flex-direction: column;
-    width: 235px;
-    border: 1px solid #F1F1F1;
-    border-radius: 2px;
-    z-index: 100;
-    background: white;
-    box-shadow: 3px 3px 5px #BFBDBD;
-    padding: 15px;
-  }
-  
-  .rdw-link-modal-label {
-    font-size: 15px;
-  }
-  
-  .rdw-link-modal-input {
-    margin-top: 5px;
-    border-radius: 2px;
-    border: 1px solid #F1F1F1;
-    height: 25px;
-    margin-bottom: 15px;
-    padding: 0 5px;
-  }
-  
-  .rdw-link-modal-buttonsection {
-    margin: 0 auto;
-  }
-  
-  .rdw-link-modal-btn {
-    margin-left: 10px;
-    background: white;
-    border: 1px solid #F1F1F1;
-    border-radius: 2px;
-    cursor: pointer;
-    padding: 5px;
-    min-width: 60px;
-  }
-  
-  .rdw-link-modal-btn:hover {
-    box-shadow: 1px 1px 0px #BFBDBD;
-  }
-  
-  .rdw-link-modal-btn:active {
-    box-shadow: 1px 1px 0px #BFBDBD inset;
-  }
-  
-  .rdw-link-modal-btn:focus {
-    outline: none !important;
-  }
-  
-  .rdw-link-modal-btn:disabled {
-    background: #ece9e9;
-  }
-  
-  .rdw-emoji-modal {
-    position: absolute;
-    top: 35px;
-    left: 5px;
-    display: flex;
-    flex-wrap: wrap;
-    width: 235px;
-    border: 1px solid #F1F1F1;
-    border-radius: 2px;
-    z-index: 100;
-    background: white;
-    box-shadow: 3px 3px 5px #BFBDBD;
-    padding: 15px;
-  }
-  
-  .rdw-emoji-icon {
-    width: 24px;
-    height: 24px;
-    margin: 2px;
-    cursor: pointer;
+  background: linear-gradient(to bottom, var(--primary), var(--secondary));
+  opacity: 0;
+  transition: opacity var(--default-transition);
+}
+
+.writing-card:hover::before {
+  opacity: 1;
+}
+
+.writing-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary);
+}
+
+/* Jodit Editor Styles - Writing theme
+.jodit-container {
+  border-radius: var(--rounded-md);
+  border: 1px solid var(--border-light);
+  background: var(--paper-bg);
+}
+
+.jodit-toolbar {
+  border-radius: var(--rounded-md) var(--rounded-md) 0 0;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--background);
+}
+
+.jodit-workplace {
+  border-radius: 0 0 var(--rounded-md) var(--rounded-md);
+  background: var(--paper-bg);
+  color: var(--ink-color);
+} */
+
+/* Writing app buttons */
+.btn-writing {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border: none;
+  border-radius: var(--rounded-md);
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all var(--default-transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-writing:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  filter: brightness(1.1);
+}
+
+.btn-writing:active {
+  transform: translateY(0);
+}
+
+/* Writing app input styles */
+.input-writing {
+  background: var(--paper-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--rounded-md);
+  padding: 0.75rem 1rem;
+  color: var(--ink-color);
+  transition: all var(--default-transition);
+}
+
+.input-writing:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+/* Writing app navigation */
+.nav-writing {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.dark .nav-writing {
+  background: rgba(26, 26, 26, 0.95);
+  border-bottom-color: var(--border-light);
+}
+
+
+/* Writing app floating action button */
+.fab-writing {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  box-shadow: var(--shadow-lg);
+  transition: all var(--default-transition);
+}
+
+.fab-writing:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3);
   }

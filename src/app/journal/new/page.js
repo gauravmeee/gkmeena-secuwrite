@@ -6,11 +6,8 @@ import { FiSave, FiArrowLeft } from "react-icons/fi";
 import Link from "next/link";
 import { useAuth } from "../../../context/AuthContext";
 import { supabase } from "../../../lib/supabase";
-import dynamic from "next/dynamic";
 import databaseUtils from "../../../lib/database";
-
-// Dynamically import JoditEditor for SSR compatibility
-const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
+import { LazyJoditEditor, debounce } from "../../../utils/componentUtils";
 
 function NewJournalEntryContent() {
   const [title, setTitle] = useState("");
@@ -24,6 +21,42 @@ function NewJournalEntryContent() {
   const mounted = useRef(false);
   const editorRef = useRef(null);
   const draftTimerRef = useRef(null);
+
+  // Debounced save function for better performance
+  const debouncedSave = useRef(
+    debounce(async (title, content) => {
+      if (!user || !title.trim() || !content.trim()) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('journal_entries')
+          .insert([
+            {
+              user_id: user.id,
+              title: title.trim(),
+              content: content,
+              created_at: new Date().toISOString()
+            }
+          ])
+          .select();
+
+        if (error) throw error;
+
+        if (data && data[0]) {
+          // Clear any drafts for this session
+          const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
+          const updatedDrafts = drafts.filter(d => !d.isCurrentlyEditing);
+          localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+          
+          // Navigate to the new entry
+          router.push(`/journal/${data[0].id}`);
+        }
+      } catch (error) {
+        console.error('Error saving journal entry:', error);
+        alert('Failed to save entry. Please try again.');
+      }
+    }, 300)
+  ).current;
 
   // Update authentication check
   useEffect(() => {
@@ -103,476 +136,187 @@ function NewJournalEntryContent() {
             if (editorRef.current) {
               editorRef.current.value = currentDraft.content || '';
             }
-          } else {
-            // No draft being edited - start blank
-            setTitle('');
-            setContent('');
-            if (editorRef.current) {
-              editorRef.current.value = '';
-            }
           }
         }
       }
     }
   }, [user, searchParams]);
 
-  // Save draft when title changes (silent - no status updates)
-  useEffect(() => {
-    const saveDraft = () => {
-      if (!user || !editorRef.current) return;
-
-      const currentContent = editorRef.current.value;
-      
-      // Only save if there's content (title or content)
-      if (title || currentContent) {
-        try {
-          const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
-          
-          // Find currently editing draft
-          const currentDraft = drafts.find(d => d.isCurrentlyEditing);
-          
-          if (currentDraft) {
-            // Update existing draft
-            const updatedDrafts = drafts.map(d => {
-              if (d.isCurrentlyEditing) {
-                return {
-                  ...d,
-                  title: title || "",
-                  content: currentContent || "",
-                  lastModified: new Date().getTime()
-                  // Keep original timestamp to avoid creating duplicates
-                };
-              }
-              return d;
-            });
-            localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
-          } else {
-            // Create new draft
-            const newDraft = {
-              userId: user.id,
-              title: title || "",
-              content: currentContent || "",
-              timestamp: new Date().toISOString(),
-              lastModified: new Date().getTime(),
-              isCurrentlyEditing: true,
-              date: new Date().toLocaleDateString('en-US', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-              }),
-              day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-              time: new Date().toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit',
-                hour12: true 
-              })
-            };
-            
-            // Remove editing flag from all other drafts
-            const otherDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
-            localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify([newDraft, ...otherDrafts]));
-          }
-          
-          // Silent saving - no status updates to avoid re-renders
-          
-        } catch (error) {
-          console.error('Error saving draft:', error);
-        }
-      }
+  // Auto-save draft functionality
+  const saveDraft = () => {
+    if (!user || (!title.trim() && !content.trim())) return;
+    
+    const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
+    const timestamp = Date.now().toString();
+    
+    // Remove any currently editing drafts
+    const filteredDrafts = drafts.filter(d => !d.isCurrentlyEditing);
+    
+    // Add new draft
+    const newDraft = {
+      title: title.trim(),
+      content: content,
+      timestamp: timestamp,
+      isCurrentlyEditing: true,
+      created_at: new Date().toISOString()
     };
-
-    if (draftTimerRef.current) {
-      clearTimeout(draftTimerRef.current);
-    }
-
-    draftTimerRef.current = setTimeout(saveDraft, 1000);
-
-    return () => {
-      if (draftTimerRef.current) {
-        clearTimeout(draftTimerRef.current);
-      }
-    };
-  }, [title, user]); // Only trigger on title changes
-
-  // Save draft immediately when page is about to unload
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (user) {
-        const currentContent = editorRef.current ? editorRef.current.value : '';
-        if (title || currentContent) {
-          try {
-            const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
-            const currentDraft = drafts.find(d => d.isCurrentlyEditing);
-            
-            if (currentDraft) {
-              // Update existing draft
-              const updatedDrafts = drafts.map(d => {
-                if (d.isCurrentlyEditing) {
-                  return {
-                    ...d,
-                    title: title || "",
-                    content: currentContent || "",
-                    lastModified: new Date().getTime()
-                    // Keep original timestamp to avoid creating duplicates
-                  };
-                }
-                return d;
-              });
-              localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
-            } else {
-              // Create new draft
-              const newDraft = {
-                userId: user.id,
-                title: title || "",
-                content: currentContent || "",
-                timestamp: new Date().toISOString(),
-                lastModified: new Date().getTime(),
-                isCurrentlyEditing: true,
-                date: new Date().toLocaleDateString('en-US', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric'
-                }),
-                day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-                time: new Date().toLocaleTimeString('en-US', { 
-                  hour: 'numeric', 
-                  minute: '2-digit',
-                  hour12: true 
-                })
-              };
-
-              const otherDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
-              localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify([newDraft, ...otherDrafts]));
-            }
-          } catch (error) {
-            console.error('Error saving draft on unload:', error);
-          }
-        }
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [title, user]); // Removed content from dependencies
-
-  // Don't clear the currently editing flag when leaving the page
-  // This ensures drafts persist across page refreshes and navigation
-  // The flag will only be cleared when the draft is saved or deleted
-
-  const clearDraft = () => {
-    if (user) {
-      const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
-      const currentDraft = drafts.find(d => d.isCurrentlyEditing);
-      if (!currentDraft) return;
-
-      const filteredDrafts = drafts.filter(d => !d.isCurrentlyEditing);
-      localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(filteredDrafts));
-    }
+    
+    // Keep only the 5 most recent drafts
+    const updatedDrafts = [newDraft, ...filteredDrafts].slice(0, 5);
+    localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
   };
 
-  // Show loading state while checking auth
-  if (!authChecked || !user) {
+  // Debounced draft saving
+  const debouncedSaveDraft = useRef(debounce(saveDraft, 1000)).current;
+
+  useEffect(() => {
+    if (title.trim() || content.trim()) {
+      debouncedSaveDraft();
+    }
+  }, [title, content, debouncedSaveDraft]);
+
+  const handleSave = async () => {
+    if (!title.trim() || !content.trim()) {
+      alert('Please enter a title and content');
+      return;
+    }
+    
+    setLoading(true);
+    await debouncedSave(title, content);
+    setLoading(false);
+  };
+
+  const handleTitleChange = (e) => {
+    setTitle(e.target.value);
+  };
+
+  const handleContentChange = (newContent) => {
+    setContent(newContent);
+  };
+
+  if (!authChecked) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white">
-        <main className="max-w-6xl mx-auto pt-24 px-6">
-          <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-            </div>
-          </div>
-        </main>
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 rounded-full bg-primary animate-pulse"></div>
+          <div className="w-4 h-4 rounded-full bg-primary animate-pulse delay-150"></div>
+          <div className="w-4 h-4 rounded-full bg-primary animate-pulse delay-300"></div>
+        </div>
       </div>
     );
   }
 
-  const handleSave = async () => {
-    // Get content from state or editor
-    const editorContent = content || editorRef.current?.value || "";
-    
-    // Check if content is empty or only contains whitespace/HTML tags
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = editorContent;
-    const textContent = tempDiv.textContent || tempDiv.innerText;
-    
-    if (!textContent || !textContent.trim()) {
-      alert("Please write something before saving");
-      return;
-    }
-
-    if (!user) {
-      alert("Please log in to save your journal entry");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      // Create the entry object with all necessary fields
-      const newEntry = {
-        title: title.trim() || "Untitled",
-        content: editorContent,
-        date: new Date().toLocaleDateString('en-US', {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric'
-        })
-      };
-
-      // Use databaseUtils to create the entry (this will handle encryption)
-      const result = await databaseUtils.createJournalEntry(user.id, newEntry);
-
-      if (!result) {
-        throw new Error("Failed to save journal entry");
-      }
-
-      // Clear the draft after successful save
-      clearDraft();
-      router.push("/journal");
-
-    } catch (error) {
-      console.error("Error saving entry:", error);
-      alert(error.message || "Could not save entry. Please try again.");
-    } finally {
-      if (mounted.current) {
-        setLoading(false);
-      }
-    }
-  };
-
-  const editorConfig = {
-    readonly: false,
-    placeholder: "Write your journal entry here...",
-    toolbarSticky: false,
-    showCharsCounter: false,
-    showWordsCounter: false,
-    showXPathInStatusbar: false,
-    spellcheck: true,
-    minHeight: 400,
-    height: "auto",
-    buttons: [
-      "bold",
-      "italic",
-      "underline",
-      "strikethrough",
-      "|",
-      "ul",
-      "ol",
-      "|",
-      "font",
-      "fontsize",
-      "brush",
-      "link",
-      "unlink",
-      "image",
-      "video",
-      "|",
-      "align",
-      "outdent",
-      "indent",
-      "undo",
-      "redo",
-      "|",
-      "hr",
-      "fullsize",
-      "selectall",
-      "source",
-    ],
-    statusbar: false,
-    removeButtons: ['source', 'fullsize', 'about'],
-    uploader: {
-      insertImageAsBase64URI: true
-    },
-    events: {
-      afterInit: function(editor) {
-        editorRef.current = editor;
-        // Set initial content if available
-        if (content) {
-          editor.value = content;
-        }
-        
-        // Add event listener to trigger draft saving
-        editor.events.on('change', () => {
-          // Mark as typing without causing re-render
-          isTypingRef.current = true;
-          
-          // Clear any existing timer
-          if (draftTimerRef.current) {
-            clearTimeout(draftTimerRef.current);
-          }
-          
-          // Set timer for draft saving
-          draftTimerRef.current = setTimeout(() => {
-            if (user && editorRef.current) {
-              const currentContent = editorRef.current.value;
-              if (title || currentContent) {
-                try {
-                  const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
-                  const currentDraft = drafts.find(d => d.isCurrentlyEditing);
-                  
-                  if (currentDraft) {
-                    const updatedDrafts = drafts.map(d => {
-                      if (d.isCurrentlyEditing) {
-                        return {
-                          ...d,
-                          title: title || "",
-                          content: currentContent || "",
-                          lastModified: new Date().getTime()
-                          // Keep original timestamp to avoid creating duplicates
-                        };
-                      }
-                      return d;
-                    });
-                    localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
-                  } else {
-                    const newDraft = {
-                      userId: user.id,
-                      title: title || "",
-                      content: currentContent || "",
-                      timestamp: new Date().toISOString(),
-                      lastModified: new Date().getTime(),
-                      isCurrentlyEditing: true,
-                      date: new Date().toLocaleDateString('en-US', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                      }),
-                      day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-                      time: new Date().toLocaleTimeString('en-US', { 
-                        hour: 'numeric', 
-                        minute: '2-digit',
-                        hour12: true 
-                      })
-                    };
-                    
-                    const otherDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
-                    localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify([newDraft, ...otherDrafts]));
-                  }
-                  
-                  // Mark as not typing after a delay
-                  setTimeout(() => {
-                    isTypingRef.current = false;
-                  }, 2000);
-                  
-                } catch (error) {
-                  console.error('Error saving draft:', error);
-                }
-              }
-            }
-          }, 1000);
-        });
-      }
-    }
-  };
+  if (!user) {
+    return null;
+  }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <main className="max-w-6xl mx-auto pt-24 px-4 pb-20">
-        {/* Header Section */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Link 
-              href={searchParams.get('editDraft') ? "/journal/draft" : "/journal"} 
-              className="flex items-center gap-2 text-primary hover:underline"
-            >
-              <FiArrowLeft size={18} />
-              <span>Back</span>
-            </Link>
-
-
-          </div>
-
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <Link 
+            href="/journal" 
+            className="flex items-center gap-2 text-muted-text hover:text-foreground transition-colors"
+          >
+            <FiArrowLeft size={20} />
+            <span>Back to Journal</span>
+          </Link>
+          
           <button
             onClick={handleSave}
-            disabled={loading}
-            className={`flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg transition-all duration-300${
-              loading
-                ? "bg-opacity-70 cursor-not-allowed"
-                : "hover:bg-primary/90 cursor-pointer"
-            }`}
+            disabled={loading || !title.trim() || !content.trim()}
+            className="btn-writing disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? (
-              <div className="flex items-center gap-2">
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8H4z"
-                  ></path>
-                </svg>
-                <span className="hidden sm:inline">Saving...</span>
-              </div>
-            ) : (
-              <>
-                <FiSave size={18} />
-                <span className="hidden sm:inline">Save Entry</span>
-              </>
-            )}
+            <FiSave size={16} />
+            {loading ? 'Saving...' : 'Save Entry'}
           </button>
         </div>
 
-        <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 p-4 sm:p-6">
-          {/* Title Input */}
-          <div className="relative w-full mb-4">
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Untitled"
-              className="w-full text-3xl font-semibold p-2 pr-36 rounded-lg border border-gray-700 bg-transparent text-white focus:outline-none focus:border-primary transition-all"
-            />
-            <span className="absolute right-4 top-4 text-gray-400 text-sm">
-              {new Date().toLocaleDateString("en-US", {
-                month: "2-digit",
-                day: "2-digit",
-                year: "numeric",
-              })}
-            </span>
-          </div>
-
-          {/* Editor */}
-          <div className="bg-white rounded-md text-black overflow-hidden shadow-md">
-            <JoditEditor
-              key="new-journal-editor"
-              config={editorConfig}
-              tabIndex={1}
-              ref={editorRef}
-            />
-          </div>
+        {/* Title Input */}
+        <div className="mb-8">
+          <input
+            type="text"
+            value={title}
+            onChange={handleTitleChange}
+            placeholder="Enter your journal title..."
+            className="input-writing w-full text-lg font-medium"
+          />
         </div>
-      </main>
+
+        {/* Rich Text Editor */}
+        <div className="bg-paper-bg border border-border-light rounded-lg overflow-hidden shadow-sm">
+          <LazyJoditEditor
+            ref={editorRef}
+            value={content}
+            config={{
+              readonly: false,
+              placeholder: "Start writing your journal entry...",
+              toolbar: true,
+              spellcheck: true,
+              language: "en",
+              theme: "default",
+              height: 500,
+              buttons: [
+                'source', '|',
+                'bold', 'italic', 'underline', 'strikethrough', '|',
+                'font', 'fontsize', 'brush', 'paragraph', '|',
+                'align', '|',
+                'ul', 'ol', '|',
+                'table', 'link', '|',
+                'undo', 'redo', '|',
+                'hr', 'eraser', 'copyformat', '|',
+                'fullsize'
+              ],
+              buttonsMD: [
+                'bold', 'italic', 'underline', '|',
+                'ul', 'ol', '|',
+                'font', 'fontsize', '|',
+                'undo', 'redo', '|',
+                'link', '|',
+                'fullsize'
+              ],
+              buttonsSM: [
+                'bold', 'italic', '|',
+                'ul', 'ol', '|',
+                'fontsize', '|',
+                'undo', 'redo'
+              ],
+              buttonsXS: [
+                'bold', '|',
+                'ul', 'ol', '|',
+                'undo', 'redo'
+              ]
+            }}
+            onBlur={handleContentChange}
+            onChange={handleContentChange}
+          />
+        </div>
+
+        {/* Draft Info */}
+        <div className="mt-6 p-4 bg-success-light border border-success/20 rounded-lg">
+          <div className="flex items-center gap-2 text-success">
+            <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium">Auto-saving drafts...</span>
+          </div>
+          <p className="text-sm text-success/80 mt-1">
+            Your entry is automatically saved as a draft. Click "Save Entry" to publish it.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
 
-// Main component with Suspense boundary
 export default function NewJournalEntry() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-950 text-white">
-        <main className="max-w-6xl mx-auto pt-24 px-4 pb-20">
-          <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-            </div>
-          </div>
-        </main>
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 rounded-full bg-primary animate-pulse"></div>
+          <div className="w-4 h-4 rounded-full bg-primary animate-pulse delay-150"></div>
+          <div className="w-4 h-4 rounded-full bg-primary animate-pulse delay-300"></div>
+        </div>
       </div>
     }>
       <NewJournalEntryContent />

@@ -41,7 +41,7 @@ export default function SignInPrompt({ type = "Diary" }) {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <main className="max-w-4xl mx-auto pt-8 px-4 pb-20">
         {/* Hero Section */}
         <div className="text-center mb-12">
@@ -57,43 +57,36 @@ export default function SignInPrompt({ type = "Diary" }) {
             Your Personal {type}
           </h1>
           
-          {/* <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            {isJournal 
-              ? "Capture your thoughts, ideas, and experiences with rich text formatting and multimedia support."
-              : "Record your daily moments, thoughts, and memories in a private, secure space."
-            }
-          </p> */}
-          
-            <p className="text-lg font-medium mb-4">
-                Sign in to <span className="text-primary">Create</span> and <span className="text-secondary">Access</span> your {type}.
-            </p>
-            <button
-                onClick={toggleAuthModal}
-                className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white px-6 py-3 rounded-md font-semibold text-base transition-transform transform hover:scale-105 shadow"
-            >
-                Sign In
-            </button>
-            </div>
+          <p className="text-lg font-medium mb-4">
+              Sign in to <span className="text-primary">Create</span> and <span className="text-secondary">Access</span> your {type}.
+          </p>
+          <button
+              onClick={toggleAuthModal}
+              className="btn-writing"
+          >
+              Sign In
+          </button>
+        </div>
 
         {/* Features Section */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           {features.map((feature, index) => (
             <div 
               key={index}
-              className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6 text-center hover:bg-gray-900/70 transition-all duration-300"
+              className="writing-card p-6 text-center"
             >
               <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/20 rounded-lg mb-4 text-primary">
                 {feature.icon}
               </div>
-              <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-              <p className="text-gray-400 text-sm">{feature.description}</p>
+              <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
+              <p className="text-muted-text text-sm">{feature.description}</p>
             </div>
           ))}
         </div>
 
         {/* Privacy Note */}
         <div className="text-center mt-8">
-          <p className="text-gray-500 text-sm">
+          <p className="text-muted-text text-sm">
             🔒 Your data is encrypted and secure. We respect your privacy.
           </p>
         </div>
