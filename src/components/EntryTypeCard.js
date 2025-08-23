@@ -8,24 +8,24 @@ export default function EntryTypeCard({ title, icon, description, path, bgColor,
   
   return (
     <Link href={path} className="group">
-      <div className="bg-gray-900/70 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800 p-6 h-full 
+      <div className="bg-bg-overlay backdrop-blur-sm rounded-xl shadow-sm border border-border-primary p-6 h-full 
         hover:border-primary/30 hover:shadow-lg transition-all duration-200 group-hover:translate-y-[-2px]">
         <div className="flex items-start flex-col h-full">
           <div className="flex w-full items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="text-2xl">{icon}</span>
-              <span className="text-sm uppercase tracking-wider text-gray-400 font-medium">
+              <span className="text-sm uppercase tracking-wider text-text-secondary font-medium">
                 {title}
               </span>
             </div>
             {displayCount > 0 && (
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-text-muted">
                 {displayCount} {displayCount === 1 ? 'entry' : 'entries'}
               </div>
             )}
           </div>
           
-          <p className="text-gray-400 text-sm line-clamp-3 mb-4 flex-grow">
+          <p className="text-text-secondary text-sm line-clamp-3 mb-4 flex-grow">
             {description}
           </p>
           

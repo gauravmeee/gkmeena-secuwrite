@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FiPlus } from "react-icons/fi";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function NoEntriesState({ type }) {
   const { user, toggleAuthModal } = useAuth();

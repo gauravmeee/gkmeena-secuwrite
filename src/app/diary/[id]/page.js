@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
-import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
-import EntryLockProtection from "../../components/EntryLockProtection";
+import DeleteConfirmationModal from "../../../components/common/DeleteConfirmationModal";
+import EntryLockProtection from "../../../components/EntryLockProtection";
 import { useAuth } from "../../../context/AuthContext";
 import databaseUtils from "../../../lib/database";
 import { supabase } from "../../../lib/supabase";
@@ -329,7 +329,7 @@ export default function DiaryEntryPage() {
             
             <div className={entryType === 'image' ? 'bg-white p-8' : 'lined-paper p-8 min-h-[70vh] bg-white'}>
               <div className="mb-6 text-left">
-                <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">
+                <div className="text-xl  font-medium text-gray-800 mb-1">
                   {entry.date || (() => {
                     const now = new Date();
                     const day = now.getDate();
@@ -351,10 +351,10 @@ export default function DiaryEntryPage() {
                     }).split(' ')[0]} ${now.getFullYear()}`;
                   })()}
                 </div>
-                <div className="text-xl font-handwriting text-gray-800 mb-1">
+                <div className="text-xl  text-gray-800 mb-1">
                   {entry.day || new Date().toLocaleDateString('en-US', { weekday: 'long' })}
                 </div>
-                <div className="text-xl font-handwriting text-gray-800">
+                <div className="text-xl  text-gray-800">
                   {entry.time || new Date().toLocaleTimeString('en-US', { 
                     hour: 'numeric', 
                     minute: '2-digit', 
@@ -364,7 +364,7 @@ export default function DiaryEntryPage() {
               </div>
 
               <div className="font-serif text-lg text-gray-800">
-                <div className="mt-10 font-handwriting text-xl">Dear Diary,</div>
+                <div className="mt-10  text-xl">Dear Diary,</div>
                 
                 {entryType === 'image' ? (
                   <div className="mt-6">
@@ -381,7 +381,7 @@ export default function DiaryEntryPage() {
                     />
                   </div>
                 ) : (
-                  <div className="whitespace-pre-wrap line-height-loose font-handwriting text-xl">
+                  <div className="whitespace-pre-wrap line-height-loose  text-xl">
                     {entry.content}
                   </div>
                 )}

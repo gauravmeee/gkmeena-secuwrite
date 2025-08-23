@@ -1,4 +1,4 @@
-import { getPageNumbers } from "../utils/entryUtils";
+import { getPageNumbers } from "@/utils/entryUtils";
 
 export default function Pagination({ currentPage, totalPages, onPageChange }) {
   const pages = getPageNumbers(currentPage, totalPages);
@@ -45,4 +45,5 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
       </button>
     </div>
   );
+
 } 

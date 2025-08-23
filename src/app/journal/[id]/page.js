@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
-import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
-import EntryLockProtection from "../../components/EntryLockProtection";
+import DeleteConfirmationModal from "../../../components/common/DeleteConfirmationModal";
+import EntryLockProtection from "../../../components/EntryLockProtection";
 import { useAuth } from "../../../context/AuthContext";
 import { supabase } from "../../../lib/supabase";
 import databaseUtils from "../../../lib/database";
@@ -117,7 +117,7 @@ export default function JournalEntryPage() {
   return (
     <EntryLockProtection entryType="journal">
       {loading ? (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30 text-white">
           <main className="max-w-4xl mx-auto pt-24 px-4">
             <div className="flex justify-center items-center h-64">
               <div className="flex items-center space-x-2">
@@ -167,17 +167,17 @@ export default function JournalEntryPage() {
           </div>
 
           {/* Journal entry display */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[calc(100vh-16rem)] flex flex-col">
-            <div className="bg-gray-800 border-b border-gray-700 p-4">
+          <div className="bg-bg-primary rounded-xl shadow-sm border border-border-primary overflow-hidden min-h-[calc(100vh-16rem)] flex flex-col">
+            <div className="bg-bg-secondary border-b border-border-primary p-4">
               <div className="flex items-center justify-between">
-                <h1 className="text-xl font-semibold text-white">{entry.title}</h1>
-                <div className="text-gray-300 text-sm">{formatDateTime(entry.created_at || entry.date)}</div>
+                <h1 className="text-xl font-semibold text-text-primary">{entry.title}</h1>
+                <div className="text-text-secondary text-sm">{formatDateTime(entry.created_at || entry.date)}</div>
               </div>
             </div>
 
-            <div className="p-6 flex-1 bg-white">
+            <div className="p-6 flex-1 bg-bg-primary">
               <div
-                className="prose prose-gray max-w-none text-gray-800"
+                className="prose prose-gray max-w-none text-text-primary"
                 dangerouslySetInnerHTML={{ __html: entry.content }}
               />
             </div>

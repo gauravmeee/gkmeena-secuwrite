@@ -268,7 +268,7 @@ function NewDiaryEntryContent() {
   // Show loading state while checking auth
   if (!authChecked || !user) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-background">
         <main className="max-w-4xl mx-auto pt-24 px-4">
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2">
@@ -426,13 +426,13 @@ function NewDiaryEntryContent() {
   };
   
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background">
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <Link 
               href={searchParams.get('editDraft') ? "/diary/draft" : "/diary"} 
-              className="flex items-center gap-2 text-primary hover:underline"
+              className="flex items-center gap-2 text-primary hover: hover:underline"
             >
               <FiArrowLeft size={16} />
               <span>Back</span>
@@ -443,7 +443,7 @@ function NewDiaryEntryContent() {
           <div className="flex items-center gap-4">
             <Link
               href={entryType === 'text' ? '/diary/new?type=image' : '/diary/new'}
-              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg"
+              className="text-primary hover:text-primary/90 transition-colors flex items-center gap-2 px-3 py-2"
             >
               {entryType === 'text' ? (
                 <>
@@ -461,7 +461,7 @@ function NewDiaryEntryContent() {
             <button
               onClick={handleSave}
               disabled={loading}
-              className={`flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg transition-all duration-300 ${
+              className={`flex items-center gap-2 bg-success text-white hover:bg-success-dark px-6 py-3 rounded-lg transition-all duration-300 ${
                 loading
                   ? "bg-opacity-70 cursor-not-allowed"
                   : "hover:bg-primary/90 cursor-pointer"
@@ -500,33 +500,33 @@ function NewDiaryEntryContent() {
             </button>
           </div>
         </div>
-        
-        <div className={`bg-white rounded-xl shadow-sm border border-gray-800 overflow-hidden ${entryType === 'image' ? 'pb-6' : ''}`}>
-          <div className="bg-gradient-to-r from-primary/5 to-secondary/5 p-4 border-b border-gray-800">
+        {/* Diary Entry Container */}
+        <div className={`text-text-primary rounded-xl bg-gradient-to-r from-primary/10 to-secondary/30 shadow-sm border border-gray-200 overflow-hidden ${entryType === 'image' ? 'pb-6' : ''}`}>
+          <div className="p-4">
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Entry Title (optional)"
-              className="w-full bg-transparent border-none text-xl font-serif text-gray-800 focus:outline-none"
+              className="w-full bg-transparent border-none text-xl font-serif focus:outline-none"
             />
           </div>
-          
-          <div className={entryType === 'image' ? 'bg-white p-8' : 'lined-paper p-8 min-h-[70vh] bg-white'}>
+
+          <div className={entryType === 'image' ? 'bg-paper-bg p-8' : 'lined-paper p-8 min-h-[70vh] bg-white'}>
             <div className="mb-6 text-left">
-              <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">{formattedDate}</div>
-              <div className="text-xl font-handwriting text-gray-800 mb-1">{weekday}</div>
-              <div className="text-xl font-handwriting text-gray-800">{formattedTime}</div>
+              <div className="text-xl font-medium mb-1">{formattedDate}</div>
+              <div className="text-xl mb-1">{weekday}</div>
+              <div className="text-xl">{formattedTime}</div>
             </div>
             
-            <div className="font-serif text-lg text-gray-800">
-              <div className="mt-10 font-handwriting text-xl">Dear Diary,</div>
+            <div className="text-lg">
+              <div className="mt-10 text-xl">Dear Diary,</div>
               
               {entryType === 'text' && (
                 <textarea 
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="w-full h-[calc(70vh-180px)] bg-transparent border-none outline-none resize-none font-handwriting text-xl text-gray-800 line-height-loose"
+                  className="w-full h-[calc(70vh-180px)] bg-transparent border-none outline-none resize-none text-xl line-height-loose"
                   placeholder="Write your thoughts here..."
                   autoFocus
                 />
@@ -575,30 +575,11 @@ function NewDiaryEntryContent() {
             )}
           </div>
         </div>
-      </main>
-      
-      <style jsx global>{`
+        <style jsx global>{`
         @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");
-
-        .font-handwriting {
-          font-family: "Kalam", "Caveat", "Dancing Script", cursive;
-        }
-        
-        .lined-paper {
-          background-color: white;
-          background-image: 
-            linear-gradient(90deg, transparent 39px, #d6aed6 39px, #d6aed6 41px, transparent 41px),
-            linear-gradient(#e5e7eb 1px, transparent 1px);
-          background-size: 100% 2rem;
-          line-height: 2rem;
-          padding-left: 45px !important;
-        }
-        
-        .line-height-loose {
-          line-height: 2rem;
-          padding-top: 0.5rem;
-        }
-      `}</style>      
+      `}</style>
+      </main>
+    
     </div>
   );
 }
@@ -607,7 +588,7 @@ function NewDiaryEntryContent() {
 export default function NewDiaryEntry() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-background">
         <main className="max-w-4xl mx-auto pt-24 px-4">
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2">

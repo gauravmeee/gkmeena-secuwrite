@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { FiFeather, FiBook, FiEdit3, FiChevronRight } from "react-icons/fi";
 import Link from "next/link";
+import { useAuth } from "../context/AuthContext"; // adjust path
 
 export default function HeroSection() {
   const [currentTypeIndex, setCurrentTypeIndex] = useState(0);
+  const { user } = useAuth();
 
   const contentTypes = [
     { name: "Journal", icon: <FiBook /> },
@@ -19,7 +21,7 @@ export default function HeroSection() {
 
   // Hero Section
   return (
-    <section className="flex flex-col h-[calc(100vh-20vh)] min-h-[calc(100vh-20vh)] bg-gradient-to-r from-primary/10 to-secondary/30">
+    <section className={`flex flex-col bg-gradient-to-r from-primary/10 to-secondary/30 ${user ? "h-[calc(100vh-20vh)] min-h-[calc(100vh-20vh)]" :"h-[calc(100vh-10vh)] min-h-[calc(100vh-10vh)]" }`}>
       {/* Top Section */}
       <div className="flex-1 flex items-center justify-center px-4 md:px-8  pt-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-7xl w-full">
@@ -51,7 +53,7 @@ export default function HeroSection() {
 
               {/* Rotating Text */}
               <div className="mt-6 text-center">
-                <div className="font-handwriting text-lg sm:text-xl text-muted-text mb-2">
+                <div className="text-lg sm:text-xl text-muted-text mb-2">
                   {contentTypes[currentTypeIndex].name}
                 </div>
                 <div className="w-12 h-0.5 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full"></div>

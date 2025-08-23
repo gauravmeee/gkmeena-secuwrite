@@ -6,15 +6,19 @@ const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState('light');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Check for saved theme preference or default to light
     const savedTheme = localStorage.getItem('theme') || 'light';
     setTheme(savedTheme);
     
-    // Apply theme to document
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(savedTheme);
+    // Apply theme to document (script might have already done this)
+    if (document.documentElement) {
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(savedTheme);
+    }
   }, []);
 
   const toggleTheme = () => {
@@ -29,7 +33,8 @@ export function ThemeProvider({ children }) {
     theme,
     toggleTheme,
     isDark: theme === 'dark',
-    isLight: theme === 'light'
+    isLight: theme === 'light',
+    mounted
   };
 
   return (

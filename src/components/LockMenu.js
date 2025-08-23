@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { FiLock, FiUnlock, FiSettings, FiKey, FiX } from "react-icons/fi";
-import { useAuth } from "../../context/AuthContext";
-import { useLock } from "../../context/LockContext";
+import { useAuth } from "../context/AuthContext";
+import { useLock } from "../context/LockContext";
 import LockModal from "./LockModal";
 
 export default function LockMenu({ isMobile = false, isCompact = false }) {
@@ -88,8 +88,8 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
       <div className="relative" ref={menuRef}>
         <button
           onClick={handleMenuClick}
-          className={`flex items-center gap-2 w-9 h-9 px-2 py-2  rounded-md bg-card-bg border border-border text-muted-text transition-all duration-200 hover:bg-border/30 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-            isLocked && !isUnlocked ? "text-green-500 hover:text-green-400" : "text-gray-300 hover:text-white"
+          className={`flex items-center justify-center gap-2 w-9 h-9  rounded-md bg-card-bg border border-border transition-all duration-200 hover:bg-border/30 focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+            isLocked && !isUnlocked ? "text-green-500 hover:text-green-400" : "text-muted-text hover:text-foreground"
           }`}
           
         >
@@ -106,7 +106,7 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
         </button>
 
         {isMenuOpen && (
-          <div className={`${isMobile && !isCompact ? 'relative mt-2' : 'absolute right-0 top-full mt-2 w-48'} bg-black/90 backdrop-blur-md rounded-lg shadow-lg overflow-hidden z-50 border border-gray-800/30`}>
+          <div className={`${isMobile && !isCompact ? 'relative mt-2 w-full' : 'absolute right-0 top-full mt-2 w-48'} bg-card-bg  border border-border   shadow-lg overflow-hidden z-50 backdrop-blur-md rounded-lg`}>
             {!hasPassword ? (
               // Case 1: No password set
               <button

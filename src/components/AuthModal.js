@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { FiMail, FiLock, FiUser, FiX } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 

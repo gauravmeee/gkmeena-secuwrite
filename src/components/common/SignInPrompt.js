@@ -1,5 +1,5 @@
 import { FiBook, FiEdit3, FiLock, FiHeart } from "react-icons/fi";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SignInPrompt({ type = "Diary" }) {
   const { toggleAuthModal } = useAuth();

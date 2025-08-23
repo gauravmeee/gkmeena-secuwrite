@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FiMessageSquare, FiX } from "react-icons/fi";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import emailjs from '@emailjs/browser';
 
 export default function Footer() {

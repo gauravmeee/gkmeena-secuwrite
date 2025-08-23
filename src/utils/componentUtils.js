@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic';
 
 // Lazy load components that are not immediately needed
-export const LazyAuthModal = dynamic(() => import('../app/components/AuthModal'), {
+export const LazyAuthModal = dynamic(() => import('../components/AuthModal'), {
   ssr: false,
   loading: () => <div className="w-6 h-6 animate-pulse bg-gray-600 rounded" />
 });
@@ -22,6 +22,7 @@ export class SimpleCache {
     this.cache = new Map();
     this.maxAge = maxAge;
   }
+
 
   set(key, value) {
     this.cache.set(key, {

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { FiSave, FiArrowLeft, FiUpload, FiX, FiImage, FiFileText } from "react-icons/fi";
 import Link from "next/link";
-import EntryLockProtection from "../../../components/EntryLockProtection";
+import EntryLockProtection from "../../../../components/EntryLockProtection";
 import { useAuth } from "../../../../context/AuthContext";
 import databaseUtils from "../../../../lib/database";
 import { supabase } from "../../../../lib/supabase";
@@ -407,7 +407,7 @@ export default function EditDiaryEntry() {
           
           <div className={entryType === 'image' ? 'bg-white p-8' : 'lined-paper p-8 min-h-[70vh] bg-white'}>
             <div className="mb-6 text-left">
-              <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">
+              <div className="text-xl font-medium text-gray-800 mb-1">
                 {originalDate || (() => {
                   const now = new Date();
                   const day = now.getDate();
@@ -429,10 +429,10 @@ export default function EditDiaryEntry() {
                   }).split(' ')[0]} ${now.getFullYear()}`;
                 })()}
               </div>
-              <div className="text-xl font-handwriting text-gray-800 mb-1">
+              <div className="text-xl text-gray-800 mb-1">
                 {originalDay || new Date().toLocaleDateString('en-US', { weekday: 'long' })}
               </div>
-              <div className="text-xl font-handwriting text-gray-800">
+              <div className="text-xl text-gray-800">
                 {originalTime || new Date().toLocaleTimeString('en-US', { 
                   hour: 'numeric', 
                   minute: '2-digit', 
@@ -442,13 +442,13 @@ export default function EditDiaryEntry() {
             </div>
 
             <div className="font-serif text-lg text-gray-800">
-              <div className="mt-10 font-handwriting text-xl">Dear Diary,</div>
+              <div className="mt-10 text-xl">Dear Diary,</div>
               
               {entryType === 'text' && (
                 <textarea 
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="w-full h-[calc(70vh-180px)] bg-transparent border-none outline-none resize-none font-handwriting text-xl text-gray-800 line-height-loose"
+                  className="w-full h-[calc(70vh-180px)] bg-transparent border-none outline-none resize-none text-xl text-gray-800 line-height-loose"
                   placeholder="Write your thoughts here..."
                 />
               )}

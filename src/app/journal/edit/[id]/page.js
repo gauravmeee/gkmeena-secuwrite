@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { FiSave, FiArrowLeft } from "react-icons/fi";
 import Link from "next/link";
-import EntryLockProtection from "../../../components/EntryLockProtection";
+import EntryLockProtection from "../../../../components/EntryLockProtection";
 import { useAuth } from "../../../../context/AuthContext";
 import { supabase } from "../../../../lib/supabase";
 import dynamic from "next/dynamic";
@@ -176,7 +176,7 @@ export default function EditJournalEntry() {
 
   if (!authChecked || !user) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white">
+      <div className="min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30 text-foreground">
         <main className="max-w-6xl mx-auto pt-24 px-6">
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2">
@@ -192,7 +192,7 @@ export default function EditJournalEntry() {
 
   return (
     <EntryLockProtection entryType="journal">
-      <div className="min-h-screen bg-gray-950 text-white">
+      <div className="min-h-screen bg-background text-foreground">
         <main className="max-w-6xl mx-auto pt-24 px-4 pb-20">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-6">
@@ -252,7 +252,7 @@ export default function EditJournalEntry() {
             </div>
           </div>
         ) : (
-          <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 p-4 sm:p-6">
+          <div className="bg-bg-primary rounded-xl shadow-lg border border-border-primary p-4 sm:p-6">
             {/* Title Input */}
             <div className="relative w-full mb-4">
               <input
@@ -260,7 +260,7 @@ export default function EditJournalEntry() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Untitled"
-                className="w-full text-3xl font-semibold p-2 pr-36 rounded-lg border border-gray-700 bg-transparent text-white focus:outline-none focus:border-primary transition-all"
+                className="w-full text-3xl font-semibold p-2 pr-36 rounded-lg border border-border-primary bg-transparent text-text-primary focus:outline-none focus:border-primary transition-all"
               />
             </div>
 

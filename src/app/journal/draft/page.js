@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../../context/AuthContext";
 import Link from "next/link";
 import { FiArrowLeft, FiEdit2, FiSave, FiTrash2 } from "react-icons/fi";
-import EntryLockProtection from "../../components/EntryLockProtection";
+import EntryLockProtection from "../../../components/EntryLockProtection";
 import databaseUtils from "../../../lib/database";
 
 export default function JournalDraftPage() {
@@ -109,7 +109,7 @@ export default function JournalDraftPage() {
 
   if (!authChecked || loading) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30 text-white">
         <main className="max-w-4xl mx-auto pt-24 px-4">
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2">
@@ -149,7 +149,7 @@ export default function JournalDraftPage() {
           </Link>
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold">My Drafts</h1>
-            <span className="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full">
+            <span className="text-sm text-text-secondary bg-bg-secondary px-3 py-1 rounded-full">
               {drafts.length} {drafts.length === 1 ? 'draft' : 'drafts'}
             </span>
           </div>
@@ -167,12 +167,12 @@ export default function JournalDraftPage() {
           {drafts.map((draft, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+              className="bg-bg-primary rounded-xl shadow-sm border border-border-primary overflow-hidden"
             >
-              <div className="bg-gray-800 border-b border-gray-700 p-4">
+              <div className="bg-bg-secondary border-b border-border-primary p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <h2 className="text-lg font-semibold text-white">
+                    <h2 className="text-lg font-semibold text-text-primary">
                       {draft.title && (
                         <span>{draft.title}</span>
                       )}
@@ -206,7 +206,7 @@ export default function JournalDraftPage() {
                     </button>
                   </div>
                 </div>
-                <div className="text-sm text-gray-400 mt-1">
+                <div className="text-sm text-text-secondary mt-1">
                   Last modified: {new Date(draft.timestamp).toLocaleString()}
                 </div>
               </div>
@@ -216,7 +216,7 @@ export default function JournalDraftPage() {
                   onClick={() => handleEdit(draft)}
                   className="cursor-pointer"
                 >
-                  <div className="prose prose-gray max-w-none text-gray-800">
+                  <div className="prose prose-gray max-w-none text-text-primary">
                     <div className="line-clamp-5 [&_img]:max-w-[200px] [&_img]:max-h-[150px] [&_img]:object-cover [&_img]:my-2">
                       {draft.content ? (
                         <div dangerouslySetInnerHTML={{ 

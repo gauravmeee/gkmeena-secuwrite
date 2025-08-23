@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FiPlus, FiX, FiChevronRight, FiLogIn } from 'react-icons/fi';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function CreateFirstEntryDialog() {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,33 +51,6 @@ export default function CreateFirstEntryDialog() {
       borderColor: "border-primary/30",
       hoverBg: "group-hover:bg-primary/20"
     },
-    // {
-    //   title: "Story",
-    //   description: "Create an original story",
-    //   path: "/stories/new",
-    //   icon: "✍️",
-    //   bgColor: "bg-accent/10",
-    //   borderColor: "border-accent/30",
-    //   hoverBg: "group-hover:bg-accent/20"
-    // },
-    // {
-    //   title: "Song/Poem",
-    //   description: "Express yourself through songs and poetry",
-    //   path: "/songs/new",
-    //   icon: "🎵",
-    //   bgColor: "bg-secondary/10",
-    //   borderColor: "border-secondary/30",
-    //   hoverBg: "group-hover:bg-secondary/20"
-    // },
-    // {
-    //   title: "Quote/Thought",
-    //   description: "Save an inspiring quote or thought",
-    //   path: "/quotes/new",
-    //   icon: "💬",
-    //   bgColor: "bg-accent/10",
-    //   borderColor: "border-accent/30",
-    //   hoverBg: "group-hover:bg-accent/20"
-    // }
   ];
   
   if (!user) {
@@ -110,14 +83,14 @@ export default function CreateFirstEntryDialog() {
           onClick={() => setIsOpen(false)}
         >
           <div 
-            className="bg-gray-900 rounded-xl border border-gray-800 p-6 max-w-md w-full shadow-2xl animate-scaleIn"
+            className="bg-bg-primary rounded-xl border border-border-primary p-6 max-w-md w-full shadow-2xl animate-scaleIn"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold text-white">What would you like to create?</h3>
+              <h3 className="text-xl font-semibold text-text-primary">What would you like to create?</h3>
               <button 
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-800 transition-colors"
+                className="text-text-muted hover:text-text-primary p-1 rounded-full hover:bg-bg-secondary transition-colors"
               >
                 <FiX size={20} />
               </button>
@@ -134,10 +107,10 @@ export default function CreateFirstEntryDialog() {
                   <div className={`absolute inset-0 opacity-0 ${option.hoverBg} transition-opacity`}></div>
                   <div className="text-2xl relative z-10 transform transition-transform group-hover:scale-110">{option.icon}</div>
                   <div className="flex-1 relative z-10">
-                    <h4 className="font-medium text-white">{option.title}</h4>
-                    <p className="text-sm text-gray-400">{option.description}</p>
+                    <h4 className="font-medium text-text-primary">{option.title}</h4>
+                    <p className="text-sm text-text-secondary">{option.description}</p>
                   </div>
-                  <FiChevronRight className="text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                  <FiChevronRight className="text-text-muted group-hover:text-text-primary group-hover:translate-x-1 transition-all" />
                 </Link>
               ))}
             </div>
@@ -147,15 +120,3 @@ export default function CreateFirstEntryDialog() {
     </>
   );
 }
-
-// Add these animations to globals.css
-// @keyframes fadeIn {
-//   from { opacity: 0; }
-//   to { opacity: 1; }
-// }
-// @keyframes scaleIn {
-//   from { transform: scale(0.95); opacity: 0; }
-//   to { transform: scale(1); opacity: 1; }
-// }
-// .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
-// .animate-scaleIn { animation: scaleIn 0.2s ease-out; } 

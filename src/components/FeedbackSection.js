@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FiMessageSquare, FiChevronUp, FiChevronDown } from "react-icons/fi";
 import emailjs from '@emailjs/browser';
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function FeedbackSection() {
   const [feedback, setFeedback] = useState("");

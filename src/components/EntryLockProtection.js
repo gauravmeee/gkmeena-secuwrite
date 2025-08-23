@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useLock } from "../../context/LockContext";
+import { useLock } from "../context/LockContext";
 import LockModal from "./LockModal";
 
 export default function EntryLockProtection({ children, entryType }) {

@@ -5,9 +5,9 @@ import "./globals.css";
 import { AuthProvider } from '../context/AuthContext';
 import { LockProvider } from '../context/LockContext';
 import { ThemeProvider } from '../context/ThemeContext';
-import AuthModal from './components/AuthModal';
-import Footer from "./components/Footer";
-import Navbar from "./components/Navbar";
+import AuthModal from '../components/AuthModal';
+import Footer from "../components/Footer";
+import Navbar from "../components/Navbar";
 import { metadata } from './metadata';
 
 const geistSans = Geist({
@@ -34,7 +34,7 @@ const homemadeApple = Homemade_Apple({
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -49,9 +49,24 @@ export default function RootLayout({ children }) {
         <link rel="icon" type="image/png" href="/favicon.png" />
         {/* Preload critical resources */}
         <link rel="preload" href="/manifest.json" as="fetch" crossOrigin="anonymous" />
+        {/* Theme script - runs before React to prevent FOUC */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme') || 'light';
+                  document.documentElement.classList.remove('light', 'dark');
+                  document.documentElement.classList.add(theme);
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${homemadeApple.variable} antialiased bg-background text-foreground`}
+        suppressHydrationWarning
       >
         <ThemeProvider>
           <AuthProvider>

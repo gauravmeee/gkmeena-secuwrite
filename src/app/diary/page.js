@@ -1,24 +1,22 @@
 "use client";
 
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiPlus, FiTrash2, FiX, FiCamera, FiEdit2, FiImage } from "react-icons/fi";
-import { useAuth } from "../../context/AuthContext";
-import databaseUtils from "../../lib/database";
-import { supabase } from "../../lib/supabase";
-import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
-import NoEntriesState from "../components/NoEntriesState";
-import SignInPrompt from "../components/SignInPrompt";
-import LockOverlay from "../components/LockOverlay";
 
-// Function to strip HTML tags for preview
-const stripHtml = (html) => {
-  if (typeof window === "undefined") return "";
-  if (!html) return "";
+import Pagination from "@/components/common/Pagination";
+import Loading from "@/components/common/Loading";
+import {DraftsViewButton, DeleteEntriesButton, NewEntryButton} from "../../components/common/Buttons";
+import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
+import NoEntriesState from "@/components/common/NoEntriesState";
+import SignInPrompt from "@/components/common/SignInPrompt";
+import LockOverlay from "@/components/common/LockOverlay";
 
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  return doc.body.textContent || "";
-};
+import { useAuth } from "@/context/AuthContext";
+import databaseUtils from "@/lib/database";
+import { supabase } from "@/lib/supabase";
+import { stripHtml } from "@/utils/textUtils";
+
 
 // Function to format date with ordinal suffix
 const getOrdinalSuffix = (day) => {
@@ -126,19 +124,7 @@ export default function DiaryPage() {
 
   // Show loading while entries are being loaded
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30">
-        <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
+    return <Loading/>
   }
 
   // Show sign in prompt if not authenticated
@@ -241,7 +227,7 @@ export default function DiaryPage() {
 
 
   return (
-    <div className="px-5 min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30"> 
+    <div className="px-5 min-h-screen bg-background"> 
       <DeleteConfirmationModal 
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -251,93 +237,61 @@ export default function DiaryPage() {
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold">My Diary</h1>
-            {user && draftsCount > 0 && (
-              <Link
-                href="/diary/draft"
-                className="text-red-500 hover:text-red-400 transition-colors flex items-center gap-1"
-              >
-                <span className="hidden sm:inline">Drafts</span>
-                <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs font-medium">
-                  {draftsCount}
-                </span>
-              </Link>
-            )}
+              <h1 className="text-3xl font-bold">My Diary</h1>
+
+              {/* If user loggined, Show 'Draft' */}
+              {user && draftsCount > 0 && (
+                <DraftsViewButton 
+                  draftsCount = {draftsCount}
+                  entryType={"diary"}
+                />
+              )}
           </div>
-
+          
+          
+          
           <div className="flex flex-wrap gap-2">
-            {user && processedEntries.length > 0 && (
-              <>
-                <button
-                  onClick={handleToggleSelectionMode}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors cursor-pointer ${
-                    isSelectionMode
-                      ? "bg-gray-600 text-white hover:bg-gray-700"
-                      : "bg-red-600 text-white hover:bg-red-700"
-                  }`}
-                >
-                  {isSelectionMode ? <FiX size={18} /> : <FiTrash2 size={18} />}
-                  <span className="hidden sm:inline">
-                    {isSelectionMode ? "Cancel" : "Delete Multiple"}
-                  </span>
-                </button>
 
-                {isSelectionMode && selectedEntries.size > 0 && (
-                  <button
-                    onClick={handleDeleteSelected}
-                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors cursor-pointer border-2 border-transparent"
-                  >
-                    <FiTrash2 size={18} />
-                    <span className="hidden sm:inline">Delete</span> ({selectedEntries.size})
-                  </button>
-                )}
-              </>
+            {/* If user loggined and have Entries , show `Delete Button` */}
+            {user && processedEntries.length > 0 && (
+              <DeleteEntriesButton
+                isSelectionMode = {isSelectionMode}
+                selectedEntries = {selectedEntries}
+                handleToggleSelectionMode = {handleToggleSelectionMode}
+                handleDeleteSelected = {handleDeleteSelected}
+              />
             )}
 
+            {/* If user loggined, Show `New Entry` Button */}
             {user && (
-              <div className="flex items-center bg-blue-500 rounded-md overflow-hidden">
-                <Link
-                  href="/diary/new?type=text"
-                  onClick={() => {
-                    if (user) {
-                      sessionStorage.setItem(`diary_new_session_${user.id}`, 'true');
-                    }
-                  }}
-                  className="flex items-center gap-2 text-white px-4 py-2 hover:bg-blue-500/90 transition-colors"
-                  title="New Text Entry"
-                >
-                  <FiPlus size={16} />
-                  <span className="hidden sm:inline">New Entry</span>
-                </Link>
-                <div className="h-6 w-px bg-white/30"></div>
-                <Link
-                  href="/diary/new?type=image"
-                  onClick={() => {
-                    if (user) {
-                      sessionStorage.setItem(`diary_new_session_${user.id}`, 'true');
-                    }
-                  }}
-                  className="flex items-center gap-2 text-white px-4 py-2 transition-colors hover:bg-blue-500/90"
-                  title="New Image Entry"
-                >
-                  <FiCamera size={16} />
-                </Link>
-              </div>
+              <NewEntryButton
+                user = {user}
+                entryType = {"diary"}
+              />
             )}
           </div>
         </div>
 
+        {/* Loading and Processing Entries */}
         {!loading && processedEntries.length === 0 ? (
           <NoEntriesState type="Diary" />
         ) : (
           <>
             <div className="grid grid-cols-1 gap-5">
               {currentEntries.map((entry) => (
+                // Locke Overlay:
+                /* Wrap each diary entry with LockOverlay 
+                  - If entry is locked (per useLock rules), it will:
+                    • Blur and disable interaction with content
+                    • Show a lock/unlock overlay with status text
+                    • On click, open LockModal for password unlock
+                  - If not locked, it simply renders children normally */
                 <LockOverlay key={entry.id || entry.timestamp} entryType="diary">
                   <div
-                    className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden"
+                    className="rounded-xl shadow-sm border border-gray-300 overflow-hidden"
                   >
-                    <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
+                    {/* Diary Entry Preview Container */}
+                    <div className="text-text-primary bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           {isSelectionMode && (
@@ -359,7 +313,7 @@ export default function DiaryPage() {
                           {entry.displayTitle && (
                             entry.isDraft ? (
                               <Link href="/diary/draft/edit">
-                                <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
+                                <h2 className="text-xl font-semibold hover:text-primary transition-colors">
                                   {entry.displayTitle}
                                   <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
                                     Draft
@@ -368,7 +322,7 @@ export default function DiaryPage() {
                               </Link>
                             ) : (
                               <Link href={`/diary/${entry.id}`}>
-                                <h2 className="text-xl font-semibold hover:text-primary transition-colors text-gray-800">
+                                <h2 className="text-xl font-semibold hover:text-primary transition-colors">
                                   {entry.displayTitle}
                                 </h2>
                               </Link>
@@ -376,13 +330,13 @@ export default function DiaryPage() {
                           )}
                         </div>
 
-                        <div className="font-handwriting text-gray-800">
+                        <div>
                           {entry.displayDate} | {entry.displayTime}
                         </div>
                       </div>
                     </div>
-                    <div className={entry.entry_type === 'image' ? 'bg-white p-8' : 'lined-paper flex items-start justify-between gap-4 p-5 bg-white'}>
-                      <div className="flex-1 text-gray-800">
+                    <div className={entry.entry_type === 'image' ? 'bg-paper-bg p-8' : 'lined-paper flex items-start justify-between gap-4 p-5'}>
+                      <div className="flex-1">
                         <Link
                           href={`/diary/${entry.id}`}
                           className="block"
@@ -402,7 +356,7 @@ export default function DiaryPage() {
                               />
                             </div>
                           ) : (
-                            <p className="pt-2 font-handwriting text-xl">
+                            <p className="pt-2 text-xl">
                               {entry.preview}
                             </p>
                           )}
@@ -412,6 +366,7 @@ export default function DiaryPage() {
                   </div>
                 </LockOverlay>
               ))}
+
             </div>
 
             <Pagination
@@ -422,106 +377,16 @@ export default function DiaryPage() {
           </>
         )}
       </main>
-
       <style jsx global>{`
         @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");
-
-        .font-handwriting {
-          font-family: "Kalam", "Caveat", "Dancing Script", cursive;
-        }
-
-        .lined-paper {
-          background-color: white;
-          background-image: linear-gradient(
-              90deg,
-              transparent 39px,
-              #d6aed6 39px,
-              #d6aed6 41px,
-              transparent 41px
-            ),
-            linear-gradient(#e5e7eb 1px, transparent 1px);
-          background-size: 100% 2rem;
-          background-position: 0 0;
-          line-height: 2rem;
-          padding-left: 45px !important;
-        }
       `}</style>
+
     </div>
   );
 }
 
-// Add Pagination component
-function getPageNumbers(currentPage, totalPages) {
-  const pages = [];
-  
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(i);
-    }
-  } else {
-    pages.push(1);
-    
-    if (currentPage > 3) {
-      pages.push('...');
-    }
-    
-    for (let i = Math.max(2, currentPage - 1); i <= Math.min(currentPage + 1, totalPages - 1); i++) {
-      pages.push(i);
-    }
-    
-    if (currentPage < totalPages - 2) {
-      pages.push('...');
-    }
-    
-    pages.push(totalPages);
-  }
-  
-  return pages;
-}
 
-function Pagination({ currentPage, totalPages, onPageChange }) {
-  const pages = getPageNumbers(currentPage, totalPages);
-  
-  return (
-    <div className="flex justify-center items-center gap-2 mt-8 mb-4">
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="px-3 py-2 rounded-md bg-gray-900 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
-      >
-        Previous
-      </button>
-      
-      <div className="flex gap-1">
-        {pages.map((page, index) => (
-          page === '...' ? (
-            <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-400">
-              ...
-            </span>
-          ) : (
-            <button
-              key={page}
-              onClick={() => onPageChange(page)}
-              disabled={page === currentPage}
-              className={`px-3 py-2 rounded-md transition-colors ${
-                page === currentPage
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-900 text-white hover:bg-gray-800'
-              }`}
-            >
-              {page}
-            </button>
-          )
-        ))}
-      </div>
-      
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="px-3 py-2 rounded-md bg-gray-900 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
-      >
-        Next
-      </button>
-    </div>
-  );
-}
+
+
+
+

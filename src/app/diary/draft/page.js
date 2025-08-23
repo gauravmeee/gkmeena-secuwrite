@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FiArrowLeft, FiSave, FiTrash2, FiEdit2 } from "react-icons/fi";
-import EntryLockProtection from "../../components/EntryLockProtection";
+import EntryLockProtection from "../../../components/EntryLockProtection";
 import { useAuth } from "../../../context/AuthContext";
 import databaseUtils from "../../../lib/database";
 export default function DraftDiaryPage() {
@@ -115,7 +115,7 @@ export default function DraftDiaryPage() {
 
   if (!authChecked || loading) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-background">
         <main className="max-w-4xl mx-auto pt-24 px-4">
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2">
@@ -131,7 +131,7 @@ export default function DraftDiaryPage() {
 
   if (drafts.length === 0) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-background">
         <main className="max-w-4xl mx-auto pt-24 px-4">
           <div className="flex flex-col justify-center items-center h-64 gap-4">
             <p className="text-xl">No drafts found</p>
@@ -146,24 +146,24 @@ export default function DraftDiaryPage() {
 
   return (
     <EntryLockProtection entryType="diary">
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen px-5 bg-background">
         <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
-          <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
+          <Link href="/diary" className="flex items-center gap-2 text-primary hover:text-primary/90 hover:underline">
             <FiArrowLeft size={16} />
             <span>Back</span>
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">My Drafts</h1>
-            <span className="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full">
+            <h1 className="text-3xl font-bold">Diary Drafts</h1>
+            <span className="text-sm text-text-inverse bg-text-primary/50 px-3 py-1 rounded-full">
               {drafts.length} {drafts.length === 1 ? 'draft' : 'drafts'}
             </span>
           </div>
         </div>
 
         {/* Draft Warning Message */}
-        <div className="mb-4 text-xs text-yellow-400/80 flex items-center gap-1.5">
-          <svg className="w-3 h-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+        <div className="mb-4 text-xs text-warning/90 flex items-center gap-1.5">
+          <svg className="w-3 h-3 text-warning/90" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
           <span>Drafts are stored locally and won&apos;t sync across devices</span>
@@ -173,25 +173,25 @@ export default function DraftDiaryPage() {
           {drafts.map((draft, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden"
+              className="rounded-xl shadow-sm border border-gray-300 overflow-hidden"
             >
-              <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
+              <div className="text-text-primary bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => handleEdit(draft)}
                     className="group cursor-pointer"
                   >
                     {draft.title && (
-                      <h2 className="text-xl font-semibold text-gray-800 hover:text-primary transition-colors">
-                        {draft.title}
-                        <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
+                      <h2 className="text-xl font-semibold hover:text-primary transition-colors">
+                        <span className="mr-2 text-sm font-normal text-red-500/90 bg-red-100/90 px-2 py-0.5 rounded">
                           Draft
                         </span>
+                        {draft.title}
                       </h2>
                     )}
                     {!draft.title && (
-                      <h2 className="text-xl font-semibold text-gray-800 hover:text-primary transition-colors">
-                        <span className="text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
+                      <h2 className="text-xl font-semibold hover:text-primary transition-color">
+                        <span className="mr-2 text-sm font-normal text-red-500/90 bg-red-100/90 px-2 py-0.5 rounded">
                           Draft
                         </span>
                       </h2>
@@ -200,7 +200,7 @@ export default function DraftDiaryPage() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => handleEdit(draft)}
-                      className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                      className="flex items-center gap-2 text-primary hover:text-primary/90 transition-colors cursor-pointer"
                     >
                       <FiEdit2 size={16} />
                       <span>Edit</span>
@@ -208,49 +208,33 @@ export default function DraftDiaryPage() {
                     <button
                       onClick={() => handleSave(draft)}
                       disabled={saving}
-                      className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                      className="flex items-center gap-2 text-primary hover:text-primary/90 transition-colors cursor-pointer"
                     >
                       <FiSave size={16} />
                       <span>Save</span>
                     </button>
                     <button
                       onClick={() => handleDelete(draft)}
-                      className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors cursor-pointer"
+                      className="flex items-center gap-2 text-red-500 hover:text-red-500/90 transition-colors cursor-pointer"
                     >
                       <FiTrash2 size={16} />
                       <span>Delete</span>
                     </button>
                   </div>
                 </div>
-                <div className="text-sm text-gray-500 mt-1">
+                <div className="text-sm text-text-muted mt-1">
                   Last modified: {draft.date} | {draft.time}
                 </div>
               </div>
               
-              <div 
-                onClick={() => handleEdit(draft)}
-                className={`${draft.entry_type === 'image' ? 'bg-white p-8' : 'lined-paper p-8 bg-white'} cursor-pointer`}
-              >
-                <div className="mb-6 text-left">
-                  <div className="text-xl font-handwriting font-medium text-gray-800 mb-1">
-                    {draft.date}
-                  </div>
-                  <div className="text-xl font-handwriting text-gray-800 mb-1">
-                    {draft.day}
-                  </div>
-                  <div className="text-xl font-handwriting text-gray-800">
-                    {draft.time}
-                  </div>
-                </div>
-                
-                <div className="font-serif text-lg text-gray-800">
-                  <div className="mt-10 font-handwriting text-xl">Dear Diary,</div>
+              <div className={draft.entry_type === 'image' ? 'bg-paper-bg p-8' : 'lined-paper flex items-start justify-between gap-4 p-5'}>
+                <div onClick={() => handleEdit(draft)} className="flex-1 cursor-pointer">
                   {draft.entry_type === 'image' ? (
-                    <div className="mt-6">
+                    <div className="space-y-4">
                       <img
                         src={draft.content}
                         alt="Diary entry"
-                        className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
+                        className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"
                         onError={(e) => {
                           console.warn('Image loading error:', {
                             src: e.target.src
@@ -260,11 +244,11 @@ export default function DraftDiaryPage() {
                       />
                     </div>
                   ) : (
-                    <div className="whitespace-pre-wrap line-height-loose font-handwriting text-xl mt-4">
+                    <div className="pt-2 text-xl">
                       {draft.content}
                     </div>
                   )}
-                </div>
+              </div>
               </div>
             </div>
           ))}
@@ -273,25 +257,6 @@ export default function DraftDiaryPage() {
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&display=swap');
-        
-        .font-handwriting {
-          font-family: 'Caveat', 'Dancing Script', cursive;
-        }
-        
-        .lined-paper {
-          background-color: white;
-          background-image: 
-            linear-gradient(90deg, transparent 39px, #d6aed6 39px, #d6aed6 41px, transparent 41px),
-            linear-gradient(#e5e7eb 1px, transparent 1px);
-          background-size: 100% 2rem;
-          line-height: 2rem;
-          padding-left: 45px !important;
-        }
-        
-        .line-height-loose {
-          line-height: 2rem;
-          padding-top: 0.5rem;
-        }
       `}</style>
         </div>
       </EntryLockProtection>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { FiLock, FiUnlock, FiEye, FiEyeOff, FiX, FiInfo } from "react-icons/fi";
-import { useLock } from "../../context/LockContext";
+import { useLock } from "../context/LockContext";
 
 export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
   const [password, setPassword] = useState("");
@@ -161,7 +161,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 p-4 pt-16">
+    <div className="fixed inset-0 bg-gradient-to-r from-primary/10 to-secondary/30 backdrop-blur-sm flex items-start justify-center z-50 p-4 pt-16">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
         <div className="p-6">
         <div className="flex items-center justify-between mb-6">

@@ -1,26 +1,3 @@
-export const stripHtml = (html) => {
-  if (typeof window === "undefined") return "";
-  if (!html) return "";
-
-  try {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-
-    const scripts = tempDiv.getElementsByTagName('script');
-    for (const script of Array.from(scripts)) {
-      script.remove();
-    }
-
-    const text = tempDiv.textContent || tempDiv.innerText || "";
-    const lines = text.split(/\n/).filter(line => line.trim());
-    const previewLines = lines.slice(0, 2);
-    const preview = previewLines.join('\n');
-    return preview + (lines.length > 2 ? '...' : '');
-  } catch (error) {
-    console.error('Error parsing HTML:', error);
-    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-  }
-};
 
 export const getOrdinalSuffix = (day) => {
   if (day > 3 && day < 21) return "th";

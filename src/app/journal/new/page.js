@@ -196,7 +196,7 @@ function NewJournalEntryContent() {
 
   if (!authChecked) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30 text-foreground flex items-center justify-center">
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 rounded-full bg-primary animate-pulse"></div>
           <div className="w-4 h-4 rounded-full bg-primary animate-pulse delay-150"></div>
@@ -211,7 +211,7 @@ function NewJournalEntryContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30 text-foreground">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -245,7 +245,7 @@ function NewJournalEntryContent() {
         </div>
 
         {/* Rich Text Editor */}
-        <div className="bg-paper-bg border border-border-light rounded-lg overflow-hidden shadow-sm">
+        <div className="bg-bg-primary border border-border-primary rounded-lg overflow-hidden shadow-sm">
           <LazyJoditEditor
             ref={editorRef}
             value={content}
