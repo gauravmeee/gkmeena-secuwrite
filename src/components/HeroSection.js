@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { FiFeather, FiBook, FiEdit3, FiChevronRight } from "react-icons/fi";
 import Link from "next/link";
 import { useAuth } from "../context/AuthContext"; // adjust path
+import { useLoading } from "../context/LoadingContext";
 
 export default function HeroSection() {
+  const { loading } = useLoading();
   const [currentTypeIndex, setCurrentTypeIndex] = useState(0);
   const { user } = useAuth();
 
@@ -21,7 +23,10 @@ export default function HeroSection() {
 
   // Hero Section
   return (
-    <section className={`flex flex-col bg-gradient-to-r from-primary/10 to-secondary/30 ${user ? "h-[calc(100vh-20vh)] min-h-[calc(100vh-20vh)]" :"h-[calc(100vh-10vh)] min-h-[calc(100vh-10vh)]" }`}>
+    <section className={`flex flex-col bg-gradient-to-r from-primary/10 to-secondary/30 transition-all duration-500 ease-in-out ${
+        (user && !loading) 
+          ? "h-[calc(100vh-20vh)] min-h-[calc(100vh-20vh)]" 
+          :"h-[calc(100vh-10vh)] min-h-[calc(100vh-10vh)]" }`}>
       {/* Top Section */}
       <div className="flex-1 flex items-center justify-center px-4 md:px-8  pt-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-7xl w-full">

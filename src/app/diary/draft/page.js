@@ -3,10 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FiArrowLeft, FiSave, FiTrash2, FiEdit2 } from "react-icons/fi";
-import EntryLockProtection from "../../../components/EntryLockProtection";
-import { useAuth } from "../../../context/AuthContext";
-import databaseUtils from "../../../lib/database";
+import {FiSave, FiTrash2, FiEdit2 } from "react-icons/fi";
+
+import Loading from "@/components/common/Loading";
+import { BackButton, EditSaveDeleteButton } from "@/components/common/LinkButtons";
+import EntryLockProtection from "@/components/EntryLockProtection";
+import { useAuth } from "@/context/AuthContext";
+import databaseUtils from "@/lib/database";
 export default function DraftDiaryPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -114,19 +117,7 @@ export default function DraftDiaryPage() {
   };
 
   if (!authChecked || loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
+      return <Loading/>
   }
 
   if (drafts.length === 0) {
@@ -144,24 +135,29 @@ export default function DraftDiaryPage() {
     );
   }
 
+  {/* ------------------------------ Main JSX -------------------------- */}
+
+
+
   return (
     <EntryLockProtection entryType="diary">
-      <div className="min-h-screen px-5 bg-background">
+
+        {/* ------- Main Page ------- */}
+      <div className="min-h-screen text-text-primary bg-background">
         <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
-          <Link href="/diary" className="flex items-center gap-2 text-primary hover:text-primary/90 hover:underline">
-            <FiArrowLeft size={16} />
-            <span>Back</span>
-          </Link>
+        <BackButton
+            href = "/diary"
+          />
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">Diary Drafts</h1>
+            <h1 className="text-3xl font-bold">Diary</h1>
             <span className="text-sm text-text-inverse bg-text-primary/50 px-3 py-1 rounded-full">
               {drafts.length} {drafts.length === 1 ? 'draft' : 'drafts'}
             </span>
           </div>
         </div>
 
-        {/* Draft Warning Message */}
+        {/* -- Draft Warning Message -- */}
         <div className="mb-4 text-xs text-warning/90 flex items-center gap-1.5">
           <svg className="w-3 h-3 text-warning/90" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -170,66 +166,45 @@ export default function DraftDiaryPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-5">
+          {/* ------- Diary Preview Container ------- */}
           {drafts.map((draft, index) => (
             <div
               key={index}
               className="rounded-xl shadow-sm border border-gray-300 overflow-hidden"
             >
-              <div className="text-text-primary bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-gray-200">
+              {/* ------- Diary Preview - Header ------- */}
+              <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => handleEdit(draft)}
-                    className="group cursor-pointer"
-                  >
-                    {draft.title && (
-                      <h2 className="text-xl font-semibold hover:text-primary transition-colors">
-                        <span className="mr-2 text-sm font-normal text-red-500/90 bg-red-100/90 px-2 py-0.5 rounded">
-                          Draft
-                        </span>
-                        {draft.title}
-                      </h2>
-                    )}
-                    {!draft.title && (
-                      <h2 className="text-xl font-semibold hover:text-primary transition-color">
-                        <span className="mr-2 text-sm font-normal text-red-500/90 bg-red-100/90 px-2 py-0.5 rounded">
-                          Draft
-                        </span>
-                      </h2>
-                    )}
-                  </button>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleEdit(draft)}
-                      className="flex items-center gap-2 text-primary hover:text-primary/90 transition-colors cursor-pointer"
-                    >
-                      <FiEdit2 size={16} />
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleSave(draft)}
-                      disabled={saving}
-                      className="flex items-center gap-2 text-primary hover:text-primary/90 transition-colors cursor-pointer"
-                    >
-                      <FiSave size={16} />
-                      <span>Save</span>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(draft)}
-                      className="flex items-center gap-2 text-red-500 hover:text-red-500/90 transition-colors cursor-pointer"
-                    >
-                      <FiTrash2 size={16} />
-                      <span>Delete</span>
-                    </button>
-                  </div>
+                  
+                  <h2 className="text-xl font-semibold hover:text-primary transition-colors">
+                    
+                    {/* -- Entry Draft Banner --*/}
+                    <span className="mr-2 text-sm font-normal text-red-500/90 bg-red-100/90 px-2 py-0.5 rounded">
+                      Draft
+                    </span>
+                    {/* -- Title if Present --*/}
+                    {draft.title && draft.title}
+                  </h2>
+
+                  {/* -- Edit, Save & Delete Button -- */}
+                  <EditSaveDeleteButton
+                    onEdit={() => handleEdit(draft)}
+                    onSave={() => handleSave(draft)}
+                    onDelete={() => handleDelete(draft)}
+                    saving = {saving}
+                  />
                 </div>
                 <div className="text-sm text-text-muted mt-1">
                   Last modified: {draft.date} | {draft.time}
                 </div>
               </div>
               
-              <div className={draft.entry_type === 'image' ? 'bg-paper-bg p-8' : 'lined-paper flex items-start justify-between gap-4 p-5'}>
+              {/* ------- Diary Preview Container - Body ------- */}
+              <div className={draft.entry_type === 'image' ? 'image-paper p-8' : 'lined-paper flex items-start justify-between gap-4 p-5'}>
                 <div onClick={() => handleEdit(draft)} className="flex-1 cursor-pointer">
                   {draft.entry_type === 'image' ? (
+
+                    // ---- Image Entry Preview----
                     <div className="space-y-4">
                       <img
                         src={draft.content}
@@ -244,6 +219,8 @@ export default function DraftDiaryPage() {
                       />
                     </div>
                   ) : (
+
+                    // ---- Text Entry Preview ----
                     <div className="pt-2 text-xl">
                       {draft.content}
                     </div>

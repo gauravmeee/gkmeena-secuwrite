@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
+import Loading from "@/components/common/Loading";
 import DeleteConfirmationModal from "../../../components/common/DeleteConfirmationModal";
 import EntryLockProtection from "../../../components/EntryLockProtection";
 import { useAuth } from "../../../context/AuthContext";
 import { supabase } from "../../../lib/supabase";
 import databaseUtils from "../../../lib/database";
+import { BackButton } from "@/components/common/ActionButtons";
 
 // Function to format the date
 const formatDateTime = (dateString) => {
@@ -117,19 +119,9 @@ export default function JournalEntryPage() {
   return (
     <EntryLockProtection entryType="journal">
       {loading ? (
-        <div className="min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30 text-white">
-          <main className="max-w-4xl mx-auto pt-24 px-4">
-            <div className="flex justify-center items-center h-64">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-                <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-                <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-              </div>
-            </div>
-          </main>
-        </div>
+        <Loading/>
       ) : !entry ? (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-background">
           <main className="max-w-4xl mx-auto pt-24 px-4">
             <div className="flex flex-col justify-center items-center h-64 gap-4">
               <p className="text-xl">Entry not found</p>
@@ -140,13 +132,12 @@ export default function JournalEntryPage() {
           </main>
         </div>
       ) : (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-background">
           <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
           <div className="flex items-center justify-between mb-6">
-                        <Link href="/journal" className="flex items-center gap-2 text-primary hover:underline">
-                <FiArrowLeft size={16} />
-                <span>Back</span>
-              </Link>
+          <BackButton
+            href = "/journal"
+          />
 
             <div className="flex items-center gap-3">
               <Link

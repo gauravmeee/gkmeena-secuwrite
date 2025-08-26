@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { FiSave, FiArrowLeft } from "react-icons/fi";
-import Link from "next/link";
+import { FiSave} from "react-icons/fi";
+import Loading from "@/components/common/Loading";
+import { BackButton } from "@/components/common/ActionButtons";
 import EntryLockProtection from "../../../../components/EntryLockProtection";
 import { useAuth } from "../../../../context/AuthContext";
-import { supabase } from "../../../../lib/supabase";
 import dynamic from "next/dynamic";
 import databaseUtils from "../../../../lib/database";
 
@@ -176,17 +176,7 @@ export default function EditJournalEntry() {
 
   if (!authChecked || !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30 text-foreground">
-        <main className="max-w-6xl mx-auto pt-24 px-6">
-          <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-            </div>
-          </div>
-        </main>
-      </div>
+      <Loading/>
     );
   }
 
@@ -196,10 +186,9 @@ export default function EditJournalEntry() {
         <main className="max-w-6xl mx-auto pt-24 px-4 pb-20">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-6">
-          <Link href={`/journal/${params.id}`} className="flex items-center gap-2 text-primary hover:underline">
-            <FiArrowLeft size={18} />
-            <span>Back</span>
-          </Link>
+          <BackButton
+            href = {`/journal/${params.id}`}
+          />
 
           <button
             onClick={handleSave}
@@ -244,13 +233,7 @@ export default function EditJournalEntry() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-            </div>
-          </div>
+          <Loading/>
         ) : (
           <div className="bg-bg-primary rounded-xl shadow-lg border border-border-primary p-4 sm:p-6">
             {/* Title Input */}

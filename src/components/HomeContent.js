@@ -5,6 +5,7 @@ import CreateFirstEntryDialog from "./CreateFirstEntryDialog";
 import LockOverlay from "@/components/common/LockOverlay";
 import Loading from "@/components/common/Loading"
 import { useAuth } from "../context/AuthContext";
+import { useLoading } from "../context/LoadingContext";
 import databaseUtils from "../lib/database";
 import { stripHtml } from "../utils/textUtils";
 import { SimpleCache} from "../utils/componentUtils";
@@ -23,7 +24,7 @@ const countCache = new SimpleCache(5 * 60 * 1000); // 5 minutes
 export default function MainSection() {
   const [entries, setEntries] = useState([]);
   const [entryCounts, setEntryCounts] = useState({ journal: 0, diary: 0 });
-  const [loading, setLoading] = useState(true);
+  const {loading, setLoading} = useLoading(); // using custome hook 'Loading'
   const { user, toggleAuthModal } = useAuth();
 
   // Memoized function to format entry data

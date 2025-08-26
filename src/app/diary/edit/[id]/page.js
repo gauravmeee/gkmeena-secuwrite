@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { FiSave, FiArrowLeft, FiUpload, FiX, FiImage, FiFileText } from "react-icons/fi";
-import Link from "next/link";
-import EntryLockProtection from "../../../../components/EntryLockProtection";
-import { useAuth } from "../../../../context/AuthContext";
-import databaseUtils from "../../../../lib/database";
-import { supabase } from "../../../../lib/supabase";
+import { FiSave, FiUpload, FiX} from "react-icons/fi";
+
+import Loading from "@/components/common/Loading";
+import { BackButton } from "@/components/common/LinkButtons";
+import EntryLockProtection from "@/components/EntryLockProtection";
+import { useAuth } from "@/context/AuthContext";
+import databaseUtils from "@/lib/database";
+import { SaveEntryButton } from "@/components/common/ActionButtons";
 
 export default function EditDiaryEntry() {
   const [title, setTitle] = useState("");
@@ -325,89 +327,54 @@ export default function EditDiaryEntry() {
   
   if (!authChecked || !user) {
     return (
-      <div className="min-h-screen bg-black text-white">
-        <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-            </div>
-          </div>
-        </main>
-      </div>
+      <Loading/>
     );
   }
   
   return (
     <EntryLockProtection entryType="diary">
-      <div className="min-h-screen bg-black text-white">
+
+      {/* ------- Main Page ------- */}
+      <div className="min-h-screen text-text-primary bg-background">
         <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link href={`/diary/${entryId}`} className="flex items-center gap-2 text-primary hover:underline">
-              <FiArrowLeft size={16} />
-              <span>Back</span>
-            </Link>
+
+          {/* -- Back Button -- */}
+          <BackButton
+            href = {`/diary/${entryId}`}
+          />
             {(title || content) && entryType === 'text'}
           </div>
           
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className={`flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg transition-all duration-300 ${
-              saving
-                ? "bg-opacity-70 cursor-not-allowed"
-                : "hover:bg-primary/90 cursor-pointer"
-            }`}
-          >
-            {saving ? (
-              <div className="flex items-center gap-2">
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8H4z"
-                  ></path>
-                </svg>
-                <span className="hidden sm:inline">Saving...</span>
-              </div>
-            ) : (
-              <>
-                <FiSave size={18} />
-                <span className="hidden sm:inline">Save Changes</span>
-              </>
-            )}
-          </button>
+          {/* -- Save Button -- */}
+          <SaveEntryButton
+            onClick = {handleSave}
+            loading = {saving}
+          />
         </div>
         
-        <div className={`bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden ${entryType === 'image' ? 'pb-6' : ''}`}>
-          <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
+        {/* ------- Diary Container ------- */}
+        <div className={`rounded-xl shadow-sm border border-gray-300 overflow-hidden ${entryType === 'image' ? 'pb-6' : ''}`}>
+          
+          {/* Diary Container - Header */}
+          <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-gray-200">
+            {/* -- Title --*/}
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Entry Title (optional)"
-              className="w-full bg-transparent border-none text-xl font-serif text-gray-800 focus:outline-none"
+              className="w-full bg-transparent border-none text-xl font-serif focus:outline-none"
             />
           </div>
           
-          <div className={entryType === 'image' ? 'bg-white p-8' : 'lined-paper p-8 min-h-[70vh] bg-white'}>
+          {/* ------- Diaary Container - Body ------- */}
+          <div className={entryType === 'image' ? 'image-paper  p-8' : 'lined-paper p-8 min-h-[70vh]'}>
             <div className="mb-6 text-left">
-              <div className="text-xl font-medium text-gray-800 mb-1">
+
+              {/* ---- Diary Date Time --- */}
+              <div className="text-xl font-medium mb-1">
                 {originalDate || (() => {
                   const now = new Date();
                   const day = now.getDate();
@@ -429,10 +396,10 @@ export default function EditDiaryEntry() {
                   }).split(' ')[0]} ${now.getFullYear()}`;
                 })()}
               </div>
-              <div className="text-xl text-gray-800 mb-1">
+              <div className="text-xl mb-1">
                 {originalDay || new Date().toLocaleDateString('en-US', { weekday: 'long' })}
               </div>
-              <div className="text-xl text-gray-800">
+              <div className="text-xl">
                 {originalTime || new Date().toLocaleTimeString('en-US', { 
                   hour: 'numeric', 
                   minute: '2-digit', 
@@ -441,14 +408,14 @@ export default function EditDiaryEntry() {
               </div>
             </div>
 
-            <div className="font-serif text-lg text-gray-800">
+            <div className="text-lg">
               <div className="mt-10 text-xl">Dear Diary,</div>
               
               {entryType === 'text' && (
                 <textarea 
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="w-full h-[calc(70vh-180px)] bg-transparent border-none outline-none resize-none text-xl text-gray-800 line-height-loose"
+                  className="w-full h-[calc(70vh-180px)] bg-transparent border-none outline-none resize-none text-xl line-height-loose"
                   placeholder="Write your thoughts here..."
                 />
               )}
@@ -457,6 +424,7 @@ export default function EditDiaryEntry() {
             {entryType === 'image' && (
               <div className="mt-6 flex flex-col items-center justify-center border-t border-gray-200 pt-6">
                 {!imagePreview ? (
+                  // -- Image Entry -- 
                   <>
                     <input
                       type="file"
@@ -478,12 +446,15 @@ export default function EditDiaryEntry() {
                     </label>
                   </>
                 ) : (
+                  // -- Text Entry -- 
                   <div className="relative w-full">
                     <img
                       src={imagePreview}
                       alt="Diary entry"
                       className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
                     />
+
+                    
                     <button
                       onClick={removeImage}
                       className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors border-2 border-transparent"
@@ -498,28 +469,7 @@ export default function EditDiaryEntry() {
         </div>
       </main>
       
-      <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");
-
-        .font-handwriting {
-          font-family: "Kalam", "Caveat", "Dancing Script", cursive;
-        }
-        
-        .lined-paper {
-          background-color: white;
-          background-image: 
-            linear-gradient(90deg, transparent 39px, #d6aed6 39px, #d6aed6 41px, transparent 41px),
-            linear-gradient(#e5e7eb 1px, transparent 1px);
-          background-size: 100% 2rem;
-          line-height: 2rem;
-          padding-left: 45px !important;
-        }
-        
-        .line-height-loose {
-          line-height: 2rem;
-          padding-top: 0.5rem;
-        }
-      `}</style>
+      <style jsx global>{`@import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");`}</style>
         </div>
       </EntryLockProtection>
   );

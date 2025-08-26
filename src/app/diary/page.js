@@ -1,12 +1,12 @@
 "use client";
 
-
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
 import Pagination from "@/components/common/Pagination";
 import Loading from "@/components/common/Loading";
-import {DraftsViewButton, DeleteEntriesButton, NewEntryButton} from "../../components/common/Buttons";
+import { DraftsViewButton } from "@/components/common/LinkButtons";
+import {DeleteEntriesButton, NewEntryButton} from "@/components/common/ActionButtons";
 import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 import NoEntriesState from "@/components/common/NoEntriesState";
 import SignInPrompt from "@/components/common/SignInPrompt";
@@ -122,12 +122,12 @@ export default function DiaryPage() {
     }
   }, [user]);
 
-  // Show loading while entries are being loaded
+  // ------- Loading -------
   if (loading) {
     return <Loading/>
   }
 
-  // Show sign in prompt if not authenticated
+  // ------- Sign In Prompt -------
   if (!user) {
     return <SignInPrompt type="Diary" />;
   }
@@ -225,9 +225,12 @@ export default function DiaryPage() {
     }
   };
 
+{/* ------------------------------ Main JSX -------------------------- */}
+
 
   return (
-    <div className="px-5 min-h-screen bg-background"> 
+    //  ------- Main Page ------- 
+    <div className="min-h-screen text-text-primary bg-background"> 
       <DeleteConfirmationModal 
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -239,7 +242,7 @@ export default function DiaryPage() {
           <div className="flex items-center gap-4">
               <h1 className="text-3xl font-bold">My Diary</h1>
 
-              {/* If user loggined, Show 'Draft' */}
+              {/* -- Draft Button -- */}
               {user && draftsCount > 0 && (
                 <DraftsViewButton 
                   draftsCount = {draftsCount}
@@ -249,10 +252,9 @@ export default function DiaryPage() {
           </div>
           
           
-          
           <div className="flex flex-wrap gap-2">
 
-            {/* If user loggined and have Entries , show `Delete Button` */}
+            {/* -- Delete Button --*/}
             {user && processedEntries.length > 0 && (
               <DeleteEntriesButton
                 isSelectionMode = {isSelectionMode}
@@ -262,7 +264,7 @@ export default function DiaryPage() {
               />
             )}
 
-            {/* If user loggined, Show `New Entry` Button */}
+            {/* -- New Entry Button -- */}
             {user && (
               <NewEntryButton
                 user = {user}
@@ -272,14 +274,14 @@ export default function DiaryPage() {
           </div>
         </div>
 
-        {/* Loading and Processing Entries */}
+        {/* ------- No Entries ------- */}
         {!loading && processedEntries.length === 0 ? (
           <NoEntriesState type="Diary" />
         ) : (
           <>
             <div className="grid grid-cols-1 gap-5">
               {currentEntries.map((entry) => (
-                // Locke Overlay:
+                // ------- Locke Overlay -------
                 /* Wrap each diary entry with LockOverlay 
                   - If entry is locked (per useLock rules), it will:
                     • Blur and disable interaction with content
@@ -287,13 +289,17 @@ export default function DiaryPage() {
                     • On click, open LockModal for password unlock
                   - If not locked, it simply renders children normally */
                 <LockOverlay key={entry.id || entry.timestamp} entryType="diary">
+
+                  {/* ------- Diary Preview Container ------- */}
                   <div
                     className="rounded-xl shadow-sm border border-gray-300 overflow-hidden"
                   >
-                    {/* Diary Entry Preview Container */}
-                    <div className="text-text-primary bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-gray-200">
+                    {/* ------- Diary Preview - Header ------- */}
+                    <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
+
+                          {/* -- Multiple Delete Selection Mode -- */}
                           {isSelectionMode && (
                             <input
                               type="checkbox"
@@ -310,10 +316,11 @@ export default function DiaryPage() {
                               className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
                             />
                           )}
+                          {/* -- Title --*/}
                           {entry.displayTitle && (
                             entry.isDraft ? (
                               <Link href="/diary/draft/edit">
-                                <h2 className="text-xl font-semibold hover:text-primary transition-colors">
+                                <h2 className="text-xl font-semibold hover:text-primary">
                                   {entry.displayTitle}
                                   <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
                                     Draft
@@ -322,7 +329,7 @@ export default function DiaryPage() {
                               </Link>
                             ) : (
                               <Link href={`/diary/${entry.id}`}>
-                                <h2 className="text-xl font-semibold hover:text-primary transition-colors">
+                                <h2 className="text-xl font-semibold hover:text-primary">
                                   {entry.displayTitle}
                                 </h2>
                               </Link>
@@ -334,19 +341,24 @@ export default function DiaryPage() {
                           {entry.displayDate} | {entry.displayTime}
                         </div>
                       </div>
+
                     </div>
-                    <div className={entry.entry_type === 'image' ? 'bg-paper-bg p-8' : 'lined-paper flex items-start justify-between gap-4 p-5'}>
+
+                    {/* ------- Diary Preview Container - Body ------- */}
+                    <div className={entry.entry_type === 'image' ? 'image-paper p-8' : 'lined-paper flex items-start justify-between gap-4 p-5'}>
                       <div className="flex-1">
                         <Link
                           href={`/diary/${entry.id}`}
                           className="block"
                         >
                           {entry.entry_type === 'image' ? (
+
+                            // ---- Image Entry Preview----
                             <div className="space-y-4">
                               <img
                                 src={entry.content}
                                 alt="Diary entry"
-                                                              className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"
+                                className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"
                                 onError={(e) => {
                                   console.warn('Image loading error:', {
                                     src: e.target.src
@@ -356,6 +368,8 @@ export default function DiaryPage() {
                               />
                             </div>
                           ) : (
+                            
+                            // ---- Text Entry Preview ----
                             <p className="pt-2 text-xl">
                               {entry.preview}
                             </p>
@@ -369,6 +383,8 @@ export default function DiaryPage() {
 
             </div>
 
+
+            {/* ------- Pagination ------- */}
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -378,8 +394,8 @@ export default function DiaryPage() {
         )}
       </main>
       <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");
-      `}</style>
+        @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");`}
+      </style>
 
     </div>
   );

@@ -3,7 +3,7 @@
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background">
       
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <h1 className="text-3xl font-bold mb-8">About Unseen Stories</h1>

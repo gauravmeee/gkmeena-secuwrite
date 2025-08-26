@@ -1,10 +1,12 @@
 "use client";
 
+
 import HeroSection from "../components/HeroSection";
-import MainSection from "../components/MainSection";
+import MainSection from "../components/HomeContent";
 import FloatingActionButton from "../components/FloatingActionButton";
 import { LazyEncryptionMigration } from "../utils/componentUtils";
 import { useAuth } from "../context/AuthContext";
+import { LoadingProvider } from "@/context/LoadingContext";
 
 
 
@@ -15,14 +17,18 @@ export default function Home() {
 
   return (
     <div className="bg-background text-foreground">
-      {/* Hero Section */}
-      <HeroSection />
+
+      <LoadingProvider>
+        <HeroSection />
+        <MainSection />
+      </LoadingProvider>
+      
       
       {/* Main Content Section */}
-      <div id="content-section" className="relative">
+      {/* <div id="content-section" className="relative"> */}
         {/* Content Section Component */}
-        <MainSection />
-      </div>
+        
+      {/* </div> */}
       
       {/* Floating Action Button */}
       {user && <FloatingActionButton />}

@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { FiArrowLeft, FiEdit2, FiSave, FiTrash2 } from "react-icons/fi";
-import EntryLockProtection from "../../../components/EntryLockProtection";
-import databaseUtils from "../../../lib/database";
+import { FiEdit2, FiSave, FiTrash2 } from "react-icons/fi";
+import { BackButton } from "@/components/common/ActionButtons";
+import EntryLockProtection from "@/components/EntryLockProtection";
+import databaseUtils from "@/lib/database";
+import Loading from "@/components/common/Loading";
 
 export default function JournalDraftPage() {
   const [drafts, setDrafts] = useState([]);
@@ -109,23 +111,13 @@ export default function JournalDraftPage() {
 
   if (!authChecked || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30 text-white">
-        <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-            </div>
-          </div>
-        </main>
-      </div>
+      <Loading/>
     );
   }
 
   if (drafts.length === 0) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-background">
         <main className="max-w-4xl mx-auto pt-24 px-4">
           <div className="flex flex-col justify-center items-center h-64 gap-4">
             <p className="text-xl">No drafts found</p>
@@ -140,13 +132,12 @@ export default function JournalDraftPage() {
 
   return (
     <EntryLockProtection entryType="journal">
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-background">
         <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
-          <Link href="/journal" className="flex items-center gap-2 text-primary hover:underline">
-            <FiArrowLeft size={16} />
-            <span>Back</span>
-          </Link>
+        <BackButton
+            href = "/journal"
+          />
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold">My Drafts</h1>
             <span className="text-sm text-text-secondary bg-bg-secondary px-3 py-1 rounded-full">

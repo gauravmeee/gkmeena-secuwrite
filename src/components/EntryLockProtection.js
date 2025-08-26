@@ -36,7 +36,7 @@ export default function EntryLockProtection({ children, entryType }) {
   // Show loading state while lock context is initializing or lock check is not complete
   if (isLoading || !lockCheckComplete) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-background">
         <div className="flex justify-center items-center h-screen">
           <div className="text-center">
             <div className="flex items-center space-x-2 mb-4">
@@ -53,7 +53,7 @@ export default function EntryLockProtection({ children, entryType }) {
 
   if (showUnlockPrompt) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <LockModal
           isOpen={true}
           onClose={handleClose}

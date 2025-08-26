@@ -225,12 +225,19 @@ body {
   padding: 2rem;
 }
 
+
 /* To Give Some Space in New/Edit mode Below 'Dear Diary' */
 .line-height-loose {
   line-height: 2rem;
   padding-top: 0.5rem;
 }  
 
+.image-paper {
+  font-family: "Kalam", "Caveat", "Dancing Script", cursive;   /* add this */
+  background-color: var(--paper-bg);
+  box-shadow: var(--shadow-md);
+  color: var(--ink-color);
+}
 
 
 .modal-backdrop {

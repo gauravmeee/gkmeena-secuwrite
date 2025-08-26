@@ -6,8 +6,8 @@ import { FiSave, FiArrowLeft } from "react-icons/fi";
 import Link from "next/link";
 import { useAuth } from "../../../context/AuthContext";
 import { supabase } from "../../../lib/supabase";
-import databaseUtils from "../../../lib/database";
 import { LazyJoditEditor, debounce } from "../../../utils/componentUtils";
+import { BackButton } from "@/components/common/ActionButtons";
 
 function NewJournalEntryContent() {
   const [title, setTitle] = useState("");
@@ -215,13 +215,9 @@ function NewJournalEntryContent() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <Link 
-            href="/journal" 
-            className="flex items-center gap-2 text-muted-text hover:text-foreground transition-colors"
-          >
-            <FiArrowLeft size={20} />
-            <span>Back to Journal</span>
-          </Link>
+        <BackButton 
+              href={searchParams.get('editDraft') ? "/journal/draft" : "/journal"} 
+            />
           
           <button
             onClick={handleSave}

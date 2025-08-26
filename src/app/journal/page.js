@@ -5,7 +5,8 @@ import Link from "next/link";
 
 import Pagination from "@/components/common/Pagination";
 import Loading from "@/components/common/Loading";
-import {DraftsViewButton, DeleteEntriesButton, NewEntryButton} from "@/components/common/Buttons";
+import { DraftsViewButton } from "@/components/common/LinkButtons";
+import {DeleteEntriesButton, NewEntryButton} from "@/components/common/ActionButtons";
 import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 import NoEntriesState from "@/components/common/NoEntriesState";
 import SignInPrompt from "@/components/common/SignInPrompt";
@@ -225,7 +226,7 @@ export default function JournalPage() {
               {user && draftsCount > 0 && (
                 <DraftsViewButton 
                   draftsCount = {draftsCount}
-                  entryType={"diary"}
+                  entryType={"journal"}
                 />
               )}
           </div>

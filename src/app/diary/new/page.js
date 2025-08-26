@@ -2,12 +2,15 @@
 
 import { useState, useEffect, Suspense } from "react";
 
+import Loading from "@/components/common/Loading";
+import { BackButton, ToggleImageButton } from "@/components/common/LinkButtons";
+import { SaveEntryButton } from "@/components/common/ActionButtons";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FiSave, FiArrowLeft, FiUpload, FiX, FiImage, FiFileText } from "react-icons/fi";
-import Link from "next/link";
-import { useAuth } from "../../../context/AuthContext";
-import databaseUtils from "../../../lib/database";
-import supabase from "../../../lib/supabase";
+import { FiUpload, FiX} from "react-icons/fi";
+import { useAuth } from "@/context/AuthContext";
+import databaseUtils from "@/lib/database";
+import supabase from "@/lib/supabase";
+
 
 // Create a new component to use searchParams
 function NewDiaryEntryContent() {
@@ -267,19 +270,7 @@ function NewDiaryEntryContent() {
 
   // Show loading state while checking auth
   if (!authChecked || !user) {
-    return (
-      <div className="min-h-screen bg-background">
-        <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
+    return <Loading/>
   }
   
   // Get current date and time
@@ -430,74 +421,20 @@ function NewDiaryEntryContent() {
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link 
+            <BackButton 
               href={searchParams.get('editDraft') ? "/diary/draft" : "/diary"} 
-              className="flex items-center gap-2 text-primary hover: hover:underline"
-            >
-              <FiArrowLeft size={16} />
-              <span>Back</span>
-            </Link>
-
+            />
           </div>
           
           <div className="flex items-center gap-4">
-            <Link
-              href={entryType === 'text' ? '/diary/new?type=image' : '/diary/new'}
-              className="text-primary hover:text-primary/90 transition-colors flex items-center gap-2 px-3 py-2"
-            >
-              {entryType === 'text' ? (
-                <>
-                  <FiImage size={18} />
-                  <span>Image Entry</span>
-                </>
-              ) : (
-                <>
-                  <FiFileText size={18} />
-                  <span>Text Entry</span>
-                </>
-              )}
-            </Link>
-            
-            <button
+      
+            <ToggleImageButton
+              entryFormat = {entryType}
+            />
+            <SaveEntryButton
               onClick={handleSave}
-              disabled={loading}
-              className={`flex items-center gap-2 bg-success text-white hover:bg-success-dark px-6 py-3 rounded-lg transition-all duration-300 ${
-                loading
-                  ? "bg-opacity-70 cursor-not-allowed"
-                  : "hover:bg-primary/90 cursor-pointer"
-              }`}
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v8H4z"
-                    ></path>
-                  </svg>
-                  <span className="hidden sm:inline">Saving...</span>
-                </div>
-              ) : (
-                <>
-                  <FiSave size={18} />
-                  <span className="hidden sm:inline">Save Entry</span>
-                </>
-              )}
-            </button>
+              loading={loading}
+            />
           </div>
         </div>
         {/* Diary Entry Container */}
@@ -588,17 +525,7 @@ function NewDiaryEntryContent() {
 export default function NewDiaryEntry() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background">
-        <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-            </div>
-          </div>
-        </main>
-      </div>
+      <Loading/>
     }>
       <NewDiaryEntryContent />
     </Suspense>

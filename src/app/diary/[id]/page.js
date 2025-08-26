@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
-import DeleteConfirmationModal from "../../../components/common/DeleteConfirmationModal";
-import EntryLockProtection from "../../../components/EntryLockProtection";
-import { useAuth } from "../../../context/AuthContext";
-import databaseUtils from "../../../lib/database";
-import { supabase } from "../../../lib/supabase";
+import Loading from "@/components/common/Loading";
+import { BackButton, EditDeleteButton } from "@/components/common/LinkButtons";
+import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
+import EntryLockProtection from "@/components/EntryLockProtection";
+import { useAuth } from "@/context/AuthContext";
+import databaseUtils from "@/lib/database";
+import { supabase } from "@/lib/supabase";
+import { EntryNotFound } from "@/components/common/EntryNotFound";
+
 
 export default function DiaryEntryPage() {
   const params = useParams();
@@ -264,72 +266,59 @@ export default function DiaryEntryPage() {
     }
   };
 
+{/* --------------------------- Main JSX ------------------------- */}
+
   return (
     <EntryLockProtection entryType="diary">
+      {/* Loading */}
       {loading ? (
-        <div className="min-h-screen bg-black text-white">
-          <main className="max-w-4xl mx-auto pt-24 px-4">
-            <div className="flex justify-center items-center h-64">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse"></div>
-                <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-                <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-              </div>
-            </div>
-          </main>
-        </div>
+        
+        <Loading/>
+
+        // No Entry
       ) : !entry ? (
-        <div className="min-h-screen bg-black text-white">
-          <main className="max-w-4xl mx-auto pt-24 px-4">
-            <div className="flex flex-col justify-center items-center h-64 gap-4">
-              <p className="text-xl">Entry not found</p>
-              <Link href="/diary" className="text-primary hover:underline">
-                Return to Diary
-              </Link>
-            </div>
-          </main>
-        </div>
+        
+        <EntryNotFound/>
       ) : (
-        <div className="min-h-screen bg-black text-white">
+
+        //  ------- Main Page -------
+        <div className="min-h-screen text-text-primary bg-background">
           
           <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
           <div className="flex items-center justify-between mb-6">
-                        <Link href="/diary" className="flex items-center gap-2 text-primary hover:underline">
-                <FiArrowLeft size={16} />
-                <span>Back</span>
-              </Link>
-            
-            <div className="flex items-center gap-3">
-              <Link
-                href={`/diary/edit/${entry.id || params.id}`}
-                className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
-              >
-                  <>
-                    <FiEdit2 size={16} />
-                    <span className="hidden sm:inline">Edit</span>
-                  </>
 
-              </Link>
-              <button
-                onClick={() => setIsDeleteModalOpen(true)}
-                className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors cursor-pointer"
-              >
-                <FiTrash2 size={16} />
-                <span className="hidden sm:inline">Delete</span>
-              </button>
-            </div>
+        {/* -- Back Button -- */}
+          <BackButton
+            href = "/diary"
+          />
+
+        {/* -- Edit & Delete Button -- */}
+          <EditDeleteButton
+            editLink={`/diary/edit/${entry.id || params.id}`}
+            onDelete={() => setIsDeleteModalOpen(true)}
+          />
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
-            <div className="bg-gradient-to-r from-pink-50 to-blue-50 p-4 border-b border-gray-200">
+          
+          {/* ------- Diary Container ------- */}
+          <div className="rounded-xl shadow-sm border border-gray-300 overflow-hidden">
+            
+            {/* Diary Container - Header */}
+            <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-gray-200">
+              {/* -- Title --*/}
               {entry.title && (
-                <h1 className="text-xl font-serif text-gray-800">{entry.title}</h1>
+                <h1 className="text-xl font-semibold">
+                  {entry.title}
+                </h1>
               )}
             </div>
             
-            <div className={entryType === 'image' ? 'bg-white p-8' : 'lined-paper p-8 min-h-[70vh] bg-white'}>
+            {/* ------- Diaary Container - Body ------- */}
+            <div className={entryType === 'image' ? 'image-paper  p-8' : 'lined-paper p-8 min-h-[70vh]'}>
               <div className="mb-6 text-left">
-                <div className="text-xl  font-medium text-gray-800 mb-1">
+
+                {/* ---- Diary Date Time --- */}
+                <div className="text-xl font-medium mb-1">
                   {entry.date || (() => {
                     const now = new Date();
                     const day = now.getDate();
@@ -351,10 +340,11 @@ export default function DiaryEntryPage() {
                     }).split(' ')[0]} ${now.getFullYear()}`;
                   })()}
                 </div>
-                <div className="text-xl  text-gray-800 mb-1">
+
+                <div className="text-xl  mb-1">
                   {entry.day || new Date().toLocaleDateString('en-US', { weekday: 'long' })}
                 </div>
-                <div className="text-xl  text-gray-800">
+                <div className="text-xl ">
                   {entry.time || new Date().toLocaleTimeString('en-US', { 
                     hour: 'numeric', 
                     minute: '2-digit', 
@@ -363,10 +353,11 @@ export default function DiaryEntryPage() {
                 </div>
               </div>
 
-              <div className="font-serif text-lg text-gray-800">
+              <div className="text-lg">
                 <div className="mt-10  text-xl">Dear Diary,</div>
                 
                 {entryType === 'image' ? (
+                  // -- Text Entry -- 
                   <div className="mt-6">
                     <img
                       src={entry.content}
@@ -381,6 +372,7 @@ export default function DiaryEntryPage() {
                     />
                   </div>
                 ) : (
+                  // -- Image Entry -- 
                   <div className="whitespace-pre-wrap line-height-loose  text-xl">
                     {entry.content}
                   </div>
@@ -391,27 +383,8 @@ export default function DiaryEntryPage() {
         </main>
         
         <style jsx global>{`
-          @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");
-
-          .font-handwriting {
-            font-family: "Kalam", "Caveat", "Dancing Script", cursive;
-          }
-
-          .lined-paper {
-            background-color: white;
-            background-image: 
-              linear-gradient(90deg, transparent 39px, #d6aed6 39px, #d6aed6 41px, transparent 41px),
-              linear-gradient(#e5e7eb 1px, transparent 1px);
-            background-size: 100% 2rem;
-            line-height: 2rem;
-            padding-left: 45px !important;
-          }
-          
-          .line-height-loose {
-            line-height: 2rem;
-            padding-top: 0.5rem;
-          }
-        `}</style>
+          @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");`}
+        </style>
         
         {/* Delete Confirmation Modal */}
         <DeleteConfirmationModal 
