@@ -270,15 +270,15 @@ export default function DiaryEntryPage() {
 
   return (
     <EntryLockProtection entryType="diary">
-      {/* Loading */}
+      {/* ------- Loading ------- */}
       {loading ? (
         
         <Loading/>
 
-        // No Entry
+        // ------- Entry Not Found ------- 
       ) : !entry ? (
-        
-        <EntryNotFound/>
+
+        <EntryNotFound EntryType={"journal"}/>
       ) : (
 
         //  ------- Main Page -------
@@ -314,7 +314,7 @@ export default function DiaryEntryPage() {
             </div>
             
             {/* ------- Diaary Container - Body ------- */}
-            <div className={entryType === 'image' ? 'image-paper  p-8' : 'lined-paper p-8 min-h-[70vh]'}>
+            <div className={entryType === 'image' ? 'image-paper  p-8 min-h-[70vh]' : 'lined-paper p-8 min-h-[70vh]'}>
               <div className="mb-6 text-left">
 
                 {/* ---- Diary Date Time --- */}

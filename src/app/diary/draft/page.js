@@ -120,23 +120,12 @@ export default function DraftDiaryPage() {
       return <Loading/>
   }
 
+  // ------- No Draft Found -------
   if (drafts.length === 0) {
-    return (
-      <div className="min-h-screen bg-background">
-        <main className="max-w-4xl mx-auto pt-24 px-4">
-          <div className="flex flex-col justify-center items-center h-64 gap-4">
-            <p className="text-xl">No drafts found</p>
-            <Link href="/diary" className="text-primary hover:underline">
-              Return to Diary
-            </Link>
-          </div>
-        </main>
-      </div>
-    );
+    <NoDraftsFound EntryType={"diary"}/>
   }
 
   {/* ------------------------------ Main JSX -------------------------- */}
-
 
 
   return (
@@ -149,8 +138,12 @@ export default function DraftDiaryPage() {
         <BackButton
             href = "/diary"
           />
+
+          {/* -- Page Title - Right -- */}
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold">Diary</h1>
+
+            {/* -- Draft Count Banner -- */}
             <span className="text-sm text-text-inverse bg-text-primary/50 px-3 py-1 rounded-full">
               {drafts.length} {drafts.length === 1 ? 'draft' : 'drafts'}
             </span>
@@ -176,7 +169,7 @@ export default function DraftDiaryPage() {
               <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   
-                  <h2 className="text-xl font-semibold hover:text-primary transition-colors">
+                  <h2 className="text-xl font-semibold hover:text-primary">
                     
                     {/* -- Entry Draft Banner --*/}
                     <span className="mr-2 text-sm font-normal text-red-500/90 bg-red-100/90 px-2 py-0.5 rounded">
@@ -200,8 +193,15 @@ export default function DraftDiaryPage() {
               </div>
               
               {/* ------- Diary Preview Container - Body ------- */}
-              <div className={draft.entry_type === 'image' ? 'image-paper p-8' : 'lined-paper flex items-start justify-between gap-4 p-5'}>
-                <div onClick={() => handleEdit(draft)} className="flex-1 cursor-pointer">
+              <div
+                className={
+                  draft.entry_type === "image"
+                    ? "image-paper p-8 max-h-64 overflow-y-auto"
+                    : "lined-paper flex items-start justify-between gap-4 p-5 max-h-64 overflow-y-auto"
+                }
+              >
+                <div onClick={() => handleEdit(draft)} 
+                className="flex-1 cursor-pointer">
                   {draft.entry_type === 'image' ? (
 
                     // ---- Image Entry Preview----
@@ -233,8 +233,8 @@ export default function DraftDiaryPage() {
       </main>
 
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&display=swap');
-      `}</style>
+        @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");`}
+      </style>
         </div>
       </EntryLockProtection>
   );

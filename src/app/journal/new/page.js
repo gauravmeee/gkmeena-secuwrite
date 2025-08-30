@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FiSave, FiArrowLeft } from "react-icons/fi";
-import Link from "next/link";
 import { useAuth } from "../../../context/AuthContext";
 import { supabase } from "../../../lib/supabase";
 import { LazyJoditEditor, debounce } from "../../../utils/componentUtils";
-import { BackButton } from "@/components/common/ActionButtons";
+import { BackButton } from "@/components/common/LinkButtons";
+import Loading from "@/components/common/Loading";
+import { SaveEntryButton } from "@/components/common/ActionButtons";
 
 function NewJournalEntryContent() {
   const [title, setTitle] = useState("");
@@ -20,13 +21,13 @@ function NewJournalEntryContent() {
   const searchParams = useSearchParams();
   const mounted = useRef(false);
   const editorRef = useRef(null);
-  const draftTimerRef = useRef(null);
+
 
   // Debounced save function for better performance
   const debouncedSave = useRef(
     debounce(async (title, content) => {
       if (!user || !title.trim() || !content.trim()) return;
-      
+
       try {
         const { data, error } = await supabase
           .from('journal_entries')
@@ -47,7 +48,7 @@ function NewJournalEntryContent() {
           const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
           const updatedDrafts = drafts.filter(d => !d.isCurrentlyEditing);
           localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
-          
+
           // Navigate to the new entry
           router.push(`/journal/${data[0].id}`);
         }
@@ -82,21 +83,21 @@ function NewJournalEntryContent() {
   useEffect(() => {
     if (user) {
       const editDraftId = searchParams.get('editDraft');
-      
+
       if (editDraftId) {
         // Editing a specific draft - clear any session flags first
         sessionStorage.removeItem(`journal_new_session_${user.id}`);
-        
+
         const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
         const currentDraft = drafts.find(d => d.timestamp === editDraftId);
-        
+
         if (currentDraft) {
           setTitle(currentDraft.title || '');
           setContent(currentDraft.content || '');
           if (editorRef.current) {
             editorRef.current.value = currentDraft.content || '';
           }
-          
+
           // Mark this draft as currently being edited
           const updatedDrafts = drafts.map(d => ({
             ...d,
@@ -107,28 +108,28 @@ function NewJournalEntryContent() {
       } else {
         // Check if user is intentionally creating new or refreshing while writing
         const isIntentionallyNew = sessionStorage.getItem(`journal_new_session_${user.id}`);
-        
+
         if (isIntentionallyNew === 'true') {
           // User intentionally clicked "New Entry" - start blank
           // Clear any currently editing flags
           const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
           const updatedDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
           localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
-          
+
           // Reset form to blank state
           setTitle('');
           setContent('');
           if (editorRef.current) {
             editorRef.current.value = '';
           }
-          
+
           // Clear the session flag
           sessionStorage.removeItem(`journal_new_session_${user.id}`);
         } else {
           // Check if there's a draft that was being edited (for refresh scenarios)
           const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
           const currentDraft = drafts.find(d => d.isCurrentlyEditing);
-          
+
           if (currentDraft) {
             // Load the currently editing draft (for refresh scenarios)
             setTitle(currentDraft.title || '');
@@ -145,13 +146,13 @@ function NewJournalEntryContent() {
   // Auto-save draft functionality
   const saveDraft = () => {
     if (!user || (!title.trim() && !content.trim())) return;
-    
+
     const drafts = JSON.parse(localStorage.getItem(`journal_drafts_${user.id}`) || '[]');
     const timestamp = Date.now().toString();
-    
+
     // Remove any currently editing drafts
     const filteredDrafts = drafts.filter(d => !d.isCurrentlyEditing);
-    
+
     // Add new draft
     const newDraft = {
       title: title.trim(),
@@ -160,7 +161,7 @@ function NewJournalEntryContent() {
       isCurrentlyEditing: true,
       created_at: new Date().toISOString()
     };
-    
+
     // Keep only the 5 most recent drafts
     const updatedDrafts = [newDraft, ...filteredDrafts].slice(0, 5);
     localStorage.setItem(`journal_drafts_${user.id}`, JSON.stringify(updatedDrafts));
@@ -180,7 +181,7 @@ function NewJournalEntryContent() {
       alert('Please enter a title and content');
       return;
     }
-    
+
     setLoading(true);
     await debouncedSave(title, content);
     setLoading(false);
@@ -196,97 +197,106 @@ function NewJournalEntryContent() {
 
   if (!authChecked) {
     return (
-      <div className="min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30 text-foreground flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 rounded-full bg-primary animate-pulse"></div>
-          <div className="w-4 h-4 rounded-full bg-primary animate-pulse delay-150"></div>
-          <div className="w-4 h-4 rounded-full bg-primary animate-pulse delay-300"></div>
-        </div>
-      </div>
+      // ------- Loading -------
+      <Loading />
     );
   }
 
   if (!user) {
     return null;
   }
-
+{/* --------------------------- Main JSX ------------------------- */}
   return (
-    <div className="min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30 text-foreground">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen text-text-primary bg-background">
+      <div className="max-w-6xl mx-auto pt-24 px-4 pb-20">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-        <BackButton 
-              href={searchParams.get('editDraft') ? "/journal/draft" : "/journal"} 
-            />
-          
-          <button
+        <div className="flex items-center justify-between mb-6">
+
+          {/* -- Back Button -- */}
+          <BackButton
+            href={searchParams.get('editDraft') ? "/journal/draft" : "/journal"}
+          />
+
+          {/* -- Save Button -- */}
+          <SaveEntryButton
             onClick={handleSave}
-            disabled={loading || !title.trim() || !content.trim()}
-            className="btn-writing disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FiSave size={16} />
-            {loading ? 'Saving...' : 'Save Entry'}
-          </button>
-        </div>
-
-        {/* Title Input */}
-        <div className="mb-8">
-          <input
-            type="text"
-            value={title}
-            onChange={handleTitleChange}
-            placeholder="Enter your journal title..."
-            className="input-writing w-full text-lg font-medium"
+            loading={loading || !title.trim() || !content.trim()}
           />
         </div>
 
-        {/* Rich Text Editor */}
-        <div className="bg-bg-primary border border-border-primary rounded-lg overflow-hidden shadow-sm">
-          <LazyJoditEditor
-            ref={editorRef}
-            value={content}
-            config={{
-              readonly: false,
-              placeholder: "Start writing your journal entry...",
-              toolbar: true,
-              spellcheck: true,
-              language: "en",
-              theme: "default",
-              height: 500,
-              buttons: [
-                'source', '|',
-                'bold', 'italic', 'underline', 'strikethrough', '|',
-                'font', 'fontsize', 'brush', 'paragraph', '|',
-                'align', '|',
-                'ul', 'ol', '|',
-                'table', 'link', '|',
-                'undo', 'redo', '|',
-                'hr', 'eraser', 'copyformat', '|',
-                'fullsize'
-              ],
-              buttonsMD: [
-                'bold', 'italic', 'underline', '|',
-                'ul', 'ol', '|',
-                'font', 'fontsize', '|',
-                'undo', 'redo', '|',
-                'link', '|',
-                'fullsize'
-              ],
-              buttonsSM: [
-                'bold', 'italic', '|',
-                'ul', 'ol', '|',
-                'fontsize', '|',
-                'undo', 'redo'
-              ],
-              buttonsXS: [
-                'bold', '|',
-                'ul', 'ol', '|',
-                'undo', 'redo'
-              ]
-            }}
-            onBlur={handleContentChange}
-            onChange={handleContentChange}
-          />
+        {/* ------- Journal Container -------  */}
+        <div className="bg-bg-primary rounded-xl shadow-sm border border-border-primary overflow-hidden min-h-[calc(100vh-70rem)] flex flex-col">
+
+          {/* ------- Journal Container - Header ------- */}
+          <div className="bg-bg-secondary border-b border-border-primary p-4">
+            <div className="flex items-center justify-between">
+
+              {/* -- Title --*/}
+              <div className="text-xl font-semibold">
+                <input
+                  type="text"
+                  value={title}
+                  onChange={handleTitleChange}
+                  placeholder="Enter your journal title..."
+                  className="w-full  text-text-primary focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ------- Journal Container - Body ------- */}
+          <div className="flex-1 bg-bg-primary">
+
+            {/* -- Editor -- */}
+            <LazyJoditEditor
+              ref={editorRef}
+              value={content}
+              onInit={(editor) => {
+                editorRef.current = editor; // now it's the real Jodit instance
+              }}
+              config={{
+                readonly: false,
+                placeholder: "Start writing your journal entry...",
+                toolbar: true,
+                spellcheck: true,
+                language: "en",
+                theme: "default",
+                height: 500,
+                buttons: [
+                  'source', '|',
+                  'bold', 'italic', 'underline', 'strikethrough', '|',
+                  'font', 'fontsize', 'brush', 'paragraph', '|',
+                  'align', '|',
+                  'ul', 'ol', '|',
+                  'table', 'link', '|',
+                  'undo', 'redo', '|',
+                  'hr', 'eraser', 'copyformat', '|',
+                  'fullsize'
+                ],
+                buttonsMD: [
+                  'bold', 'italic', 'underline', '|',
+                  'ul', 'ol', '|',
+                  'font', 'fontsize', '|',
+                  'undo', 'redo', '|',
+                  'link', '|',
+                  'fullsize'
+                ],
+                buttonsSM: [
+                  'bold', 'italic', '|',
+                  'ul', 'ol', '|',
+                  'fontsize', '|',
+                  'undo', 'redo'
+                ],
+                buttonsXS: [
+                  'bold', '|',
+                  'ul', 'ol', '|',
+                  'undo', 'redo'
+                ]
+              }}
+              onBlur={handleContentChange}
+              onChange={handleContentChange}
+            />
+          </div>
         </div>
 
         {/* Draft Info */}
@@ -306,15 +316,7 @@ function NewJournalEntryContent() {
 
 export default function NewJournalEntry() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 rounded-full bg-primary animate-pulse"></div>
-          <div className="w-4 h-4 rounded-full bg-primary animate-pulse delay-150"></div>
-          <div className="w-4 h-4 rounded-full bg-primary animate-pulse delay-300"></div>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<Loading />}>
       <NewJournalEntryContent />
     </Suspense>
   );

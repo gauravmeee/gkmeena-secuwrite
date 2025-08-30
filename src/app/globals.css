@@ -62,10 +62,10 @@
   
 
   /* Text Colors Variations*/
-  --text-primary: #1f2937;      /* Main text color */
-  --text-secondary: #35383e;    /* Secondary text color */
-  --text-muted: #9ca3af;        /* Muted text color */
-  --text-inverse: #ffffff;      /* Text on dark backgrounds */
+  --text-primary: #1f2937;   /* Slate-800 */
+  --text-secondary: #374151; /* Slate-700 */
+  --text-muted: #6b7280;     /* Slate-500  */
+  --text-inverse: #ffffff;  /* Text on dark backgrounds */
   
   /* Background Colors variations */
   --bg-primary: #ffffff;        /* Primary background */
@@ -118,9 +118,9 @@
     --bg-amber: #fef3c7;
 
     /* Dark theme: Text color overrides*/
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --text-primary: #f8fafc;   /* Slate-50 */
+    --text-secondary: #cbd5e1; /* Slate-300 */
+    --text-muted: #94a3b8;     /* Slate-400 (lighter than before, good on dark bg) */
     --text-inverse: #1f2937;
     
     /* Dark theme: Background color overrides*/
@@ -223,6 +223,7 @@ body {
   color: var(--ink-color);
   /* color: var(--ink-color); */
   padding: 2rem;
+  background-attachment: local; /* “The background should scroll with the element’s content instead of staying fixed relative to the element’s box or the viewport.”*/
 }
 
 
@@ -411,3 +412,85 @@ text -> text-primary
 Button Combinartions (Success + Danger) , (Primary + Red-500)
 
 */
+
+/* Minimal Jodit Editor CSS - Dark Mode Visibility Only */
+
+/* Remove all backgrounds and borders */
+.jodit-container {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.jodit-toolbar__box {
+  background: transparent !important;
+  border: none !important;
+  position: sticky !important;
+  top: 0 !important;
+}
+
+.jodit-wysiwyg {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  border: none !important;
+  padding: 2rem 3rem !important;
+}
+
+.jodit-workplace {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Toolbar buttons - dark mode visibility */
+.jodit-toolbar-button__button {
+  color: var(--text-primary) !important;
+}
+
+.jodit-toolbar-button__button:hover {
+  background: var(--bg-tertiary) !important;
+  color: var(--primary) !important;
+}
+
+.jodit-toolbar-button__button svg {
+  fill: currentColor !important;
+}
+
+/* Dropdowns - dark mode visibility */
+.jodit-popup,
+.jodit-popup__container,
+.jodit-ui-list,
+.jodit-toolbar-collection {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.jodit-popup__content {
+  background: var(--bg-secondary) !important;
+}
+
+.jodit-ui-list__item,
+.jodit-toolbar-collection__item {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.jodit-ui-list__item:hover,
+.jodit-toolbar-collection__item:hover {
+  background: var(--primary) !important;
+  color: white !important;
+}
+
+/* Dialog inputs - dark mode visibility */
+.jodit-ui-input,
+.jodit-ui-input__input {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-primary) !important;
+}
+
+.jodit-dialog {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-primary) !important;
+}

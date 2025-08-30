@@ -2,15 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
 import Loading from "@/components/common/Loading";
 import DeleteConfirmationModal from "../../../components/common/DeleteConfirmationModal";
 import EntryLockProtection from "../../../components/EntryLockProtection";
 import { useAuth } from "../../../context/AuthContext";
 import { supabase } from "../../../lib/supabase";
 import databaseUtils from "../../../lib/database";
-import { BackButton } from "@/components/common/ActionButtons";
+import { BackButton, EditDeleteButton } from "@/components/common/LinkButtons";
+import { EntryNotFound } from "@/components/common/EntryNotFound";
 
 // Function to format the date
 const formatDateTime = (dateString) => {
@@ -116,59 +115,57 @@ export default function JournalEntryPage() {
     }
   };
 
+  {/* --------------------------- Main JSX ------------------------- */}
   return (
     <EntryLockProtection entryType="journal">
+
+      {/* ------- Loading ------- */}
       {loading ? (
         <Loading/>
+        //  ------- Entry Not Found ------- 
       ) : !entry ? (
-        <div className="min-h-screen bg-background">
-          <main className="max-w-4xl mx-auto pt-24 px-4">
-            <div className="flex flex-col justify-center items-center h-64 gap-4">
-              <p className="text-xl">Entry not found</p>
-              <Link href="/journal" className="text-primary hover:underline">
-                Return to Journal
-              </Link>
-            </div>
-          </main>
-        </div>
+        
+        <EntryNotFound EntryType={"journal"} />
       ) : (
-        <div className="min-h-screen bg-background">
+
+        //  ------- Main Page -------
+        <div className="min-h-screen text-text-primary bg-background">
+          {/* !!!!!!!!!!!!! max-w-4xl (in edit its 6xl)*/}
           <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
           <div className="flex items-center justify-between mb-6">
+
+          {/* -- Back Button -- */}
           <BackButton
             href = "/journal"
           />
 
-            <div className="flex items-center gap-3">
-              <Link
-                href={`/journal/edit/${entry.id}`}
-                className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
-              >
-                <FiEdit2 size={16} />
-                <span className="hidden sm:inline">Edit</span>
-              </Link>
-              <button
-                onClick={() => setIsDeleteModalOpen(true)}
-                className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors cursor-pointer"
-              >
-                <FiTrash2 size={16} />
-                <span className="hidden sm:inline">Delete</span>
-              </button>
-            </div>
+        {/* -- Edit & Delete Button -- */}
+          <EditDeleteButton
+            editLink={`/journal/edit/${entry.id}`}
+            onDelete={() => setIsDeleteModalOpen(true)}
+          />
+
           </div>
 
-          {/* Journal entry display */}
-          <div className="bg-bg-primary rounded-xl shadow-sm border border-border-primary overflow-hidden min-h-[calc(100vh-16rem)] flex flex-col">
+          {/* ------- Journal Container ------- */}
+          <div className="bg-bg-primary rounded-xl shadow-sm border border-border-primary overflow-hidden min-h-[calc(100vh-70rem)] flex flex-col">
+            
+            {/* Journal Container - Header */}
             <div className="bg-bg-secondary border-b border-border-primary p-4">
               <div className="flex items-center justify-between">
-                <h1 className="text-xl font-semibold text-text-primary">{entry.title}</h1>
-                <div className="text-text-secondary text-sm">{formatDateTime(entry.created_at || entry.date)}</div>
+
+                {/* -- Title --*/}
+                <h1 className="text-xl font-semibold">{entry.title}</h1>
+
+                {/* -- DateTime --*/}
+                <div className="text-text-secondary">{formatDateTime(entry.created_at || entry.date)}</div>
               </div>
             </div>
 
+          {/* ------- Diaary Container - Body ------- */}
             <div className="p-6 flex-1 bg-bg-primary">
               <div
-                className="prose prose-gray max-w-none text-text-primary"
+                className="prose prose-gray max-w-none"
                 dangerouslySetInnerHTML={{ __html: entry.content }}
               />
             </div>

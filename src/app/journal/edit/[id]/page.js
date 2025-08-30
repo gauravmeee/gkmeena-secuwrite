@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { FiSave} from "react-icons/fi";
+import { SaveEntryButton } from "@/components/common/ActionButtons";
 import Loading from "@/components/common/Loading";
-import { BackButton } from "@/components/common/ActionButtons";
+import { BackButton } from "@/components/common/LinkButtons";
 import EntryLockProtection from "../../../../components/EntryLockProtection";
 import { useAuth } from "../../../../context/AuthContext";
 import dynamic from "next/dynamic";
@@ -120,6 +120,7 @@ export default function EditJournalEntry() {
     }
   };
 
+  // Jodit Editor Configuration
   const editorConfig = {
     readonly: false,
     placeholder: "Write your journal entry here...",
@@ -171,92 +172,87 @@ export default function EditJournalEntry() {
           editor.value = initialContentRef.current;
         }
       }
-    }
+    },
+    style: {
+      background: "transparent",
+      color: "inherit",
+      border: "none",
+      boxShadow: "none",
+      padding: "0",
+    },
+    // Disable the add new line feature
+    addNewLine: false,
+    addNewLineOnDBLClick: false,
+    
+    // Alternative: disable specific plugins
+    disablePlugins: ['add-new-line'],
   };
 
+  // ------- Loading ------- 
   if (!authChecked || !user) {
     return (
       <Loading/>
     );
   }
 
+  {/* --------------------------- Main JSX ------------------------- */}
   return (
     <EntryLockProtection entryType="journal">
-      <div className="min-h-screen bg-background text-foreground">
+      <div className="min-h-screen text-text-primary bg-background">
+        {/* !!!!!!!!!!! max-w-6xl (in view its 4xl)*/}
         <main className="max-w-6xl mx-auto pt-24 px-4 pb-20">
-        {/* Header Section */}
+        
         <div className="flex items-center justify-between mb-6">
+
+          {/* -- Back Button -- */}
           <BackButton
             href = {`/journal/${params.id}`}
           />
 
-          <button
+           {/* -- Save Button -- */}
+          <SaveEntryButton
             onClick={handleSave}
-            disabled={saving || loading}
-            className={`flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg transition-all duration-300${
-              saving || loading
-                ? "bg-opacity-70 cursor-not-allowed"
-                : "hover:bg-primary/90 cursor-pointer"
-            }`}
-          >
-            {saving ? (
-              <div className="flex items-center gap-2">
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8H4z"
-                  ></path>
-                </svg>
-                Saving...
-              </div>
-            ) : (
-              <>
-                <FiSave size={18} />
-                <span className="hidden sm:inline">Save Changes</span>
-              </>
-            )}
-          </button>
+            loading={loading || saving}  
+          />
         </div>
 
+        {/* ------- Loading ------- */}
         {loading ? (
           <Loading/>
         ) : (
-          <div className="bg-bg-primary rounded-xl shadow-lg border border-border-primary p-4 sm:p-6">
-            {/* Title Input */}
-            <div className="relative w-full mb-4">
+          // ------- Journal Container ------- 
+          <div className="bg-bg-primary rounded-xl shadow-sm border border-border-primary overflow-hidden min-h-[calc(100vh-70rem)] flex flex-col">
+
+          {/* ------- Journal Container - Header ------- */}
+            <div className="bg-bg-secondary border-b border-border-primary p-4">
+              <div className="flex items-center justify-between">
+
+            {/* -- Title --*/}
+            <div className="text-xl font-semibold">
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Untitled"
-                className="w-full text-3xl font-semibold p-2 pr-36 rounded-lg border border-border-primary bg-transparent text-text-primary focus:outline-none focus:border-primary transition-all"
+                className="w-full  text-text-primary focus:outline-none"
               />
+              </div>
             </div>
+            </div>
+              
 
-            {/* Editor */}
-            <div className="bg-white rounded-md text-black overflow-hidden shadow-md">
-              <JoditEditor
-                key="edit-journal-editor"
-                config={editorConfig}
-                tabIndex={1}
-                ref={editorRef}
-              />
+            {/* ------- Journal Container - Body ------- */}
+              <div className="flex-1 bg-bg-primary">
+                {/* -- Editor -- */}
+                <JoditEditor
+                  key="edit-journal-editor"
+                  config={editorConfig}
+                  tabIndex={1}
+                  ref={editorRef}
+                />
             </div>
           </div>
+
         )}
         </main>
       </div>

@@ -200,18 +200,21 @@ export default function JournalPage() {
     }
   };
 
+  // ------- Loading -------
   if (loading) {
     return <Loading/>
   }
 
-  // Show sign in prompt if not authenticated
+  // ------- Sign In Prompt -------
   if (!user) {
     return <SignInPrompt type="Journal" />;
   }
 
+  {/* ------------------------------ Main JSX -------------------------- */}
 
   return (
-    <div className="px-5 min-h-screen bg-gradient-to-r from-primary/10 to-secondary/30">
+    //  ------- Main Page ------- 
+    <div className="min-h-screen text-text-primary bg-background">
       <DeleteConfirmationModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -222,7 +225,9 @@ export default function JournalPage() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold">My Journal</h1>
-            {/* If user loggined, Show 'Draft' */}
+            
+
+            {/* -- Draft Button -- */}
               {user && draftsCount > 0 && (
                 <DraftsViewButton 
                   draftsCount = {draftsCount}
@@ -230,9 +235,11 @@ export default function JournalPage() {
                 />
               )}
           </div>
+
+
           <div className="flex flex-wrap gap-2">
             
-            {/* If user loggined and have Entries , show `Delete Button` */}
+            {/* -- Delete Button --*/}
             {user && processedEntries.length > 0 && (
               <DeleteEntriesButton
                 isSelectionMode = {isSelectionMode}
@@ -242,7 +249,7 @@ export default function JournalPage() {
               />
             )}
 
-            {/* If user loggined, Show `New Entry` Button */}
+            {/* -- New Entry Button -- */}
             {user && (
               <NewEntryButton
                 user = {user}
@@ -253,6 +260,8 @@ export default function JournalPage() {
           </div>
         </div>
 
+
+        {/* ------- No Entries ------- */}
         {processedEntries.length === 0 ? (
           <NoEntriesState type="Journal" />
         ) : (
@@ -264,13 +273,26 @@ export default function JournalPage() {
                   currentPage * entriesPerPage
                 )
                 .map((entry) => (
+                  // ------- Locke Overlay -------
+                /* Wrap each diary entry with LockOverlay 
+                  - If entry is locked (per useLock rules), it will:
+                    • Blur and disable interaction with content
+                    • Show a lock/unlock overlay with status text
+                    • On click, open LockModal for password unlock
+                  - If not locked, it simply renders children normally */
                   <LockOverlay key={entry.id || entry.timestamp} entryType="journal">
+
+                    {/* ------- Journal Preview Container ------- */}
                     <div
                       className="bg-bg-primary rounded-xl shadow-sm border border-border-primary overflow-hidden"
                     >
+
+                      {/* ------- Journal Preview - Header ------- */}
                       <div className="bg-bg-secondary border-b border-border-primary p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
+
+                            {/* -- Multiple Delete Selection Mode -- */}
                             {isSelectionMode && (
                               <input
                                 type="checkbox"
@@ -287,12 +309,19 @@ export default function JournalPage() {
                                 className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
                               />
                             )}
-                            <h2 className="text-lg font-semibold text-text-primary">
+
+                            {/* -- Title -- XL */}
+                            <Link href={`/journal/${entry.id}`}>
+                            <h2 className="text-xl font-semibold hover:text-primary">
                               {entry.title}
                             </h2>
+                            </Link>
                           </div>
-                          <div className="flex items-center gap-2 text-text-secondary">
-                            <span>{entry.dateTime}</span>
+                            
+
+                            {/* -- DateTime --*/}
+                          <div className="text-text-secondary">
+                            {entry.dateTime}
                           </div>
                         </div>
                       </div>
@@ -301,9 +330,38 @@ export default function JournalPage() {
                           href={`/journal/${entry.id}`}
                           className="block"
                         >
-                          <div className="prose prose-gray max-w-none text-text-primary">
+
+                          {/* ------- Journal Preview Container - Body ------- */}
+                          <div className="prose prose-gray max-w-none">
                             <div
-                              className="line-clamp-5 [&_img]:max-w-[200px] [&_img]:max-h-[150px] [&_img]:object-cover [&_img]:my-2"
+                              className="
+                              overflow-hidden
+                              [display:-webkit-box]
+                              [-webkit-box-orient:vertical]
+                              [-webkit-line-clamp:5]
+                              [line-clamp:5]
+                              leading-6
+                              [&_*]:!m-0
+                              [&_*]:!p-0
+                              [&_h1]:!text-base
+                              [&_h2]:!text-base
+                              [&_h3]:!text-base
+                              [&_h4]:!text-base
+                              [&_h5]:!text-base
+                              [&_h6]:!text-base
+                              [&_p]:!mb-1
+                              [&_p]:!leading-6
+                              [&_ul]:!mb-1
+                              [&_ol]:!mb-1
+                              [&_li]:!mb-0
+                              [&_blockquote]:!mb-1
+                              [&_img]:max-w-[200px] 
+                              [&_img]:max-h-[150px] 
+                              [&_img]:object-cover 
+                              [&_img]:my-2
+                              [&_br]:hidden
+                              [&_div]:!block
+                            "
                               dangerouslySetInnerHTML={{ __html: entry.preview.content }}
                             />
                           </div>

@@ -318,26 +318,17 @@ export default function DiaryPage() {
                           )}
                           {/* -- Title --*/}
                           {entry.displayTitle && (
-                            entry.isDraft ? (
-                              <Link href="/diary/draft/edit">
-                                <h2 className="text-xl font-semibold hover:text-primary">
-                                  {entry.displayTitle}
-                                  <span className="ml-2 text-sm font-normal text-red-500 bg-red-100 px-2 py-0.5 rounded">
-                                    Draft
-                                  </span>
-                                </h2>
-                              </Link>
-                            ) : (
                               <Link href={`/diary/${entry.id}`}>
                                 <h2 className="text-xl font-semibold hover:text-primary">
                                   {entry.displayTitle}
                                 </h2>
                               </Link>
                             )
-                          )}
+                          }
                         </div>
 
-                        <div>
+                          {/* -- Date and Time --*/}
+                        <div className="text-text-secondary">
                           {entry.displayDate} | {entry.displayTime}
                         </div>
                       </div>
