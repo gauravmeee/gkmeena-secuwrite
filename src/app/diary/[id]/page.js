@@ -301,10 +301,10 @@ export default function DiaryEntryPage() {
           
           
           {/* ------- Diary Container ------- */}
-          <div className="rounded-xl shadow-sm border border-gray-300 overflow-hidden">
+          <div className="rounded-xl shadow-sm border border-border-primary overflow-hidden">
             
             {/* Diary Container - Header */}
-            <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-gray-200">
+            <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-border-primary">
               {/* -- Title --*/}
               {entry.title && (
                 <h1 className="text-xl font-semibold">

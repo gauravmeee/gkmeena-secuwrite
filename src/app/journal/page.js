@@ -2,19 +2,29 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-
-import Pagination from "@/components/common/Pagination";
-import Loading from "@/components/common/Loading";
-import { DraftsViewButton } from "@/components/common/LinkButtons";
-import {DeleteEntriesButton, NewEntryButton} from "@/components/common/ActionButtons";
+// import { FiPlus, FiTrash2, FiX } from "react-icons/fi";
+import { useAuth } from "@/context/AuthContext";
+import { useLock } from "@/context/LockContext";
+import databaseUtils from "@/lib/database";
 import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 import NoEntriesState from "@/components/common/NoEntriesState";
 import SignInPrompt from "@/components/common/SignInPrompt";
+// import LoadingSpinner from "@/components/common/LoadingSpinner";
 import LockOverlay from "@/components/common/LockOverlay";
+import { useRouter } from "next/navigation";
 
-import { useAuth } from "@/context/AuthContext";
-import databaseUtils from "@/lib/database";
+// Added
+import Pagination from "@/components/common/Pagination";
+import Loading from "@/components/common/Loading";
+import { NewEntryButton, DeleteEntriesButton } from "@/components/common/ActionButtons";
+import { DraftsViewButton } from "@/components/common/LinkButtons";
 
+// const stripHtml = (html) => {
+//   if (typeof window === "undefined") return "";
+//   if (!html) return "";
+//   const doc = new DOMParser().parseFromString(html, "text/html");
+//   return doc.body.textContent || "";
+// };
 
 const getOrdinalSuffix = (day) => {
   if (day > 3 && day < 21) return "th";
@@ -96,10 +106,20 @@ export default function JournalPage() {
   const [selectedEntries, setSelectedEntries] = useState(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const { user, toggleAuthModal } = useAuth();
+  const { shouldBlur } = useLock();
+  const [entries, setEntries] = useState([]);
+  const [authChecked, setAuthChecked] = useState(false);
   const [draftsCount, setDraftsCount] = useState(0);
-  const { user} = useAuth();
+  const router = useRouter();
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAuthChecked(true);
+    }, 1000);
 
+    return () => clearTimeout(timer);
+  }, [user]);
 
   useEffect(() => {
     async function loadData() {
@@ -112,6 +132,7 @@ export default function JournalPage() {
       try {
         // Load journal entries
         const journalEntries = await databaseUtils.getJournalEntries(user.id);
+        setEntries(journalEntries || []);
 
         // Process entries for display
         const processed = (journalEntries || []).map((entry) => ({
@@ -202,13 +223,31 @@ export default function JournalPage() {
 
   // ------- Loading -------
   if (loading) {
-    return <Loading/>
+    return (
+      <Loading/>
+    );
   }
 
-  // ------- Sign In Prompt -------
+ // ------- Sign In Prompt -------
   if (!user) {
     return <SignInPrompt type="Journal" />;
   }
+
+  // // Show loading spinner while data is being fetched
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen bg-black text-white">
+  //       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
+  //         <div className="flex items-center justify-between mb-8">
+  //           <div className="flex items-center gap-4">
+  //             <h1 className="text-3xl font-bold text-white">My Journal</h1>
+  //           </div>
+  //         </div>
+  //         <LoadingSpinner />
+  //       </main>
+  //     </div>
+  //   );
+  // }
 
   {/* ------------------------------ Main JSX -------------------------- */}
 
@@ -225,20 +264,19 @@ export default function JournalPage() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold">My Journal</h1>
-            
+
 
             {/* -- Draft Button -- */}
-              {user && draftsCount > 0 && (
-                <DraftsViewButton 
-                  draftsCount = {draftsCount}
-                  entryType={"journal"}
-                />
-              )}
+            {user && draftsCount > 0 && (
+              <DraftsViewButton 
+              draftsCount = {draftsCount}
+              entryType={"journal"}
+            />
+            )}
           </div>
 
-
           <div className="flex flex-wrap gap-2">
-            
+
             {/* -- Delete Button --*/}
             {user && processedEntries.length > 0 && (
               <DeleteEntriesButton
@@ -260,8 +298,6 @@ export default function JournalPage() {
           </div>
         </div>
 
-
-        {/* ------- No Entries ------- */}
         {processedEntries.length === 0 ? (
           <NoEntriesState type="Journal" />
         ) : (
@@ -273,20 +309,14 @@ export default function JournalPage() {
                   currentPage * entriesPerPage
                 )
                 .map((entry) => (
+
                   // ------- Locke Overlay -------
-                /* Wrap each diary entry with LockOverlay 
-                  - If entry is locked (per useLock rules), it will:
-                    • Blur and disable interaction with content
-                    • Show a lock/unlock overlay with status text
-                    • On click, open LockModal for password unlock
-                  - If not locked, it simply renders children normally */
                   <LockOverlay key={entry.id || entry.timestamp} entryType="journal">
 
                     {/* ------- Journal Preview Container ------- */}
                     <div
                       className="bg-bg-primary rounded-xl shadow-sm border border-border-primary overflow-hidden"
                     >
-
                       {/* ------- Journal Preview - Header ------- */}
                       <div className="bg-bg-secondary border-b border-border-primary p-4">
                         <div className="flex items-center justify-between">
@@ -306,7 +336,7 @@ export default function JournalPage() {
                                   }
                                   setSelectedEntries(newSelected);
                                 }}
-                                className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                                className="w-4 h-4"
                               />
                             )}
 
@@ -316,24 +346,25 @@ export default function JournalPage() {
                               {entry.title}
                             </h2>
                             </Link>
-                          </div>
-                            
 
-                            {/* -- DateTime --*/}
+                          </div>
+
+                          {/* -- DateTime --*/}
                           <div className="text-text-secondary">
                             {entry.dateTime}
                           </div>
+
                         </div>
                       </div>
+
                       <div className="p-4">
                         <Link
                           href={`/journal/${entry.id}`}
                           className="block"
                         >
-
                           {/* ------- Journal Preview Container - Body ------- */}
                           <div className="prose prose-gray max-w-none">
-                            <div
+                          <div
                               className="
                               overflow-hidden
                               [display:-webkit-box]
@@ -366,15 +397,17 @@ export default function JournalPage() {
                             />
                           </div>
                         </Link>
+
                       </div>
                     </div>
                   </LockOverlay>
                 ))}
             </div>
 
+            {/* -- Paignation --*/}
             <Pagination
               currentPage={currentPage}
-              totalPages={totalPages}
+              totalPages={Math.ceil(processedEntries.length / entriesPerPage)}
               onPageChange={(page) => setCurrentPage(page)}
             />
           </>
@@ -383,3 +416,79 @@ export default function JournalPage() {
     </div>
   );
 }
+
+// // Pagination component remains the same as in the previous code
+// function getPageNumbers(currentPage, totalPages) {
+//   const pages = [];
+  
+//   if (totalPages <= 7) {
+//     for (let i = 1; i <= totalPages; i++) {
+//       pages.push(i);
+//     }
+//   } else {
+//     pages.push(1);
+    
+//     if (currentPage > 3) {
+//       pages.push('...');
+//     }
+    
+//     for (let i = Math.max(2, currentPage - 1); i <= Math.min(currentPage + 1, totalPages - 1); i++) {
+//       pages.push(i);
+//     }
+    
+//     if (currentPage < totalPages - 2) {
+//       pages.push('...');
+//     }
+    
+//     pages.push(totalPages);
+//   }
+  
+//   return pages;
+// }
+
+// function Pagination({ currentPage, totalPages, onPageChange }) {
+//   const pages = getPageNumbers(currentPage, totalPages);
+  
+//   return (
+//     <div className="flex justify-center items-center gap-2 mt-8 mb-4">
+//       <button
+//         onClick={() => onPageChange(currentPage - 1)}
+//         disabled={currentPage === 1}
+//         className="px-3 py-2 rounded-md bg-gray-900 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
+//       >
+//         Previous
+//       </button>
+      
+//       <div className="flex gap-1">
+//         {pages.map((page, index) => (
+//           page === '...' ? (
+//             <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-400">
+//               ...
+//             </span>
+//           ) : (
+//             <button
+//               key={page}
+//               onClick={() => onPageChange(page)}
+//               disabled={page === currentPage}
+//               className={`px-3 py-2 rounded-md transition-colors ${
+//                 page === currentPage
+//                   ? 'bg-primary text-white'
+//                   : 'bg-gray-900 text-white hover:bg-gray-800'
+//               }`}
+//             >
+//               {page}
+//             </button>
+//           )
+//         ))}
+//       </div>
+      
+//       <button
+//         onClick={() => onPageChange(currentPage + 1)}
+//         disabled={currentPage === totalPages}
+//         className="px-3 py-2 rounded-md bg-gray-900 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
+//       >
+//         Next
+//       </button>
+//     </div>
+//   );
+// }

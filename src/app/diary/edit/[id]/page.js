@@ -355,10 +355,10 @@ export default function EditDiaryEntry() {
         </div>
         
         {/* ------- Diary Container ------- */}
-        <div className={`rounded-xl shadow-sm border border-gray-300 overflow-hidden ${entryType === 'image' ? 'pb-6' : ''}`}>
+        <div className="rounded-xl shadow-sm border border-border-primary overflow-hidden">
           
           {/* Diary Container - Header */}
-          <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-gray-200">
+          <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-border-primary">
             {/* -- Title --*/}
             <input
               type="text"
@@ -370,7 +370,8 @@ export default function EditDiaryEntry() {
           </div>
           
           {/* ------- Diaary Container - Body ------- */}
-          <div className={entryType === 'image' ? 'image-paper  p-8' : 'lined-paper p-8 min-h-[70vh]'}>
+          <div className={`p-8 min-h-[70vh] ${entryType === 'image' ? 'image-paper' : 'lined-paper'}`}>
+            
             <div className="mb-6 text-left">
 
               {/* ---- Diary Date Time --- */}
@@ -408,9 +409,11 @@ export default function EditDiaryEntry() {
               </div>
             </div>
 
+            {/* -- Dear Diary -- */}
             <div className="text-lg">
               <div className="mt-10 text-xl">Dear Diary,</div>
               
+              {/* -- Text Entry -- */}
               {entryType === 'text' && (
                 <textarea 
                   value={content}
@@ -420,11 +423,11 @@ export default function EditDiaryEntry() {
                 />
               )}
             </div>
-
+            
+            {/* -- Image Entry -- */}
             {entryType === 'image' && (
-              <div className="mt-6 flex flex-col items-center justify-center border-t border-gray-200 pt-6">
+              <div className="mt-6 flex flex-col items-center justify-center pt-6">
                 {!imagePreview ? (
-                  // -- Image Entry -- 
                   <>
                     <input
                       type="file"
@@ -439,9 +442,9 @@ export default function EditDiaryEntry() {
                     >
                       <FiUpload size={40} className="text-gray-400" />
                       <div className="text-center">
-                        <p className="text-gray-600 font-medium">Click to upload an image</p>
-                        <p className="text-gray-500 text-sm mt-1">or drag and drop</p>
-                        <p className="text-gray-400 text-xs mt-2">Maximum file size: 5MB</p>
+                      <p className="text-text-secondary font-medium">Click to upload an image</p>
+                        <p className="text-text-secondary text-sm mt-1">or drag and drop</p>
+                        <p className="text-text-muted text-xs mt-2">Maximum file size: 5MB</p>
                       </div>
                     </label>
                   </>
@@ -455,6 +458,7 @@ export default function EditDiaryEntry() {
                     />
 
                     
+                    {/* -- Remove Image Button -- */}
                     <button
                       onClick={removeImage}
                       className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors border-2 border-transparent"

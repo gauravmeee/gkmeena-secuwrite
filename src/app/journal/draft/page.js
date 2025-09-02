@@ -3,13 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import Link from "next/link";
-import { FiEdit2, FiSave, FiTrash2 } from "react-icons/fi";
-import { BackButton, EditSaveDeleteButton } from "@/components/common/LinkButtons";
 import EntryLockProtection from "@/components/EntryLockProtection";
 import databaseUtils from "@/lib/database";
 import Loading from "@/components/common/Loading";
 import { NoDraftsFound } from "@/components/common/EntryNotFound";
+import { BackButton, EditSaveDeleteButton } from "@/components/common/LinkButtons";
 
 export default function JournalDraftPage() {
   const [drafts, setDrafts] = useState([]);
@@ -122,7 +120,7 @@ export default function JournalDraftPage() {
     <NoDraftsFound EntryType={"journal"}/>
   }
 
-    {/* ------------------------------ Main JSX -------------------------- */}
+  {/* ------------------------------ Main JSX -------------------------- */}
 
   return (
     <EntryLockProtection entryType="journal">
@@ -130,8 +128,8 @@ export default function JournalDraftPage() {
       <div className="min-h-screen text-text-primary bg-background">
         <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
-
-          {/* -- Back Button -- */}
+          
+        {/* -- Back Button -- */}
         <BackButton
             href = "/journal"
           />
@@ -163,7 +161,6 @@ export default function JournalDraftPage() {
               key={index}
               className="bg-bg-primary rounded-xl shadow-sm border border-border-primary overflow-hidden"
             >
-
               {/* ------- Journal Preview - Header ------- */}
               <div className="bg-bg-secondary border-b border-border-primary p-4">
                 <div className="flex items-center justify-between">
@@ -184,7 +181,6 @@ export default function JournalDraftPage() {
 
                   {/* -- Edit, Save and Delete Button -- */}
 
-                  {/* -- Edit, Save & Delete Button -- */}
                   <EditSaveDeleteButton
                     onEdit={() => handleEdit(draft)}
                     onSave={() => handleSave(draft)}
@@ -237,6 +233,7 @@ export default function JournalDraftPage() {
                             />
                   </div>
                 </div>
+
               </div>
             </div>
           ))}

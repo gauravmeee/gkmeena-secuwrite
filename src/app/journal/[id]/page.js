@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Loading from "@/components/common/Loading";
-import DeleteConfirmationModal from "../../../components/common/DeleteConfirmationModal";
-import EntryLockProtection from "../../../components/EntryLockProtection";
-import { useAuth } from "../../../context/AuthContext";
+import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
+import EntryLockProtection from "@/components/EntryLockProtection";
+import { useAuth } from "@/context/AuthContext";
 import { supabase } from "../../../lib/supabase";
 import databaseUtils from "../../../lib/database";
 import { BackButton, EditDeleteButton } from "@/components/common/LinkButtons";
-import { EntryNotFound } from "@/components/common/EntryNotFound";
+import { EntryNotFound } from "@/components/common/EntryNotFound"
+import Loading from "@/components/common/Loading";
 
 // Function to format the date
 const formatDateTime = (dateString) => {
@@ -115,31 +115,28 @@ export default function JournalEntryPage() {
     }
   };
 
-  {/* --------------------------- Main JSX ------------------------- */}
+   {/* --------------------------- Main JSX ------------------------- */}
   return (
     <EntryLockProtection entryType="journal">
 
       {/* ------- Loading ------- */}
       {loading ? (
         <Loading/>
-        //  ------- Entry Not Found ------- 
       ) : !entry ? (
-        
         <EntryNotFound EntryType={"journal"} />
       ) : (
-
         //  ------- Main Page -------
         <div className="min-h-screen text-text-primary bg-background">
           {/* !!!!!!!!!!!!! max-w-4xl (in edit its 6xl)*/}
           <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
           <div className="flex items-center justify-between mb-6">
-
-          {/* -- Back Button -- */}
+            
+            {/* -- Back Button -- */}
           <BackButton
             href = "/journal"
           />
 
-        {/* -- Edit & Delete Button -- */}
+            {/* -- Edit & Delete Button -- */}
           <EditDeleteButton
             editLink={`/journal/edit/${entry.id}`}
             onDelete={() => setIsDeleteModalOpen(true)}
@@ -162,7 +159,7 @@ export default function JournalEntryPage() {
               </div>
             </div>
 
-          {/* ------- Diaary Container - Body ------- */}
+            {/* ------- Diaary Container - Body ------- */}
             <div className="p-6 flex-1 bg-bg-primary">
               <div
                 className="prose prose-gray max-w-none"

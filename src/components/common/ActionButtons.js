@@ -57,7 +57,7 @@ export function NewEntryButton({
                 href= {href}
                 onClick={() => {
                 if (user) {
-                    sessionStorage.setItem(`{entryType}_new_session_${user.id}`, 'true');
+                    sessionStorage.setItem(`${entryType}_new_session_${user.id}`, 'true');
                 }
                 }}
                 className="flex items-center gap-2  px-4 py-2  transition-colors"
@@ -134,3 +134,35 @@ export function SaveEntryButton({ onClick, loading }) {
       </button>
   );
 }
+
+
+// {user && (
+//   <div className="flex items-center bg-primary rounded-md overflow-hidden">
+//     <Link
+//       href="/diary/new?type=text"
+//       onClick={() => {
+//         if (user) {
+//           sessionStorage.setItem(`diary_new_session_${user.id}`, 'true');
+//         }
+//       }}
+//       className="flex items-center gap-2 text-white px-4 py-2 hover:bg-primary/90 transition-colors"
+//       title="New Text Entry"
+//     >
+//       <FiPlus size={16} />
+//       <span className="hidden sm:inline">New Entry</span>
+//     </Link>
+//     <div className="h-6 w-px bg-white/30"></div>
+//     <Link
+//       href="/diary/new?type=image"
+//       onClick={() => {
+//         if (user) {
+//           sessionStorage.setItem(`diary_new_session_${user.id}`, 'true');
+//         }
+//       }}
+//       className="flex items-center gap-2 text-white px-4 py-2 hover:bg-primary/90 transition-colors"
+//       title="New Image Entry"
+//     >
+//       <FiCamera size={16} />
+//     </Link>
+//   </div>
+// )}

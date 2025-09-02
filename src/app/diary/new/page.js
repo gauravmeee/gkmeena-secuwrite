@@ -6,11 +6,10 @@ import Loading from "@/components/common/Loading";
 import { BackButton, ToggleImageButton } from "@/components/common/LinkButtons";
 import { SaveEntryButton } from "@/components/common/ActionButtons";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FiUpload, FiX} from "react-icons/fi";
-import { useAuth } from "@/context/AuthContext";
-import databaseUtils from "@/lib/database";
-import supabase from "@/lib/supabase";
-
+import {FiUpload, FiX} from "react-icons/fi";
+import { useAuth } from "../../../context/AuthContext";
+import databaseUtils from "../../../lib/database";
+import supabase from "../../../lib/supabase";
 
 // Create a new component to use searchParams
 function NewDiaryEntryContent() {
@@ -26,10 +25,11 @@ function NewDiaryEntryContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   
-  // Load draft content when component mounts
+  // Load draft content when component mounts and show file picker immediately
   useEffect(() => {
     if (user) {
       const editDraftId = searchParams.get('editDraft');
+      const typeFromUrl = searchParams.get('type'); // Get type parameter first
       
       if (editDraftId) {
         // Editing a specific draft - clear any session flags first
@@ -41,8 +41,9 @@ function NewDiaryEntryContent() {
         if (currentDraft) {
           setTitle(currentDraft.title || "");
           setContent(currentDraft.content || "");
-          setEntryType(currentDraft.entry_type || 'text');
-          if (currentDraft.imagePreview && currentDraft.entry_type === 'image') {
+          // Priority: URL parameter > draft entry type > default 'text'
+          setEntryType(typeFromUrl || currentDraft.entry_type || 'text');
+          if (currentDraft.imagePreview && (typeFromUrl === 'image' || currentDraft.entry_type === 'image')) {
             setImagePreview(currentDraft.imagePreview);
           }
           
@@ -64,10 +65,10 @@ function NewDiaryEntryContent() {
           const updatedDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
           localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify(updatedDrafts));
           
-          // Reset form to blank state
+          // Reset form to blank state, but respect URL parameter
           setTitle("");
           setContent("");
-          setEntryType('text');
+          setEntryType(typeFromUrl || 'text'); // URL parameter takes priority
           setImagePreview(null);
           
           // Clear the session flag
@@ -77,8 +78,8 @@ function NewDiaryEntryContent() {
           const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
           const currentDraft = drafts.find(d => d.isCurrentlyEditing);
           
-          if (currentDraft) {
-            // Load the currently editing draft (for refresh scenarios)
+          if (currentDraft && !typeFromUrl) {
+            // Load the currently editing draft only if no URL type parameter
             setTitle(currentDraft.title || "");
             setContent(currentDraft.content || "");
             setEntryType(currentDraft.entry_type || 'text');
@@ -86,13 +87,30 @@ function NewDiaryEntryContent() {
               setImagePreview(currentDraft.imagePreview);
             }
           } else {
-            // No draft being edited - start blank
+            // No draft being edited OR URL parameter overrides - start fresh
             setTitle("");
             setContent("");
-            setEntryType('text');
+            setEntryType(typeFromUrl || 'text'); // URL parameter takes priority
             setImagePreview(null);
+            
+            // If URL specifies image type, clear any text draft
+            if (typeFromUrl === 'image') {
+              const drafts = JSON.parse(localStorage.getItem(`diary_drafts_${user.id}`) || "[]");
+              const updatedDrafts = drafts.map(d => ({ ...d, isCurrentlyEditing: false }));
+              localStorage.setItem(`diary_drafts_${user.id}`, JSON.stringify(updatedDrafts));
+            }
           }
         }
+      }
+  
+      // If it's an image entry from URL parameter, show file picker after state is set
+      if (typeFromUrl === 'image') {
+        setTimeout(() => {
+          const input = document.getElementById('image-upload');
+          if (input) {
+            input.click();
+          }
+        }, 100); // Small delay to ensure DOM is ready
       }
     }
   }, [user, searchParams]);
@@ -256,20 +274,21 @@ function NewDiaryEntryContent() {
     return () => clearTimeout(timer);
   }, [user, router]);
 
-  useEffect(() => {
-    // If it's an image entry from URL parameter, show file picker immediately
-    const typeFromUrl = searchParams.get('type');
-    if (typeFromUrl === 'image') {
-      setEntryType('image');
-      const input = document.getElementById('image-upload');
-      if (input) {
-        input.click();
-      }
-    }
-  }, [searchParams]);
+  // useEffect(() => {
+  //   // If it's an image entry from URL parameter, show file picker immediately
+  //   const typeFromUrl = searchParams.get('type');
+  //   if (typeFromUrl === 'image') {
+  //     setEntryType('image');
+  //     const input = document.getElementById('image-upload');
+  //     if (input) {
+  //       input.click();
+  //     }
+  //   }
+  // }, [searchParams]);
 
-  // Show loading state while checking auth
+  // ---
   if (!authChecked || !user) {
+    // ------- Loading -------
     return <Loading/>
   }
   
@@ -329,7 +348,6 @@ function NewDiaryEntryContent() {
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    setEntryType('text');
   };
 
   const handleSave = async () => {
@@ -416,30 +434,44 @@ function NewDiaryEntryContent() {
     }
   };
   
+  {/* --------------------------- Main JSX ------------------------- */}
   return (
-    <div className="min-h-screen bg-background">
+    //  ------- Main Page ------- 
+    <div className="min-h-screen text-text-primary bg-background">
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
+          
           <div className="flex items-center gap-4">
+            {/* -- Back Button -- */}
             <BackButton 
               href={searchParams.get('editDraft') ? "/diary/draft" : "/diary"} 
             />
           </div>
           
           <div className="flex items-center gap-4">
-      
-            <ToggleImageButton
-              entryFormat = {entryType}
-            />
+
+            {/* -- Image/Text Toggle Button -- */}
+            {!searchParams.get('editDraft') && (
+              <ToggleImageButton
+                entryFormat = {entryType}
+              />
+            )}
+            {/* -- Save Button -- */}
             <SaveEntryButton
               onClick={handleSave}
               loading={loading}
             />
           </div>
         </div>
-        {/* Diary Entry Container */}
-        <div className={`text-text-primary rounded-xl bg-gradient-to-r from-primary/10 to-secondary/30 shadow-sm border border-gray-200 overflow-hidden ${entryType === 'image' ? 'pb-6' : ''}`}>
-          <div className="p-4">
+        
+        {/* ------- Diary Container -------  */}
+        <div className="rounded-xl shadow-sm border border-border-primary overflow-hidden">
+          
+          
+          {/* ------- Diary Container - Header ------- */}
+          <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-border-primary">
+
+            {/* -- Title -- */}
             <input
               type="text"
               value={title}
@@ -448,17 +480,23 @@ function NewDiaryEntryContent() {
               className="w-full bg-transparent border-none text-xl font-serif focus:outline-none"
             />
           </div>
-
-          <div className={entryType === 'image' ? 'bg-paper-bg p-8' : 'lined-paper p-8 min-h-[70vh] bg-white'}>
+          
+          {/* ------- Diary Container - Body ------- */}
+          <div className={`p-8 min-h-[70vh] ${entryType === 'image' ? 'image-paper' : 'lined-paper'}`}>
+            
             <div className="mb-6 text-left">
+
+              {/* ---- Diary Date Time --- */}
               <div className="text-xl font-medium mb-1">{formattedDate}</div>
               <div className="text-xl mb-1">{weekday}</div>
               <div className="text-xl">{formattedTime}</div>
             </div>
             
+            {/* -- Dear Diary -- */}
             <div className="text-lg">
               <div className="mt-10 text-xl">Dear Diary,</div>
               
+              {/* -- Text Entry -- */}
               {entryType === 'text' && (
                 <textarea 
                   value={content}
@@ -469,9 +507,10 @@ function NewDiaryEntryContent() {
                 />
               )}
             </div>
-
+            
+            {/* -- Image Entry -- */}
             {entryType === 'image' && (
-              <div className="mt-6 flex flex-col items-center justify-center border-t border-gray-200 pt-6">
+              <div className="mt-6 flex flex-col items-center justify-center pt-6">
                 {!imagePreview ? (
                   <>
                     <input
@@ -487,19 +526,23 @@ function NewDiaryEntryContent() {
                     >
                       <FiUpload size={40} className="text-gray-400" />
                       <div className="text-center">
-                        <p className="text-gray-600 font-medium">Click to upload an image</p>
-                        <p className="text-gray-500 text-sm mt-1">or drag and drop</p>
-                        <p className="text-gray-400 text-xs mt-2">Maximum file size: 5MB</p>
+                        <p className="text-text-secondary font-medium">Click to upload an image</p>
+                        <p className="text-text-secondary text-sm mt-1">or drag and drop</p>
+                        <p className="text-text-muted text-xs mt-2">Maximum file size: 5MB</p>
                       </div>
                     </label>
                   </>
                 ) : (
                   <div className="relative w-full">
+
+                    {/* -- Image Preview -- */}
                     <img
                       src={imagePreview}
                       alt="Diary entry"
                       className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
                     />
+
+                    {/* -- Remove Image Button -- */}
                     <button
                       onClick={removeImage}
                       className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors border-2 border-transparent"
@@ -512,11 +555,10 @@ function NewDiaryEntryContent() {
             )}
           </div>
         </div>
-        <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");
-      `}</style>
       </main>
-    
+      
+      <style jsx global>{`
+        @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");`}</style>      
     </div>
   );
 }
@@ -524,9 +566,7 @@ function NewDiaryEntryContent() {
 // Main component with Suspense boundary
 export default function NewDiaryEntry() {
   return (
-    <Suspense fallback={
-      <Loading/>
-    }>
+    <Suspense fallback={<Loading/>}>
       <NewDiaryEntryContent />
     </Suspense>
   );

@@ -2,9 +2,24 @@
 
 import { useTheme } from '../context/ThemeContext';
 import { FiSun, FiMoon } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
 
 export default function ThemeToggle() {
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { toggleTheme, isDark } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    // To avoid hydration mismatch
+    return (
+      <button
+        className="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-card-bg border border-border"
+        aria-hidden="true"
+        disabled
+      />
+    );
+  }
 
   return (
     <button

@@ -71,30 +71,20 @@
   --bg-primary: #ffffff;        /* Primary background */
   --bg-secondary: #f9fafb;      /* Secondary background */
   --bg-tertiary: #f3f4f6;       /* Tertiary background */
-  --bg-overlay: rgba(163, 163, 163, 0.6); /* Overlay background */
+  --bg-overlay: rgba(0, 0, 0, 0.1); /* white with 0.1 opacity*/
   
   /* Border Colors variations */
-  --border-primary: #9ca3af;   /* gray-400 */
-  --border-secondary: #6b7280; /* gray-500 */
-  --border-tertiary: #4b5563;  /* gray-600 */
+  --border-primary: #d1d1d1;   /* light neutral gray */
+--border-secondary: #b0b0b0; /* medium neutral gray */
+--border-tertiary: #8a8a8a;  /* darker neutral gray */
   
 
 
   /* Dark theme: Shadow color overrides*/
-  --shadow-color: rgba(0, 0, 0, 0.3);
   --shadow-color-light: rgba(0, 0, 0, 0.2);
+  --shadow-color: rgba(0, 0, 0, 0.3);
   --shadow-color-dark: rgba(0, 0, 0, 0.4);
 
-  /* Layout + UI tokens */
-  --container-padding: 1.5rem;
-  --content-width: 1120px;
-  --default-transition: 0.3s ease;
-  --rounded-sm: 0.375rem;
-  --rounded-md: 0.5rem;
-  --rounded-lg: 0.75rem;
-  --shadow-sm: 0 1px 3px var(--shadow-color-light);
-  --shadow-md: 0 4px 6px -1px var(--shadow-color);
-  --shadow-lg: 0 10px 15px -3px var(--shadow-color-dark);
 }
 
 
@@ -127,17 +117,17 @@
     --bg-primary: #1a1a1a;
     --bg-secondary: #2a2a2a;
     --bg-tertiary: #3a3a3a;
-    --bg-overlay: rgba(26, 26, 26, 0.6);
+    --bg-overlay: rgba(255, 255, 255, 0.1); /* white with 0.1 opacity*/
     
     /* Dark theme: Border color overrides*/
-    --border-primary: #3a3a3a;
-    --border-secondary: #4a4a4a;
-    --border-tertiary: #5a5a5a;
+    --border-primary: #5a5a5a;   /* lightest gray visible on dark */
+    --border-secondary: #404040; /* medium gray */
+    --border-tertiary: #2d2d2d;  /* darker gray, near background */
 
       /* Shadow variations (white glow) */
-    --shadow-color: rgba(255, 255, 255, 0.1);
-    --shadow-color-light: rgba(255, 255, 255, 0.05);
-    --shadow-color-dark: rgba(255, 255, 255, 0.15);
+    --shadow-color-light: rgba(255, 255, 255, 0.1);
+    --shadow-color: rgba(255, 255, 255, 0.2);
+    --shadow-color-dark: rgba(255, 255, 255, 0.3);
   }
 }
 
@@ -183,10 +173,26 @@
   --color-border-secondary: var(--border-secondary);
   --color-border-tertiary: var(--border-tertiary);
 
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  
+
+  /* Layout + UI tokens */
+  --container-padding: 1.5rem;
+  --content-width: 1120px;
+  --default-transition: 0.3s ease;
+
+  /* Radii */
+  --rounded-sm: 0.375rem;
+  --rounded-md: 0.5rem;
+  --rounded-lg: 0.75rem;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px var(--shadow-color-light);
+  --shadow-md: 0 4px 6px -1px var(--shadow-color);
+  --shadow-lg: 0 10px 15px -3px var(--shadow-color-dark);
 }
+
 
 /* --------------------------------------------------------
    Base styles
@@ -199,7 +205,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-
+.my-shadow {
+  box-shadow: 0 2px 4px var(--shadow-color);
+}
 
 .lined-paper {
   font-family: "Kalam", "Caveat", "Dancing Script", cursive;   /* add this */

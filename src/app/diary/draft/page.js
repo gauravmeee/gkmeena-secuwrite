@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import {FiSave, FiTrash2, FiEdit2 } from "react-icons/fi";
 
 import Loading from "@/components/common/Loading";
 import { BackButton, EditSaveDeleteButton } from "@/components/common/LinkButtons";
 import EntryLockProtection from "@/components/EntryLockProtection";
+import { NoDraftsFound } from "@/components/common/EntryNotFound";
 import { useAuth } from "@/context/AuthContext";
 import databaseUtils from "@/lib/database";
 export default function DraftDiaryPage() {
@@ -163,10 +162,10 @@ export default function DraftDiaryPage() {
           {drafts.map((draft, index) => (
             <div
               key={index}
-              className="rounded-xl shadow-sm border border-gray-300 overflow-hidden"
+              className="rounded-xl shadow-sm border border-border-primary overflow-hidden"
             >
               {/* ------- Diary Preview - Header ------- */}
-              <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-gray-200">
+              <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-border-primary">
                 <div className="flex items-center justify-between">
                   
                   <h2 className="text-xl font-semibold hover:text-primary">

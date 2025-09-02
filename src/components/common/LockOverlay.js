@@ -57,34 +57,31 @@ export default function LockOverlay({ entryType, className = "", children }) {
         
         {/* Lock Overlay */}
         <div 
-          className="absolute inset-0 backdrop-blur-[4px] rounded-lg flex items-center justify-center z-[5] cursor-pointer"
+          className="rounded-xl absolute inset-0 transition-all duration-100 group-hover:translate-y-[-1px] bg-bg-overlay backdrop-blur-[10px]  flex items-center justify-center z-[5] cursor-pointer shadow-sm border border-border-primary hover:border-primary/30 hover:shadow-md"
           style={{
             userSelect: 'none',
             WebkitUserSelect: 'none',
             MozUserSelect: 'none',
-            msUserSelect: 'none',
-            backgroundColor: 'var(--bg-overlay)'
+            msUserSelect: 'none'
           }}
           onClick={handleOverlayClick}
           onContextMenu={(e) => e.preventDefault()}
         >
-          <div className="text-center p-4 select-none text-text-primary">
+          <div className="text-center p-4 select-none">
+           
             <div className="flex justify-center mb-3">
-              <div className="w-16 h-16 bg-gray-800/80 backdrop-blur-sm rounded-full flex items-center justify-center">
-                {isLocked && !isUnlocked ? (
+              {/* -- Lock Icon -- */}
+              <div className="w-16 h-16 bg-gradient-to-r from-primary/60 to-secondary/60 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  
                   <FiLock size={28} className="text-tertiary" />
-                ) : (
-                  <FiUnlock size={28} className="text-text-muted" />
-                )}
+
               </div>
             </div>
             
             <p className="text-sm text-text-secondary">
               {!hasPassword 
                 ? "Set a password to protect your content"
-                : isLocked && !isUnlocked 
-                  ? "This content is protected. Unlock to view."
-                  : "This content is protected but currently unlocked."
+                : "This content is protected. Unlock to view."
               }
             </p>
           </div>

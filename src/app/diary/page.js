@@ -11,12 +11,10 @@ import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal
 import NoEntriesState from "@/components/common/NoEntriesState";
 import SignInPrompt from "@/components/common/SignInPrompt";
 import LockOverlay from "@/components/common/LockOverlay";
-
 import { useAuth } from "@/context/AuthContext";
 import databaseUtils from "@/lib/database";
 import { supabase } from "@/lib/supabase";
 import { stripHtml } from "@/utils/textUtils";
-
 
 // Function to format date with ordinal suffix
 const getOrdinalSuffix = (day) => {
@@ -122,15 +120,6 @@ export default function DiaryPage() {
     }
   }, [user]);
 
-  // ------- Loading -------
-  if (loading) {
-    return <Loading/>
-  }
-
-  // ------- Sign In Prompt -------
-  if (!user) {
-    return <SignInPrompt type="Diary" />;
-  }
 
   // Calculate pagination
   const indexOfLastEntry = currentPage * entriesPerPage;
@@ -225,33 +214,44 @@ export default function DiaryPage() {
     }
   };
 
+
+ // ------- Loading -------
+ if (loading) {
+  return <Loading/>
+}
+
+// ------- Sign In Prompt -------
+if (!user) {
+  return <SignInPrompt type="Diary" />;
+}
+
 {/* ------------------------------ Main JSX -------------------------- */}
 
 
-  return (
-    //  ------- Main Page ------- 
-    <div className="min-h-screen text-text-primary bg-background"> 
-      <DeleteConfirmationModal 
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={confirmDeleteSelected}
-        itemType={`${selectedEntries.size} diary ${selectedEntries.size === 1 ? 'entry' : 'entries'}`}
-      />
-      <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-              <h1 className="text-3xl font-bold">My Diary</h1>
+return (
+  //  ------- Main Page ------- 
+  <div className="min-h-screen text-text-primary bg-background"> 
+  <DeleteConfirmationModal 
+    isOpen={showDeleteModal}
+    onClose={() => setShowDeleteModal(false)}
+    onConfirm={confirmDeleteSelected}
+    itemType={`${selectedEntries.size} diary ${selectedEntries.size === 1 ? 'entry' : 'entries'}`}
+  />
+  <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
+    <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center gap-4">
+          <h1 className="text-3xl font-bold">My Diary</h1>
 
-              {/* -- Draft Button -- */}
+            {/* -- Draft Button -- */}
               {user && draftsCount > 0 && (
                 <DraftsViewButton 
                   draftsCount = {draftsCount}
                   entryType={"diary"}
                 />
               )}
+  
           </div>
-          
-          
+
           <div className="flex flex-wrap gap-2">
 
             {/* -- Delete Button --*/}
@@ -271,6 +271,7 @@ export default function DiaryPage() {
                 entryType = {"diary"}
               />
             )}
+
           </div>
         </div>
 
@@ -289,17 +290,14 @@ export default function DiaryPage() {
                     • On click, open LockModal for password unlock
                   - If not locked, it simply renders children normally */
                 <LockOverlay key={entry.id || entry.timestamp} entryType="diary">
-
                   {/* ------- Diary Preview Container ------- */}
                   <div
-                    className="rounded-xl shadow-sm border border-gray-300 overflow-hidden"
+                    className="rounded-xl shadow-sm border border-border-primary overflow-hidden"
                   >
                     {/* ------- Diary Preview - Header ------- */}
-                    <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-gray-200">
+                    <div className="bg-gradient-to-r from-primary/10 to-secondary/30 p-4 border-b border-border-primary">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-
-                          {/* -- Multiple Delete Selection Mode -- */}
                           {isSelectionMode && (
                             <input
                               type="checkbox"
@@ -313,9 +311,10 @@ export default function DiaryPage() {
                                 }
                                 setSelectedEntries(newSelected);
                               }}
-                              className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                              className="w-4 h-4"
                             />
                           )}
+                          
                           {/* -- Title --*/}
                           {entry.displayTitle && (
                               <Link href={`/diary/${entry.id}`}>
@@ -325,18 +324,19 @@ export default function DiaryPage() {
                               </Link>
                             )
                           }
+
                         </div>
 
-                          {/* -- Date and Time --*/}
+                        {/* -- Date and Time --*/}
                         <div className="text-text-secondary">
                           {entry.displayDate} | {entry.displayTime}
                         </div>
                       </div>
-
                     </div>
 
                     {/* ------- Diary Preview Container - Body ------- */}
                     <div className={entry.entry_type === 'image' ? 'image-paper p-8' : 'lined-paper flex items-start justify-between gap-4 p-5'}>
+                      {/*Text Gray *****************/}
                       <div className="flex-1">
                         <Link
                           href={`/diary/${entry.id}`}
@@ -349,7 +349,7 @@ export default function DiaryPage() {
                               <img
                                 src={entry.content}
                                 alt="Diary entry"
-                                className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"
+                                                              className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"
                                 onError={(e) => {
                                   console.warn('Image loading error:', {
                                     src: e.target.src
@@ -359,7 +359,6 @@ export default function DiaryPage() {
                               />
                             </div>
                           ) : (
-                            
                             // ---- Text Entry Preview ----
                             <p className="pt-2 text-xl">
                               {entry.preview}
@@ -371,9 +370,7 @@ export default function DiaryPage() {
                   </div>
                 </LockOverlay>
               ))}
-
             </div>
-
 
             {/* ------- Pagination ------- */}
             <Pagination
@@ -384,16 +381,85 @@ export default function DiaryPage() {
           </>
         )}
       </main>
-      <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");`}
-      </style>
 
+      <style jsx global>{`
+        @import url("https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Kalam&display=swap");`}</style>
     </div>
   );
 }
 
+// Add Pagination component
+// function getPageNumbers(currentPage, totalPages) {
+//   const pages = [];
+  
+//   if (totalPages <= 7) {
+//     for (let i = 1; i <= totalPages; i++) {
+//       pages.push(i);
+//     }
+//   } else {
+//     pages.push(1);
+    
+//     if (currentPage > 3) {
+//       pages.push('...');
+//     }
+    
+//     for (let i = Math.max(2, currentPage - 1); i <= Math.min(currentPage + 1, totalPages - 1); i++) {
+//       pages.push(i);
+//     }
+    
+//     if (currentPage < totalPages - 2) {
+//       pages.push('...');
+//     }
+    
+//     pages.push(totalPages);
+//   }
+  
+//   return pages;
+// }
 
-
-
-
-
+// function Pagination({ currentPage, totalPages, onPageChange }) {
+//   const pages = getPageNumbers(currentPage, totalPages);
+  
+//   return (
+//     <div className="flex justify-center items-center gap-2 mt-8 mb-4">
+//       <button
+//         onClick={() => onPageChange(currentPage - 1)}
+//         disabled={currentPage === 1}
+//         className="px-3 py-2 rounded-md bg-gray-900 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
+//       >
+//         Previous
+//       </button>
+      
+//       <div className="flex gap-1">
+//         {pages.map((page, index) => (
+//           page === '...' ? (
+//             <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-400">
+//               ...
+//             </span>
+//           ) : (
+//             <button
+//               key={page}
+//               onClick={() => onPageChange(page)}
+//               disabled={page === currentPage}
+//               className={`px-3 py-2 rounded-md transition-colors ${
+//                 page === currentPage
+//                   ? 'bg-primary text-white'
+//                   : 'bg-gray-900 text-white hover:bg-gray-800'
+//               }`}
+//             >
+//               {page}
+//             </button>
+//           )
+//         ))}
+//       </div>
+      
+//       <button
+//         onClick={() => onPageChange(currentPage + 1)}
+//         disabled={currentPage === totalPages}
+//         className="px-3 py-2 rounded-md bg-gray-900 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
+//       >
+//         Next
+//       </button>
+//     </div>
+//   );
+// }

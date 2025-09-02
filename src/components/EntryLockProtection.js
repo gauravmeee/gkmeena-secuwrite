@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLock } from "../context/LockContext";
 import LockModal from "./LockModal";
+import Loading from "./common/Loading";
 
 export default function EntryLockProtection({ children, entryType }) {
   const [showUnlockPrompt, setShowUnlockPrompt] = useState(false);
@@ -36,18 +37,7 @@ export default function EntryLockProtection({ children, entryType }) {
   // Show loading state while lock context is initializing or lock check is not complete
   if (isLoading || !lockCheckComplete) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="flex justify-center items-center h-screen">
-          <div className="text-center">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-4 h-4 rounded-full bg-primary/60 animate-pulse"></div>
-              <div className="w-4 h-4 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-              <div className="w-4 h-4 rounded-full bg-primary/60 animate-pulse delay-300"></div>
-            </div>
-            <p className="text-gray-400 text-sm">Loading security settings...</p>
-          </div>
-        </div>
-      </div>
+      <Loading/>
     );
   }
 
