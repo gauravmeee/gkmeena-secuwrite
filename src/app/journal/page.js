@@ -315,7 +315,7 @@ export default function JournalPage() {
 
                     {/* ------- Journal Preview Container ------- */}
                     <div
-                      className="bg-bg-primary rounded-xl shadow-sm border border-border-primary overflow-hidden"
+                      className="bg-bg-primary rounded-xl shadow-sm border border-border-primary overflow-hidden transition-all group-hover:translate-y-[-1px] hover:shadow-md"
                     >
                       {/* ------- Journal Preview - Header ------- */}
                       <div className="bg-bg-secondary border-b border-border-primary p-4">

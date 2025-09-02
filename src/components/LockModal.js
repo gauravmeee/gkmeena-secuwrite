@@ -161,15 +161,19 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-r from-primary/10 to-secondary/30 backdrop-blur-sm flex items-start justify-center z-50 p-4 pt-16">
+    <div className="fixed inset-0  backdrop-blur-sm flex items-start justify-center z-50 p-4 pt-16">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
         <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
+
+            {/* --Lock Icon-- */}
             <div className="text-primary">
               {getModalIcon()}
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">
+
+            {/* --Lock Icon-- */}
+            <h2 className="text-xl font-semibold text-text-primary">
               {getModalTitle()}
             </h2>
           </div>

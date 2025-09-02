@@ -340,7 +340,7 @@ export default function MainSection() {
                 <div key={entry.id || entry.timestamp} className="group h-full">
                   <LockOverlay entryType={entry.type} className="h-full">
                     <div
-                      className={`rounded-xl p-4 h-full transition-all duration-100 group-hover:translate-y-[-1px] bg-bg-overlay backdrop-blur-[10px] shadow-sm border border-border-primary hover:border-primary/30 hover:shadow-md`}
+                      className={`rounded-xl p-4 h-full transition-all group-hover:translate-y-[-1px] bg-bg-overlay backdrop-blur-[10px] shadow-sm border border-border-primary hover:shadow-md`}
                     >
                       <Link href={entryLink} className="block h-full">
                         <div className="flex items-start flex-col h-full">

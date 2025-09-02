@@ -57,7 +57,7 @@ export default function LockOverlay({ entryType, className = "", children }) {
         
         {/* Lock Overlay */}
         <div 
-          className="rounded-xl absolute inset-0 transition-all duration-100 group-hover:translate-y-[-1px] bg-bg-overlay backdrop-blur-[10px]  flex items-center justify-center z-[5] cursor-pointer shadow-sm border border-border-primary hover:border-primary/30 hover:shadow-md"
+          className="rounded-xl absolute inset-0 transition-all  group-hover:translate-y-[-1px] bg-bg-overlay backdrop-blur-[10px]  flex items-center justify-center z-[5] cursor-pointer shadow-sm border border-border-primary hover:shadow-md"
           style={{
             userSelect: 'none',
             WebkitUserSelect: 'none',
