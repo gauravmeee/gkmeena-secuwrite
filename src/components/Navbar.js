@@ -41,10 +41,16 @@ export default function Navbar() {
         : ""
       }`}>
       <div className="max-w-[var(--content-width)] mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 text-2xl font-bold">
-          <img src="/favicon.png" alt="Unseen Stories Logo" className="w-12 h-12" />
-          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Unseen Stories</span>
-        </Link>
+      <Link href="/" className="flex items-center gap-2 text-2xl font-bold">
+        <img
+          src={isDark ? "/favicon-dark.png" : "/favicon-light.png"}
+          alt="Secuwrite Logo"
+          className="w-12 h-12"
+        />
+        <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          Secuwrite
+        </span>
+      </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6">
@@ -67,7 +73,7 @@ export default function Navbar() {
           {user ? (
             <>
               <LockMenu isMobile={false} />
-              <div className="relative group">
+              <div className="relative group z-[9999]">
                 <button className="flex items-center gap-2 px-4 py-2 bg-card-bg/40 backdrop-blur-sm rounded-full hover:bg-card-bg/60 transition-all duration-200 ml-2 border border-border/30">
                   <span className="text-sm font-medium truncate max-w-32 text-foreground">
                     {user.email.split('@')[0]}
@@ -75,7 +81,7 @@ export default function Navbar() {
                   <FiChevronDown size={16} className="text-primary transition-transform duration-200 group-hover:rotate-180" />
                 </button>
 
-                <div className="absolute right-0 top-full mt-2 w-48 bg-card-bg/95 backdrop-blur-md rounded-lg shadow-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 border border-border/30">
+                <div className="absolute right-0 top-full mt-2 w-48 bg-card-bg/95 backdrop-blur-md rounded-lg shadow-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-[9999] border border-border/30">
                   <div className="p-3 border-b border-border/30">
                     <p className="text-sm text-muted-text truncate">{user.email}</p>
                   </div>

@@ -15,7 +15,7 @@ export default function PrivacyPage() {
           
           <h2 className="text-2xl font-semibold mb-4">Our Commitment to Privacy</h2>
           <p className="text-gray-300 mb-6">
-            At Unseen Stories, we take your privacy very seriously. This Privacy Policy outlines how we collect, use, store, and protect your information when you use our service.
+            At Secuwrite, we take your privacy very seriously. This Privacy Policy outlines how we collect, use, store, and protect your information when you use our service.
           </p>
           
           <h2 className="text-2xl font-semibold mb-4">Information We Collect</h2>

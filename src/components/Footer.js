@@ -4,10 +4,12 @@ import Link from "next/link";
 import { FiMessageSquare, FiX } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import emailjs from '@emailjs/browser';
+import { useTheme } from "../context/ThemeContext";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,11 +62,15 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             {/* Brand */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-foreground">Unseen Stories</span>
-              <span className="text-xs mx-2">|</span>
-              <span className="text-xs">© {currentYear}</span>
-            </div>
+            {/* Brand */}
+          <div className="flex items-center gap-2">
+            <img
+              src={isDark ? "/assets/icons/Secuwrite-logo-light.png" : "/assets/icons/Secuwrite-logo-dark.png"}
+              alt="Secuwrite Logo"
+              className="w-20 h-6"
+            />
+            <span className="text-xs">© {currentYear}</span>
+          </div>
             
             {/* Links */}
             <div className="flex items-center gap-4">

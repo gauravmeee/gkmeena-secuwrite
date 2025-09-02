@@ -90,8 +90,7 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
         {/* -- Set Lock - Button in Menu -- */}
         <button
           onClick={handleMenuClick}
-          className={`flex items-center justify-center gap-2 w-9 h-9  rounded-md bg-card-bg border border-border transition-all duration-200 hover:bg-border/30 focus:outline-none focus:ring-2 focus:ring-primary/20 ${isLocked && !isUnlocked ? "text-green-500 hover:text-green-400" : "text-muted-text hover:text-foreground"
-            }`}
+          className={`flex items-center justify-center gap-2 w-9 h-9 rounded-md bg-card-bg border border-border transition-all duration-200 hover:bg-border/30 focus:outline-none focus:ring-2 focus:ring-primary/20 ${isLocked && !isUnlocked ? "text-success hover:text-success-dark" : "text-muted-text hover:text-foreground"}`}
 
         >
           {isLocked && !isUnlocked ? (
@@ -107,15 +106,14 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
         </button>
 
         {isMenuOpen && (
-          <div className={`${isMobile && !isCompact ? 'relative mt-2 w-full' : 'absolute right-0 top-full mt-2 w-48'} bg-card-bg  border border-border shadow-lg overflow-hidden z-50 backdrop-blur-md rounded-lg`}>
+          <div className={`${isMobile && !isCompact ? 'relative mt-2 w-full' : 'absolute right-0 top-full mt-2 w-48'} bg-card-bg border border-border shadow-lg overflow-hidden z-[9999] backdrop-blur-md rounded-lg`}>
             {!hasPassword ? (
               // ---------- Case 1: No password set ----------
 
-              // -- Set Lock - Button in Menu --
+              // -- Set Lock - Button in  enu --
               <button
                 onClick={() => handleMenuItemClick("set")}
-                className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left ${isMobile ? 'text-lg' : ''
-                  }`}
+                className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-border/30 transition-colors text-left ${isMobile ? 'text-lg' : ''}`}
               >
                 <FiLock size={isMobile ? 22 : 16} />
                 <span>Set Lock</span>
@@ -130,8 +128,7 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
                     {/* -- Unlock - Button in Menu -- */}
                     <button
                       onClick={() => handleMenuItemClick("unlock")}
-                      className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left ${isMobile ? 'text-lg' : ''
-                        }`}
+                      className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-border/30 transition-colors text-left ${isMobile ? 'text-lg' : ''}`}
                     >
                       <FiUnlock size={isMobile ? 22 : 16} />
                       <span>Unlock</span>
@@ -140,8 +137,7 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
                     {/* -- Reset Password - Button in Menu -- */}
                     <button
                       onClick={() => handleMenuItemClick("change")}
-                      className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left ${isMobile ? 'text-lg' : ''
-                        }`}
+                      className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-border/30 transition-colors text-left ${isMobile ? 'text-lg' : ''}`}
                     >
                       <FiKey size={isMobile ? 22 : 16} />
                       <span>Reset Password</span>
@@ -153,21 +149,20 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
                     {/* -- Lock - Button in Menu -- */}
                     <button
                       onClick={() => handleMenuItemClick("lock")}
-                      className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left ${isMobile ? 'text-lg' : ''
-                        }`}
+                      className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-border/30 transition-colors text-left ${isMobile ? 'text-lg' : ''}`}
                     >
                       <FiLock size={isMobile ? 22 : 16} />
                       <span>Lock</span>
                     </button>
                     
                     {/* -- Also Lock Journal - Checkbox in Menu -- */}
-                    <div className="px-4 py-3 border-t border-gray-700/30">
+                    <div className="px-4 py-3 border-t border-border/30">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={lockJournal}
                           onChange={() => handleMenuItemClick("toggleJournal")}
-                          className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} text-primary rounded border-gray-300 focus:ring-primary`}
+                          className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} text-primary rounded border-border focus:ring-primary`}
                         />
                         <span className={isMobile ? 'text-base' : 'text-sm'}>Also Lock Journal</span>
                       </label>
@@ -176,8 +171,7 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
                     {/* -- Change Password - Button in Menu -- */}
                     <button
                       onClick={() => handleMenuItemClick("change")}
-                      className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left ${isMobile ? 'text-lg' : ''
-                        }`}
+                      className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-border/30 transition-colors text-left ${isMobile ? 'text-lg' : ''}`}
                     >
                       <FiKey size={isMobile ? 22 : 16} />
                       <span>Change Password</span>
@@ -186,8 +180,7 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
                     {/* -- Remove Lock - Button in Menu -- */}
                     <button
                       onClick={() => handleMenuItemClick("remove")}
-                      className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-700/30 transition-colors text-left text-red-400 hover:text-red-300 ${isMobile ? 'text-lg' : ''
-                        }`}
+                      className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-danger/10 transition-colors text-left text-danger hover:text-danger-dark ${isMobile ? 'text-lg' : ''}`}
                     >
                       <FiX size={isMobile ? 22 : 16} />
                       <span>Remove Lock</span>

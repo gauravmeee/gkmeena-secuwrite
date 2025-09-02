@@ -161,8 +161,9 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
   };
 
   return (
-    <div className="fixed inset-0  backdrop-blur-sm flex items-start justify-center z-50 p-4 pt-16">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+    <div className="fixed inset-0 modal-backdrop backdrop-blur-sm flex items-start justify-center z-50 p-4 pt-16">
+
+      <div className="bg-card-bg rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto border border-border">
         <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -179,25 +180,25 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
           </div>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-muted-text hover:text-foreground transition-colors"
           >
             <FiX size={20} />
           </button>
         </div>
 
         {showSetupInstructions && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mb-6 p-4 bg-bg-tertiary/60 border border-border rounded-lg">
             <div className="flex items-start gap-3">
-              <FiInfo className="text-blue-500 mt-1 flex-shrink-0" size={20} />
+              <FiInfo className="text-primary mt-1 flex-shrink-0" size={20} />
               <div>
-                <h3 className="font-medium text-blue-900 mb-2">Database Setup Required</h3>
-                <p className="text-blue-800 text-sm mb-3">
+                <h3 className="font-medium text-text-primary mb-2">Database Setup Required</h3>
+                <p className="text-text-secondary text-sm mb-3">
                   The lock feature requires a database table to be created first.
                 </p>
-                <div className="text-xs text-blue-700 bg-blue-100 p-3 rounded border">
+                <div className="text-xs text-text-secondary bg-bg-secondary p-3 rounded border border-border">
                   <strong>Quick Setup:</strong><br/>
                   1. Go to Supabase Dashboard → SQL Editor<br/>
-                  2. Run the SQL from <code className="bg-blue-200 px-1 rounded">setup_lock_table.sql</code><br/>
+                  2. Run the SQL from <code className="bg-bg-tertiary px-1 rounded">setup_lock_table.sql</code><br/>
                   3. Refresh this page and try again
                 </div>
               </div>
@@ -208,8 +209,9 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "set" && (
             <div className="space-y-4">
+              {/* -- Set Password Input -- */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -217,7 +219,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
+                    className="w-full input-writing pr-10"
                     placeholder="Enter password"
                     required
                     autoComplete="new-password"
@@ -225,15 +227,16 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-text hover:text-foreground"
                   >
                     {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
                   </button>
                 </div>
               </div>
 
+             {/* -- Set Confirm Password Input -- */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -241,7 +244,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
+                    className="w-full input-writing pr-10"
                     placeholder="Confirm password"
                     required
                     autoComplete="new-password"
@@ -249,7 +252,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-text hover:text-foreground"
                   >
                     {showConfirmPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
                   </button>
@@ -262,9 +265,9 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                   id="lockJournal"
                   checked={lockJournal}
                   onChange={(e) => setLockJournal(e.target.checked)}
-                  className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                  className="w-4 h-4 text-primary rounded border-border focus:ring-primary"
                 />
-                <label htmlFor="lockJournal" className="text-sm text-gray-700">
+                <label htmlFor="lockJournal" className="text-sm text-text-secondary">
                   Also lock Journal entries
                 </label>
               </div>
@@ -274,7 +277,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
           {mode === "change" && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   New Password
                 </label>
                 <div className="relative">
@@ -282,7 +285,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
+                    className="w-full input-writing pr-10"
                     placeholder="Enter new password"
                     required
                     autoComplete="new-password"
@@ -290,7 +293,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-text hover:text-foreground"
                   >
                     {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
                   </button>
@@ -298,7 +301,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   Confirm New Password
                 </label>
                 <div className="relative">
@@ -306,7 +309,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
+                    className="w-full input-writing pr-10"
                     placeholder="Confirm new password"
                     required
                     autoComplete="new-password"
@@ -314,7 +317,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-text hover:text-foreground"
                   >
                     {showConfirmPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
                   </button>
@@ -325,7 +328,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
 
           {mode === "unlock" && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Password
               </label>
               <div className="relative">
@@ -333,15 +336,17 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
+                  className="w-full input-writing pr-10"
                   placeholder="Enter your password"
                   required
                   autoComplete="current-password"
                 />
+
+                {/* -- Hide/Show Password - Eye toggle button -- */}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-text hover:text-foreground"
                 >
                   {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
                 </button>
@@ -350,46 +355,50 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
           )}
 
           {error && (
-            <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
+            <div className="text-danger text-sm bg-danger/10 p-3 rounded-md border border-danger/20">
               {error}
             </div>
           )}
 
+          {/* -- Set Password Button -- */}
           <div className="flex gap-3 pt-4">
             {mode === "set" && (
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 btn-writing disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? "Setting..." : "Set Password"}
               </button>
             )}
 
+            {/* -- Change Password Button -- */}
             {mode === "change" && (
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 btn-writing disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? "Changing..." : "Change Password"}
               </button>
             )}
 
+            {/* -- Unlock Button -- */}
             {mode === "unlock" && (
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 btn-writing disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? "Unlocking..." : "Unlock"}
               </button>
             )}
 
+            {/* -- Cancel Button -- */}
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+              className="flex-1 bg-bg-tertiary text-text-secondary py-2 px-4 rounded-md hover:bg-border/30 transition-colors border border-border"
             >
               Cancel
             </button>

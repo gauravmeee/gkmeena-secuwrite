@@ -6,12 +6,12 @@ export default function AboutPage() {
     <div className="min-h-screen bg-background">
       
       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
-        <h1 className="text-3xl font-bold mb-8">About Unseen Stories</h1>
+        <h1 className="text-3xl font-bold mb-8">About Secuwrite</h1>
         
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 mb-8">
           <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
           <p className="text-gray-300 mb-6">
-            Unseen Stories is a personal journaling app designed to help you document your thoughts, ideas, and memories in a secure and private environment. 
+            Secuwrite is a personal journaling app designed to help you document your thoughts, ideas, and memories in a secure and private environment. 
             We believe that journaling is a powerful tool for self-reflection, personal growth, and mental well-being.
           </p>
           
@@ -27,7 +27,7 @@ export default function AboutPage() {
           
           <h2 className="text-2xl font-semibold mb-4">Our Story</h2>
           <p className="text-gray-300">
-            Unseen Stories was created by a team of developers who are passionate about personal development and mental wellbeing. 
+            Secuwrite was created by a team of developers who are passionate about personal development and mental wellbeing. 
             We wanted to create a tool that would help people express themselves freely and keep track of their thoughts and experiences 
             over time. The app was built with a focus on privacy, ease of use, and beautiful design.
           </p>

@@ -343,8 +343,9 @@ html.dark .modal-backdrop {
   transition: all var(--default-transition);
   box-shadow: var(--shadow-sm);
 
-  display: inline-flex;        /* puts icon + text in one row */
-  align-items: center;         /* vertical centering */
+  display: flex;              /* instead of inline-flex */
+  justify-content: center;    /* centers text horizontally */
+  align-items: center;        /* centers vertically */
   gap: 0.5rem;                 /* spacing between icon & text */
 }
 

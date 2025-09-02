@@ -1,4 +1,4 @@
-# Unseen Stories Application
+# Secuwrite Application
 
 A versatile writing platform for all your creative needs - from daily journal entries to poems, stories, and inspirational quotes. Features end-to-end encryption to ensure your personal writings remain private and secure.
 
