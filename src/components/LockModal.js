@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FiLock, FiUnlock, FiEye, FiEyeOff, FiX, FiInfo } from "react-icons/fi";
+import { FiLock, FiUnlock, FiEye, FiEyeOff, FiX, FiInfo, FiMail, FiKey } from "react-icons/fi";
 import { useLock } from "../context/LockContext";
+import { useAuth } from "../context/AuthContext";
+import OTPInstructions from "./OTPInstructions";
 
 export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
   const [password, setPassword] = useState("");
@@ -14,6 +16,15 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
   const [lockJournal, setLockJournal] = useState(false);
   const [showSetupInstructions, setShowSetupInstructions] = useState(false);
   
+  // OTP-related states
+  const [otpStep, setOtpStep] = useState("email"); // "email", "otp", "newPassword"
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [devOtp, setDevOtp] = useState(""); // For development mode
+  
   const { 
     setPassword: setGlobalPassword, 
     removePassword, 
@@ -22,6 +33,8 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
     lock,
     updateLockJournal: setGlobalLockJournal
   } = useLock();
+  
+  const { user } = useAuth();
 
   // Clear password fields when modal opens/closes or mode changes
   useEffect(() => {
@@ -32,8 +45,22 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
       setShowPassword(false);
       setShowConfirmPassword(false);
       setShowSetupInstructions(false);
+      
+      // Reset OTP states
+      setOtpStep("email");
+      setEmail("");
+      setOtp("");
+      setOtpSent(false);
+      setOtpVerified(false);
+      setResendCooldown(0);
+      setDevOtp("");
+      
+      // Set email from user if available
+      if (user?.email) {
+        setEmail(user.email);
+      }
     }
-  }, [isOpen, mode]);
+  }, [isOpen, mode, user]);
 
   const clearPasswordFields = () => {
     setPassword("");
@@ -41,6 +68,132 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
     setError("");
     setShowPassword(false);
     setShowConfirmPassword(false);
+  };
+
+  // Send OTP to email
+  const sendOTP = async () => {
+    if (!email) {
+      setError("Email is required");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch('/api/otp/send-simple', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setOtpSent(true);
+        setOtpStep("otp");
+        setError("");
+        // Start cooldown timer (60 seconds)
+        setResendCooldown(60);
+        const timer = setInterval(() => {
+          setResendCooldown(prev => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        
+        // In development mode, show the OTP
+        if (result.otp) {
+          console.log(`Development OTP for ${email}: ${result.otp}`);
+          setDevOtp(result.otp);
+        }
+      } else {
+        setError(result.error || 'Failed to send OTP');
+      }
+    } catch (error) {
+      setError('Failed to send OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Verify OTP
+  const verifyOTP = async () => {
+    if (!otp || otp.length !== 6) {
+      setError("Please enter a valid 6-digit OTP");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch('/api/otp/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setOtpVerified(true);
+        setOtpStep("newPassword");
+        setError("");
+      } else {
+        setError(result.error || 'Invalid OTP');
+        setOtp("");
+      }
+    } catch (error) {
+      setError('Failed to verify OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Reset password with OTP verification
+  const resetPasswordWithOTP = async () => {
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    if (password.length < 4) {
+      setError("Password must be at least 4 characters");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch('/api/otp/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp, newPassword: password }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        clearPasswordFields();
+        onClose(true);
+      } else {
+        setError(result.error || 'Failed to reset password');
+      }
+    } catch (error) {
+      setError('Failed to reset password. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -71,24 +224,16 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
           }
         }
       } else if (mode === "change") {
-        if (password !== confirmPassword) {
-          setError("Passwords do not match");
+        // For password change, use OTP verification
+        if (otpStep === "email") {
+          await sendOTP();
           return;
-        }
-        if (password.length < 4) {
-          setError("Password must be at least 4 characters");
+        } else if (otpStep === "otp") {
+          await verifyOTP();
           return;
-        }
-        
-        const result = await changePassword(password);
-        if (result.success) {
-          clearPasswordFields();
-          onClose(true); // Pass true for successful operation
-        } else {
-          setError(result.error);
-          if (result.error && result.error.includes('Database table not set up')) {
-            setShowSetupInstructions(true);
-          }
+        } else if (otpStep === "newPassword") {
+          await resetPasswordWithOTP();
+          return;
         }
       } else if (mode === "unlock") {
         const result = await unlock(password);
@@ -143,6 +288,15 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
   if (!isOpen) return null;
 
   const getModalTitle = () => {
+    if (mode === "change") {
+      switch (otpStep) {
+        case "email": return "Verify Email for Password Reset";
+        case "otp": return "Enter Verification Code";
+        case "newPassword": return "Set New Password";
+        default: return "Change Password";
+      }
+    }
+    
     switch (mode) {
       case "set": return "Set Lock Password";
       case "change": return "Change Password";
@@ -152,6 +306,15 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
   };
 
   const getModalIcon = () => {
+    if (mode === "change") {
+      switch (otpStep) {
+        case "email": return <FiMail size={24} />;
+        case "otp": return <FiKey size={24} />;
+        case "newPassword": return <FiLock size={24} />;
+        default: return <FiLock size={24} />;
+      }
+    }
+    
     switch (mode) {
       case "set": return <FiLock size={24} />;
       case "change": return <FiLock size={24} />;
@@ -206,7 +369,132 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
           </div>
         )}
 
+        {/* OTP Instructions */}
+        {mode === "change" && (
+          <OTPInstructions email={email} step={otpStep} />
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* OTP Flow for Password Change */}
+          {mode === "change" && otpStep === "email" && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full input-writing"
+                  placeholder="Enter your email address"
+                  required
+                  disabled={!!user?.email}
+                />
+                {user?.email && (
+                  <p className="text-xs text-text-secondary mt-1">
+                    Using your account email: {user.email}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {mode === "change" && otpStep === "otp" && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Verification Code
+                </label>
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="w-full input-writing text-center text-lg tracking-widest"
+                  placeholder="000000"
+                  required
+                  maxLength={6}
+                />
+                <p className="text-xs text-text-secondary mt-1">
+                  Enter the 6-digit code sent to {email}
+                </p>
+                
+                {/* Development Mode OTP Display */}
+                {process.env.NODE_ENV === 'development' && devOtp && (
+                  <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs">
+                    <strong>Development Mode:</strong> OTP is {devOtp}
+                  </div>
+                )}
+                
+                {resendCooldown > 0 ? (
+                  <p className="text-xs text-muted-text mt-1">
+                    Resend code in {resendCooldown}s
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={sendOTP}
+                    className="text-xs text-primary hover:text-primary-dark mt-1 underline"
+                  >
+                    Resend code
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {mode === "change" && otpStep === "newPassword" && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full input-writing pr-10"
+                    placeholder="Enter new password"
+                    required
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-text hover:text-foreground"
+                  >
+                    {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full input-writing pr-10"
+                    placeholder="Confirm new password"
+                    required
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-text hover:text-foreground"
+                  >
+                    {showConfirmPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {mode === "set" && (
             <div className="space-y-4">
               {/* -- Set Password Input -- */}
@@ -360,7 +648,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
             </div>
           )}
 
-          {/* -- Set Password Button -- */}
+          {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
             {mode === "set" && (
               <button
@@ -372,14 +660,34 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
               </button>
             )}
 
-            {/* -- Change Password Button -- */}
-            {mode === "change" && (
+            {/* OTP Flow Buttons for Password Change */}
+            {mode === "change" && otpStep === "email" && (
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !email}
                 className="flex-1 btn-writing disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? "Changing..." : "Change Password"}
+                {isLoading ? "Sending..." : "Send Verification Code"}
+              </button>
+            )}
+
+            {mode === "change" && otpStep === "otp" && (
+              <button
+                type="submit"
+                disabled={isLoading || otp.length !== 6}
+                className="flex-1 btn-writing disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? "Verifying..." : "Verify Code"}
+              </button>
+            )}
+
+            {mode === "change" && otpStep === "newPassword" && (
+              <button
+                type="submit"
+                disabled={isLoading || !password || !confirmPassword}
+                className="flex-1 btn-writing disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? "Resetting..." : "Reset Password"}
               </button>
             )}
 
@@ -391,6 +699,26 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                 className="flex-1 btn-writing disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? "Unlocking..." : "Unlock"}
+              </button>
+            )}
+
+            {/* Back Button for OTP Flow */}
+            {mode === "change" && otpStep !== "email" && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (otpStep === "otp") {
+                    setOtpStep("email");
+                    setOtp("");
+                  } else if (otpStep === "newPassword") {
+                    setOtpStep("otp");
+                    setPassword("");
+                    setConfirmPassword("");
+                  }
+                }}
+                className="flex-1 bg-bg-tertiary text-text-secondary py-2 px-4 rounded-md hover:bg-border/30 transition-colors border border-border"
+              >
+                Back
               </button>
             )}
 

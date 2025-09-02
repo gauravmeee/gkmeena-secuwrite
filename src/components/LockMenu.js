@@ -134,13 +134,13 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
                       <span>Unlock</span>
                     </button>
                     
-                    {/* -- Reset Password - Button in Menu -- */}
+                    {/* -- Change Password - Button in Menu -- */}
                     <button
                       onClick={() => handleMenuItemClick("change")}
                       className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-border/30 transition-colors text-left ${isMobile ? 'text-lg' : ''}`}
                     >
                       <FiKey size={isMobile ? 22 : 16} />
-                      <span>Reset Password</span>
+                      <span>Change Password</span>
                     </button>
                   </>
                 ) : (

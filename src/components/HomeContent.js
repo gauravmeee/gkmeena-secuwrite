@@ -309,7 +309,7 @@ export default function MainSection() {
           </div>
           <h2 className="text-xl font-bold text-foreground mb-3">Create Your First Entry</h2>
           <p className="text-muted-text text-sm mb-4">
-            You don't have any entries yet. Create your first one to get started!
+            You don&apos;t have any entries yet. Create your first one to get started!
           </p>
           <div className="flex justify-center">
             <CreateFirstEntryDialog />
