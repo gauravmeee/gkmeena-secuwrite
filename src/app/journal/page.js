@@ -106,8 +106,8 @@ export default function JournalPage() {
   const [selectedEntries, setSelectedEntries] = useState(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const { user, toggleAuthModal } = useAuth();
-  const { shouldBlur } = useLock();
+  const { user} = useAuth();
+  const { isUnlocked, lockJournal} = useLock();
   const [entries, setEntries] = useState([]);
   const [authChecked, setAuthChecked] = useState(false);
   const [draftsCount, setDraftsCount] = useState(0);
@@ -278,7 +278,7 @@ export default function JournalPage() {
           <div className="flex flex-wrap gap-2">
 
             {/* -- Delete Button --*/}
-            {user && processedEntries.length > 0 && (
+            {user && processedEntries.length > 0 && (!lockJournal || isUnlocked) && (
               <DeleteEntriesButton
                 isSelectionMode = {isSelectionMode}
                 selectedEntries = {selectedEntries}
@@ -288,7 +288,7 @@ export default function JournalPage() {
             )}
 
             {/* -- New Entry Button -- */}
-            {user && (
+            {user && !isSelectionMode && (
               <NewEntryButton
                 user = {user}
                 entryType = {"journal"}

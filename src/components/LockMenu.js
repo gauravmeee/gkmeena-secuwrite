@@ -14,11 +14,9 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
 
   const { user } = useAuth();
   const {
-    isLocked,
     hasPassword,
     isUnlocked,
     lockJournal,
-    removePassword,
     lock,
     updateLockJournal
   } = useLock();
@@ -42,7 +40,7 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
 
   const handleMenuClick = () => {
     // If locked, directly open unlock modal
-    if (isLocked && !isUnlocked) {
+    if (hasPassword && !isUnlocked) {
       setModalMode("unlock");
       setIsModalOpen(true);
       return;
@@ -99,17 +97,17 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
         {/* -- Set Lock - Button in Menu -- */}
         <button
           onClick={handleMenuClick}
-          className={`flex items-center justify-center gap-2 w-9 h-9 rounded-md bg-card-bg border border-border transition-all duration-200 hover:bg-border/30 focus:outline-none focus:ring-2 focus:ring-primary/20 ${isLocked && !isUnlocked ? "text-success hover:text-success-dark" : "text-muted-text hover:text-foreground"}`}
+          className={`flex items-center justify-center gap-2 w-9 h-9 rounded-md bg-card-bg border border-border transition-all duration-200 hover:bg-border/30 focus:outline-none focus:ring-2 focus:ring-primary/20 ${hasPassword && !isUnlocked ? "text-success hover:text-success-dark" : "text-muted-text hover:text-foreground"}`}
 
         >
-          {isLocked && !isUnlocked ? (
+          {hasPassword && !isUnlocked ? (
             <FiLock size={isCompact ? 20 : (isMobile ? 22 : 16)} />
           ) : (
             <FiUnlock size={isCompact ? 20 : (isMobile ? 22 : 16)} />
           )}
           {isMobile && !isCompact && (
             <span className="text-lg">
-              {!hasPassword ? "Set Lock" : (isLocked && !isUnlocked ? "Unlock" : "Lock")}
+              {!hasPassword ? "Set Lock" : (hasPassword && !isUnlocked ? "Unlock" : "Lock")}
             </span>
           )}
         </button>
@@ -130,7 +128,7 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
             ) : (
               // ---------- Case 2: Password set ----------
               <>
-                {isLocked && !isUnlocked ? (
+                {hasPassword && !isUnlocked ? (
                   // ------ Case 2.1: If Locked ------
                   // No menu items - main button opens unlock modal directly
                   <div className="px-4 py-3 text-sm text-text-secondary">

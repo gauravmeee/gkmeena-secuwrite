@@ -11,20 +11,20 @@ export default function EntryLockProtection({ children, entryType }) {
   const [lockCheckComplete, setLockCheckComplete] = useState(false);
   const router = useRouter();
   
-  const { isLocked, isUnlocked, shouldBlur, isLoading } = useLock();
+  const {hasPassword, isUnlocked, shouldBlur, isLoading } = useLock();
 
   useEffect(() => {
     // Only check lock state after loading is complete
     if (!isLoading) {
       // Check if this entry type should be protected and user is not unlocked
-      if (isLocked && !isUnlocked && shouldBlur(entryType)) {
+      if (hasPassword && !isUnlocked && shouldBlur(entryType)) {
         setShowUnlockPrompt(true);
       } else {
         setShowUnlockPrompt(false);
       }
       setLockCheckComplete(true);
     }
-  }, [isLocked, isUnlocked, shouldBlur, entryType, isLoading]);
+  }, [hasPassword, isUnlocked, shouldBlur, entryType, isLoading]);
 
   const handleClose = (wasSuccessful = false) => {
     // Only redirect back if the user closed/cancelled the modal

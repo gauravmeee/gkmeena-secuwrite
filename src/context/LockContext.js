@@ -10,7 +10,7 @@ const LockContext = createContext();
 // Lock provider component
 export function LockProvider({ children }) {
   const { user } = useAuth();
-  const [isLocked, setIsLocked] = useState(false);
+
   const [hasPassword, setHasPassword] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [lockJournal, setLockJournal] = useState(false);
@@ -31,16 +31,13 @@ export function LockProvider({ children }) {
         
         // Always start locked if user has a password set
         if (settings.has_password) {
-          setIsLocked(true);
           setIsUnlocked(false);
         } else {
-          setIsLocked(false);
           setIsUnlocked(false);
         }
       } catch (error) {
         console.error('Error loading lock settings:', error);
         // Default to unlocked if there's an error
-        setIsLocked(false);
         setIsUnlocked(false);
         setHasPassword(false);
         setLockJournal(false);
@@ -99,7 +96,6 @@ export function LockProvider({ children }) {
       
       if (result.success) {
         setHasPassword(true);
-        setIsLocked(true);
         setIsUnlocked(false);
         setLockJournal(lockJournalSetting);
       }
@@ -122,7 +118,6 @@ export function LockProvider({ children }) {
       
       if (result.success) {
         setHasPassword(false);
-        setIsLocked(false);
         setIsUnlocked(false);
         setLockJournal(false);
       }
@@ -200,7 +195,7 @@ export function LockProvider({ children }) {
 
   // Check if content should be blurred
   const shouldBlur = (entryType = null) => {
-    if (!isLocked || isUnlocked) return false;
+    if (!hasPassword || isUnlocked) return false;
     
     // If lockJournal is true, blur both diary and journal entries
     if (lockJournal) {
@@ -213,7 +208,7 @@ export function LockProvider({ children }) {
 
   // Check if route should be protected
   const isRouteProtected = (pathname) => {
-    if (!isLocked || isUnlocked) return false;
+    if (!hasPassword || isUnlocked) return false;
     
     const protectedRoutes = [
       '/diary',
@@ -240,7 +235,7 @@ export function LockProvider({ children }) {
 
   // Context values to expose
   const value = {
-    isLocked,
+   hasPassword,
     hasPassword,
     isUnlocked,
     lockJournal,

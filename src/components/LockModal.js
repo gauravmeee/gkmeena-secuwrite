@@ -474,7 +474,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
           <div className="flex items-center gap-3">
 
             {/* --Lock Icon-- */}
-            <div className="text-primary">
+            <div className="text-danger">
               {getModalIcon()}
             </div>
 
@@ -485,7 +485,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
           </div>
           <button
             onClick={handleClose}
-            className="text-muted-text hover:text-foreground transition-colors"
+            className="text-muted-text hover:text-foreground transition-colors cursor-pointer"
           >
             <FiX size={20} />
           </button>
@@ -533,11 +533,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                   required
                   disabled={!!user?.email}
                 />
-                {user?.email && (
-                  <p className="text-xs text-text-secondary mt-1">
-                    Using your account email: {user.email}
-                  </p>
-                )}
+
               </div>
             </div>
           )}
@@ -582,7 +578,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                   <button
                     type="button"
                     onClick={sendOTP}
-                    className="text-xs text-primary hover:text-primary-dark mt-1 underline"
+                    className="text-xs text-primary hover:text-primary-dark mt-1 underline cursor-pointer"
                   >
                     Resend code
                   </button>
@@ -751,7 +747,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                     setOtp("");
                     setError("");
                   }}
-                  className="text-xs text-primary hover:text-primary-dark underline"
+                  className="text-xs text-primary hover:text-primary-dark underline cursor-pointer"
                 >
                   Reset Password
                 </button>
@@ -842,14 +838,9 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
             <div>
               <div className="mb-4 p-4 bg-danger/10 border border-danger/20 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <FiX className="text-danger mt-1 flex-shrink-0" size={20} />
-                  <div>
-                    <h3 className="font-medium text-danger mb-2">Remove Lock Protection</h3>
                     <p className="text-text-secondary text-sm">
-                      This will permanently remove the lock protection from your entries. 
-                      You will need to verify your current password to proceed.
+                      This will remove the lock protection from your entries. 
                     </p>
-                  </div>
                 </div>
               </div>
               
@@ -904,7 +895,7 @@ export default function LockModal({ isOpen, onClose, mode = "unlock" }) {
                 disabled={isLoading || !email}
                 className="flex-1 btn-writing disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? "Sending..." : "Send Verification Code"}
+                {isLoading ? "Sending..." : "Send OTP"}
               </button>
             )}
 

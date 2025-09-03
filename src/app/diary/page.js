@@ -15,6 +15,8 @@ import { useAuth } from "@/context/AuthContext";
 import databaseUtils from "@/lib/database";
 import { supabase } from "@/lib/supabase";
 import { stripHtml } from "@/utils/textUtils";
+import { useLock } from "@/context/LockContext";
+
 
 // Function to format date with ordinal suffix
 const getOrdinalSuffix = (day) => {
@@ -34,6 +36,7 @@ export default function DiaryPage() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { user} = useAuth();
+  const { hasPassword, isUnlocked } = useLock();
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(10);
   const [draftsCount, setDraftsCount] = useState(0);
@@ -255,7 +258,7 @@ return (
           <div className="flex flex-wrap gap-2">
 
             {/* -- Delete Button --*/}
-            {user && processedEntries.length > 0 && (
+            {user && processedEntries.length > 0 && (!hasPassword || isUnlocked)&& (
               <DeleteEntriesButton
                 isSelectionMode = {isSelectionMode}
                 selectedEntries = {selectedEntries}
@@ -265,7 +268,7 @@ return (
             )}
 
             {/* -- New Entry Button -- */}
-            {user && (
+            {user && !isSelectionMode && (
               <NewEntryButton
                 user = {user}
                 entryType = {"diary"}

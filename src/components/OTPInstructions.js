@@ -5,14 +5,7 @@ import { FiMail, FiClock, FiShield, FiCheckCircle } from "react-icons/fi";
 export default function OTPInstructions({ email, step }) {
   if (step === "email") {
     return (
-      <div className="mb-6 p-4 bg-bg-tertiary/60 border border-border rounded-lg">
-        <div className="flex items-start gap-3">
-          <FiMail className="text-primary mt-1 flex-shrink-0" size={20} />
-          <div>
-            <h3 className="font-medium text-text-primary mb-2">Email Verification Required</h3>
-            <p className="text-text-secondary text-sm mb-3">
-              For security reasons, we need to verify your email address before allowing password changes.
-            </p>
+      <div className="mb-6 p-4 bg-bg-tertiary/60 border border-border rounded-lg flex items-start">
             <div className="text-xs text-text-secondary space-y-1">
               <div className="flex items-center gap-2">
                 <FiShield size={12} />
@@ -23,8 +16,6 @@ export default function OTPInstructions({ email, step }) {
                 <span>Only you can reset your password</span>
               </div>
             </div>
-          </div>
-        </div>
       </div>
     );
   }

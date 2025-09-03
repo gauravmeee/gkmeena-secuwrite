@@ -1,22 +1,20 @@
 "use client";
 
-import { FiLock, FiUnlock } from "react-icons/fi";
+import { FiLock} from "react-icons/fi";
 import { useLock } from "@/context/LockContext";
-import { useTheme } from "@/context/ThemeContext";
 import { useState } from "react";
 import LockModal from "../LockModal";
 
 export default function LockOverlay({ entryType, className = "", children }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { shouldBlur, isLocked, isUnlocked, hasPassword } = useLock();
-  const { theme, mounted } = useTheme();
+  const { shouldBlur,hasPassword, isUnlocked} = useLock();
   
   const shouldShowOverlay = shouldBlur(entryType);
   
   const handleOverlayClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (hasPassword && isLocked && !isUnlocked) {
+    if (hasPassword &&hasPassword && !isUnlocked) {
       setIsModalOpen(true);
     }
   };
