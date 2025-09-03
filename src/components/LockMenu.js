@@ -41,6 +41,14 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
   }, [isMenuOpen]);
 
   const handleMenuClick = () => {
+    // If locked, directly open unlock modal
+    if (isLocked && !isUnlocked) {
+      setModalMode("unlock");
+      setIsModalOpen(true);
+      return;
+    }
+    
+    // Otherwise, show dropdown menu
     setIsMenuOpen(!isMenuOpen);
   };
 
@@ -57,11 +65,12 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
         setIsModalOpen(true);
         break;
       case "change":
-        setModalMode("change");
+        setModalMode("changeSimple");
         setIsModalOpen(true);
         break;
       case "remove":
-        removePassword();
+        setModalMode("remove");
+        setIsModalOpen(true);
         break;
       case "lock":
         lock();
@@ -122,27 +131,11 @@ export default function LockMenu({ isMobile = false, isCompact = false }) {
               // ---------- Case 2: Password set ----------
               <>
                 {isLocked && !isUnlocked ? (
-
                   // ------ Case 2.1: If Locked ------
-                  <>
-                    {/* -- Unlock - Button in Menu -- */}
-                    <button
-                      onClick={() => handleMenuItemClick("unlock")}
-                      className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-border/30 transition-colors text-left ${isMobile ? 'text-lg' : ''}`}
-                    >
-                      <FiUnlock size={isMobile ? 22 : 16} />
-                      <span>Unlock</span>
-                    </button>
-                    
-                    {/* -- Change Password - Button in Menu -- */}
-                    <button
-                      onClick={() => handleMenuItemClick("change")}
-                      className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-border/30 transition-colors text-left ${isMobile ? 'text-lg' : ''}`}
-                    >
-                      <FiKey size={isMobile ? 22 : 16} />
-                      <span>Change Password</span>
-                    </button>
-                  </>
+                  // No menu items - main button opens unlock modal directly
+                  <div className="px-4 py-3 text-sm text-text-secondary">
+                    Click the lock button to unlock
+                  </div>
                 ) : (
                   // ------- Case 2.2: If Unlocked ------
                   <>

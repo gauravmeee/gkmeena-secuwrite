@@ -18,11 +18,18 @@ export async function POST(request) {
     // Store OTP in database with expiration (10 minutes)
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
     
-    // Store OTP in otp_verification table
+    // Find the user_id for this email from the lock settings table
+    const { data: lockSettings, error: lockError } = await supabase
+      .from('user_lock_settings')
+      .select('user_id')
+      .eq('user_id', (await supabase.auth.getUser()).data?.user?.id)
+      .single();
+
+    // For now, we'll use a temporary approach - store the email and handle user lookup during reset
     const { error: otpError } = await supabase
       .from('otp_verification')
       .upsert({
-        user_id: 'temp-' + Date.now(), // Temporary ID
+        user_id: 'temp-' + Date.now(), // Temporary ID - will be resolved during reset
         email: email,
         otp: otp,
         expires_at: expiresAt.toISOString(),
@@ -39,21 +46,31 @@ export async function POST(request) {
       );
     }
 
-    // For development/testing, return the OTP
+    // Return OTP for client-side email sending
+    console.log(`OTP generated for ${email}: ${otp}`);
+    
+    // For development, also return the OTP in response
     if (process.env.NODE_ENV === 'development') {
-      console.log(`OTP for ${email}: ${otp}`);
       return NextResponse.json({
         success: true,
-        message: 'OTP sent to your email address. Please check your inbox.',
-        otp: otp // Only in development
+        message: 'OTP generated. Please send email from client-side.',
+        otp: otp,
+        emailConfig: {
+          serviceId: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+          templateId: process.env.NEXT_PUBLIC_EMAILJS_OTP_TEMPLATE_ID || process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
+          publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
+        }
       });
     }
 
-    // In production, you would send the email here
-    // For now, we'll just return success
     return NextResponse.json({
       success: true,
-      message: 'OTP sent to your email address. Please check your inbox.'
+      message: 'OTP generated. Please send email from client-side.',
+      emailConfig: {
+        serviceId: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+        templateId: process.env.NEXT_PUBLIC_EMAILJS_OTP_TEMPLATE_ID || process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
+        publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
+      }
     });
 
   } catch (error) {

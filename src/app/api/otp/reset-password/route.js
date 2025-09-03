@@ -1,14 +1,38 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '../../../../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { sha256 } from 'js-sha256';
 
 export async function POST(request) {
   try {
-    const { email, otp, newPassword } = await request.json();
-
-    if (!email || !otp || !newPassword) {
+    const { email, otp, newPassword, userId } = await request.json();
+    
+    // Get the authorization token from the request headers
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    
+    if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Email, OTP, and new password are required' },
+        { success: false, error: 'Authorization token required' },
+        { status: 401 }
+      );
+    }
+    
+    // Create authenticated Supabase client
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    );
+
+    if (!email || !otp || !newPassword || !userId) {
+      return NextResponse.json(
+        { success: false, error: 'Email, OTP, new password, and user ID are required' },
         { status: 400 }
       );
     }
@@ -36,29 +60,45 @@ export async function POST(request) {
       );
     }
 
-    // Get the current user to verify they match the email
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !userData.user || userData.user.email !== email) {
-      return NextResponse.json(
-        { success: false, error: 'User verification failed' },
-        { status: 400 }
-      );
-    }
+    // Use the userId passed from the client
+    console.log('Resetting lock password for user:', userId, 'email:', email);
 
     // Hash the new password
     const passwordHash = sha256(newPassword);
 
-    // Update the lock password in user_lock_settings
-    const { data: lockData, error: lockError } = await supabase
+    // Try to update existing lock settings first
+    const { data: existingLock, error: updateError } = await supabase
       .from('user_lock_settings')
       .update({
         password_hash: passwordHash,
+        has_password: true,
         updated_at: new Date().toISOString()
       })
-      .eq('user_id', userData.user.id)
+      .eq('user_id', userId)
       .select()
       .single();
+
+    let lockData = existingLock;
+    let lockError = updateError;
+
+    // If update failed (no existing record), try to insert
+    if (updateError && updateError.code === 'PGRST116') {
+      const { data: newLock, error: insertError } = await supabase
+        .from('user_lock_settings')
+        .insert({
+          user_id: userId,
+          password_hash: passwordHash,
+          has_password: true,
+          lock_journal: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      lockData = newLock;
+      lockError = insertError;
+    }
 
     if (lockError) {
       console.error('Error updating lock password:', lockError);

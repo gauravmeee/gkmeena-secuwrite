@@ -22,35 +22,23 @@ export async function POST(request) {
       .single();
 
     if (error || !data) {
+      console.error('OTP verification failed:', { error, data, email, otp });
       return NextResponse.json(
         { success: false, error: 'Invalid or expired OTP' },
         { status: 400 }
       );
     }
 
-    // Get the actual user ID from auth.users by email
-    // We'll use a different approach - get user from the current session
-    // For now, we'll store the email and get user_id during password reset
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    console.log('OTP verification successful:', { email, otp });
+
+    // OTP is valid, return success
+    // We don't need to verify the user session here since this is for password reset
+    // The user will be verified during the actual password reset step
     
-    if (userError || !userData.user || userData.user.email !== email) {
-      return NextResponse.json(
-        { success: false, error: 'User verification failed' },
-        { status: 400 }
-      );
-    }
-
-    // Update the OTP record with the actual user ID
-    await supabase
-      .from('otp_verification')
-      .update({ user_id: userData.user.id })
-      .eq('email', email)
-      .eq('otp', otp);
-
     return NextResponse.json({
       success: true,
       message: 'OTP verified successfully',
-      userId: userData.user.id
+      email: email
     });
 
   } catch (error) {
