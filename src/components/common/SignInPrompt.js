@@ -1,4 +1,4 @@
-import { FiBook, FiEdit3, FiLock, FiHeart } from "react-icons/fi";
+import { FiBook, FiEdit3, FiLock, FiHeart, FiImage, FiFileText, FiShield } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 
 export default function SignInPrompt({ type = "Diary" }) {
@@ -8,35 +8,35 @@ export default function SignInPrompt({ type = "Diary" }) {
   
   const features = isJournal ? [
     {
-      icon: <FiEdit3 className="w-6 h-6" />,
-      title: "Rich Text Editor",
-      description: "Format your thoughts with bold, italic, images, and more"
-    },
-    {
-      icon: <FiBook className="w-6 h-6" />,
-      title: "Organized Entries",
-      description: "Keep your journal entries neatly organized and searchable"
+      icon: <FiShield className="w-6 h-6" />,
+      title: "End-to-End Encrypted",
+      description: "Your journal entries are fully encrypted and secure"
     },
     {
       icon: <FiLock className="w-6 h-6" />,
-      title: "Private & Secure",
-      description: "Your personal thoughts are encrypted and kept private"
+      title: "Lock & Draft Features",
+      description: "Lock private entries and save drafts for later"
+    },
+    {
+      icon: <FiEdit3 className="w-6 h-6" />,
+      title: "Rich Text Editor",
+      description: "Format your thoughts with bold, italic, links, and more"
     }
   ] : [
     {
-      icon: <FiEdit3 className="w-6 h-6" />,
-      title: "Text & Image Entries",
-      description: "Write your thoughts or capture moments with photos"
+      icon: <FiShield className="w-6 h-6" />,
+      title: "End-to-End Encrypted",
+      description: "Your diary entries are fully encrypted and secure"
     },
     {
-      icon: <FiBook className="w-6 h-6" />,
-      title: "Daily Reflections",
-      description: "Record your daily experiences and personal growth"
+      icon: <FiImage className="w-6 h-6" />,
+      title: "Images & Handwritten",
+      description: "Add photos and handwritten-style entries to your diary"
     },
     {
-        icon: <FiLock className="w-6 h-6" />,
-        title: "Secure & Private",
-        description: "Your diary is encrypted, accessible only by you"
+      icon: <FiLock className="w-6 h-6" />,
+      title: "Lock & Draft Features",
+      description: "Lock private entries and save drafts for later"
     }
   ];
 
@@ -57,15 +57,19 @@ export default function SignInPrompt({ type = "Diary" }) {
             Your Personal {type}
           </h1>
           
-          <p className="text-lg font-medium mb-4">
-              Sign in to <span className="text-primary">Create</span> and <span className="text-secondary">Access</span> your {type}.
+          <p className="text-lg font-medium mb-6">
+            Sign in to <span className="text-primary">Create</span> and <span className="text-secondary">Access</span> your {type}.
           </p>
-          <button
+          
+          {/* Centered Sign In Button */}
+          <div className="flex justify-center">
+            <button
               onClick={toggleAuthModal}
-              className="btn-writing"
-          >
+              className="btn-writing px-8 py-3 text-base font-medium rounded-lg transition-all hover:scale-105 shadow-md hover:shadow-lg"
+            >
               Sign In
-          </button>
+            </button>
+          </div>
         </div>
 
         {/* Features Section */}
@@ -73,24 +77,27 @@ export default function SignInPrompt({ type = "Diary" }) {
           {features.map((feature, index) => (
             <div 
               key={index}
-              className="writing-card p-6 text-center"
+              className="writing-card p-6 text-center group hover:shadow-lg transition-all duration-300"
             >
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/20 rounded-lg mb-4 text-primary">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/20 rounded-lg mb-4 text-primary group-hover:bg-primary/30 group-hover:scale-110 transition-all duration-300">
                 {feature.icon}
               </div>
               <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
-              <p className="text-muted-text text-sm">{feature.description}</p>
+              <p className="text-muted-text text-sm leading-relaxed">{feature.description}</p>
             </div>
           ))}
         </div>
 
         {/* Privacy Note */}
         <div className="text-center mt-8">
-          <p className="text-muted-text text-sm">
-            🔒 Your data is encrypted and secure. We respect your privacy.
-          </p>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-bg-overlay rounded-full border border-border-primary">
+            <FiShield className="w-4 h-4 text-primary" />
+            <p className="text-muted-text text-sm">
+              Your data is end-to-end encrypted and secure. We respect your privacy.
+            </p>
+          </div>
         </div>
       </main>
     </div>
   );
-} 
+}

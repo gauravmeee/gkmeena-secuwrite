@@ -228,6 +228,13 @@ if (!user) {
   return <SignInPrompt type="Diary" />;
 }
 
+// ------- No Entries -------
+if(user && processedEntries.length === 0 && draftsCount==0){
+  return(
+    <NoEntriesState type="Diary" />
+  )
+}
+
 {/* ------------------------------ Main JSX -------------------------- */}
 
 
@@ -277,12 +284,6 @@ return (
 
           </div>
         </div>
-
-        {/* ------- No Entries ------- */}
-        {!loading && processedEntries.length === 0 ? (
-          <NoEntriesState type="Diary" />
-        ) : (
-          <>
             <div className="grid grid-cols-1 gap-5">
               {currentEntries.map((entry) => (
                 // ------- Locke Overlay -------
@@ -381,8 +382,6 @@ return (
               totalPages={totalPages}
               onPageChange={(page) => setCurrentPage(page)}
             />
-          </>
-        )}
       </main>
 
       <style jsx global>{`

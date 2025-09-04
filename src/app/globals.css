@@ -309,21 +309,7 @@ html.dark .modal-backdrop {
   overflow: hidden;
 }
 
-.writing-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(to bottom, var(--primary), var(--secondary));
-  opacity: 0;
-  transition: opacity var(--default-transition);
-}
 
-.writing-card:hover::before {
-  opacity: 1;
-}
 
 .writing-card:hover {
   transform: translateY(-2px);

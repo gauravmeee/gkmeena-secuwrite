@@ -233,21 +233,12 @@ export default function JournalPage() {
     return <SignInPrompt type="Journal" />;
   }
 
-  // // Show loading spinner while data is being fetched
-  // if (loading) {
-  //   return (
-  //     <div className="min-h-screen bg-black text-white">
-  //       <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
-  //         <div className="flex items-center justify-between mb-8">
-  //           <div className="flex items-center gap-4">
-  //             <h1 className="text-3xl font-bold text-white">My Journal</h1>
-  //           </div>
-  //         </div>
-  //         <LoadingSpinner />
-  //       </main>
-  //     </div>
-  //   );
-  // }
+  // ------- No Entries -------
+  if(user && processedEntries.length === 0 && draftsCount==0){
+    return(
+      <NoEntriesState type="Journal" />
+    )
+  }
 
   {/* ------------------------------ Main JSX -------------------------- */}
 
@@ -298,10 +289,6 @@ export default function JournalPage() {
           </div>
         </div>
 
-        {processedEntries.length === 0 ? (
-          <NoEntriesState type="Journal" />
-        ) : (
-          <>
             <div className="grid grid-cols-1 gap-5">
               {processedEntries
                 .slice(
@@ -410,8 +397,7 @@ export default function JournalPage() {
               totalPages={Math.ceil(processedEntries.length / entriesPerPage)}
               onPageChange={(page) => setCurrentPage(page)}
             />
-          </>
-        )}
+
       </main>
     </div>
   );

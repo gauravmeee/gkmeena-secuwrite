@@ -7,12 +7,13 @@ import FloatingActionButton from "../components/FloatingActionButton";
 import { LazyEncryptionMigration } from "../utils/componentUtils";
 import { useAuth } from "../context/AuthContext";
 import { LoadingProvider } from "@/context/LoadingContext";
-
+import { useState } from "react";
 
 
 export default function Home() {
 
   const { user} = useAuth();
+  const [hideFloatingButton, setHideFloatingButton] = useState(false);
   
 
   return (
@@ -20,18 +21,11 @@ export default function Home() {
 
       <LoadingProvider>
         <HeroSection />
-        <MainSection />
+        <MainSection setHideFloatingButton={setHideFloatingButton} />
       </LoadingProvider>
       
-      
-      {/* Main Content Section */}
-      {/* <div id="content-section" className="relative"> */}
-        {/* Content Section Component */}
-        
-      {/* </div> */}
-      
       {/* Floating Action Button */}
-      {user && <FloatingActionButton />}
+      {user && !hideFloatingButton && <FloatingActionButton />}
       
       {/* Lazy load encryption migration */}
       {user && <LazyEncryptionMigration userId={user.id} />}

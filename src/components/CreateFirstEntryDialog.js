@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import Link from 'next/link';
-import { FiPlus, FiX, FiChevronRight, FiLogIn } from 'react-icons/fi';
+import { FiPlus, FiX, FiChevronRight} from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 
-export default function CreateFirstEntryDialog() {
+const CreateFirstEntryDialog = forwardRef((props,ref)=> {
   const [isOpen, setIsOpen] = useState(false);
   const { user, toggleAuthModal } = useAuth();
   
+
   // Handle escape key press to close dialog
   useEffect(() => {
     const handleEscape = (e) => {
@@ -66,15 +67,20 @@ export default function CreateFirstEntryDialog() {
       </div>
     );
   }
+
+  
   
   return (
-    <>
+    <div ref={ref}> {/* attach ref here */}
+    {/* ------- Create Entry Button (on Home Section)------- */}
       <button
         onClick={() => setIsOpen(true)}
-        className="bg-primary hover:bg-primary/90 text-white p-4 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-black"
+        className="btn-writing px-8 py-3 text-base font-medium rounded-lg transition-all hover:scale-105 shadow-md hover:shadow-lg"
         aria-label="Create new entry"
       >
+        
         <FiPlus size={24} />
+        Create Entry
       </button>
       
       {isOpen && (
@@ -117,6 +123,8 @@ export default function CreateFirstEntryDialog() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
-}
+});
+
+export default CreateFirstEntryDialog
