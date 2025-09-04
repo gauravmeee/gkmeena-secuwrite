@@ -44,16 +44,16 @@ export default function SignInPrompt({ type = "Diary" }) {
     <div className="min-h-screen bg-background text-foreground">
       <main className="max-w-4xl mx-auto pt-8 px-4 pb-20">
         {/* Hero Section */}
-        <div className="text-center mb-8 md:mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full mb-6">
+        <div className="text-center sm:mt-6 md:mt-8 mb-6 md:mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full mb-4 md:mb-6">
             {isJournal ? (
-              <FiBook className="w-10 h-10 text-primary" />
+              <FiBook className="w-8 h-8 md:w-10 md:h-10 text-primary" />
             ) : (
-              <FiHeart className="w-10 h-10 text-primary" />
+              <FiHeart className="w-8 h-8 md:w-10 md:h-10 text-primary" />
             )}
           </div>
           
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <h1 className="text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Your Personal {type}
           </h1>
           
@@ -73,7 +73,7 @@ export default function SignInPrompt({ type = "Diary" }) {
         </div>
 
         {/* Features Section */}
-        <div className="grid md:grid-cols-3 gap-4 md:gap-8 mb:8 md:mb-12">
+        <div className="grid md:grid-cols-3 gap-4 md:gap-8 mb:6 md:mb-12">
           {features.map((feature, index) => (
             <div 
               key={index}
@@ -90,13 +90,11 @@ export default function SignInPrompt({ type = "Diary" }) {
 
 
         {/* Privacy Note */}
-        <div className="text-center mt-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-bg-overlay rounded-full border border-border-primary">
+        <div className="text-center mt-6 md:mt-12">
+          <p className="text-warning text-sm font-medium inline-flex items-center gap-2 justify-center">
             <FiShield className="w-4 h-4 text-primary" />
-            <p className="text-muted-text text-sm">
-              Your data is end-to-end encrypted and secure. We respect your privacy.
-            </p>
-          </div>
+            Your data is end-to-end encrypted and secure. We respect your privacy.
+          </p>
         </div>
       </main>
     </div>
