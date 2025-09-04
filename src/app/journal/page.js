@@ -392,11 +392,13 @@ export default function JournalPage() {
             </div>
 
             {/* -- Paignation --*/}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={Math.ceil(processedEntries.length / entriesPerPage)}
-              onPageChange={(page) => setCurrentPage(page)}
-            />
+            {processedEntries.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
+            )}
 
       </main>
     </div>

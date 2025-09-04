@@ -353,7 +353,7 @@ return (
                               <img
                                 src={entry.content}
                                 alt="Diary entry"
-                                                              className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"
+                                                           className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"
                                 onError={(e) => {
                                   console.warn('Image loading error:', {
                                     src: e.target.src
@@ -377,11 +377,13 @@ return (
             </div>
 
             {/* ------- Pagination ------- */}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={(page) => setCurrentPage(page)}
-            />
+            {processedEntries.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
+            )}
       </main>
 
       <style jsx global>{`
