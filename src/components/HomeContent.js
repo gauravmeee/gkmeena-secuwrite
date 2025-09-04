@@ -46,22 +46,22 @@ export default function MainSection() {
   }, []);
 
   // Memoize the entry types to prevent unnecessary re-renders
-  const entryTypes = useMemo(() => [
-    {
-      title: "Journal",
-      description: "Write your thoughts with rich text formatting",
-      count: entryCounts.journal,
-      link: "/journal/new",
-      type: "journal"
-    },
-    {
-      title: "Diary", 
-      description: "Record your daily experiences",
-      count: entryCounts.diary,
-      link: "/diary/new",
-      type: "diary"
-    }
-  ], [entryCounts.journal, entryCounts.diary]);
+  // const entryTypes = useMemo(() => [
+  //   {
+  //     title: "Journal",
+  //     description: "Write your thoughts with rich text formatting",
+  //     count: entryCounts.journal,
+  //     link: "/journal/new",
+  //     type: "journal"
+  //   },
+  //   {
+  //     title: "Diary", 
+  //     description: "Record your daily experiences",
+  //     count: entryCounts.diary,
+  //     link: "/diary/new",
+  //     type: "diary"
+  //   }
+  // ], [entryCounts.journal, entryCounts.diary]);
 
   useEffect(() => { 
     async function loadData() {
@@ -131,8 +131,8 @@ export default function MainSection() {
     loadData();
   }, [user, formatEntry]);
 
-  // Check for any entries
-  const hasAnyEntries = Object.values(entryCounts).some(count => count > 0);
+  // // Check for any entries
+  // const hasAnyEntries = Object.values(entryCounts).some(count => count > 0);
 
   // Get the appropriate link for each entry type
   const getEntryLink = (entry, index) => {
@@ -168,41 +168,10 @@ export default function MainSection() {
     }
   };
 
+ 
 
-  // Empty state for entries
-  function EmptyState({ user, toggleAuthModal }) {
-    return (
-      <div className="p-10 flex items-center justify-center">
-        <div className="text-center max-w-md">
-          {user ? (
-            <>
-              <div className="flex justify-center mb-4">
-                <CreateFirstEntryDialog />
-              </div>
-              <p className="text-text-secondary text-sm">
-                You don&apos;t have any entries yet. Create your first one to get started!
-              </p>
-            </>
-          ) : (
-            <div className="space-y-3">
-              <button
-                onClick={toggleAuthModal}
-                className="text-primary hover:text-primary/90 text-base font-medium transition-colors"
-              >
-                Sign in to view your entries
-              </button>
-              <p className="text-text-muted text-xs">
-                Create and manage your personal entries securely
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Scroll button component
-  function ScrollButton() {
+  // ------- Scroll button component -------
+  function ScrollButton({currentState}) {
     const [scrollY, setScrollY] = useState(0);
     const maxScroll = typeof window !== 'undefined' ? window.innerHeight * 0.3 : 300;
 
@@ -232,7 +201,8 @@ export default function MainSection() {
 
     // Arrow moves down from 0 → 10px only during fade out
     const iconTranslateY = t < fadeStart ? 0 : 10 * ((t - fadeStart) / (1 - fadeStart));
-
+    
+    // ------- Scroll button JSX -------
     return (
       <button
         onClick={() =>
@@ -252,7 +222,7 @@ export default function MainSection() {
                 transition: "font-size 0.1s, transform 0.1s",
               }}
             >
-              Recent Entries
+              {currentState}
             </h2>
           </div>
           <span
@@ -271,124 +241,162 @@ export default function MainSection() {
     );
   }
 
-  // Show loading while data is being loaded
-  if (loading) {
-    return <Loading />;
-  }
 
-  // If user is not logged in
-  if (!user) {
-    return (
-      <div className="py-10 flex justify-center items-center">
-        <div className="text-center max-w-md mx-auto">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FiBook className="text-white text-2xl" />
-          </div>
-          <h2 className="text-xl font-bold text-foreground mb-3">Start Your Writing Journey</h2>
-          <p className="text-muted-text text-sm mb-4">
-            Sign in to create and manage your personal entries securely
-          </p>
+ // ------- Sign In Prompt -------
+function NoUserState({toggleAuthModal}) {
+  return (
+    <div className="min-h-[60vh] flex justify-center items-center px-4">
+      <div className="text-center max-w-lg mx-auto">
+        <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <FiBook className="text-white text-3xl" />
+        </div>
+        <h2 className="text-2xl text-foreground mb-4">Welcome to Your Writing Space</h2>
+        <p className="text-text-secondary text-base mb-8 leading-relaxed">
+          Sign in to create and manage your personal entries securely. Your thoughts, your stories, your journey.
+        </p>
+        <div className="flex justify-center">
           <button
             onClick={toggleAuthModal}
-            className="btn-writing"
+            className="btn-writing px-8 py-3 text-base font-medium rounded-lg transition-all hover:scale-105 shadow-md hover:shadow-lg"
           >
             Sign in to get started
           </button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
-  // If user has no entries
-  if (!hasAnyEntries) {
-    return (
-      <div className="h-screen min-h-screen flex justify-center items-center">
-        <div className="text-center max-w-md mx-auto">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FiEdit className="text-white text-2xl" />
-          </div>
-          <h2 className="text-xl font-bold text-foreground mb-3">Create Your First Entry</h2>
-          <p className="text-muted-text text-sm mb-4">
-            You don&apos;t have any entries yet. Create your first one to get started!
-          </p>
-          <div className="flex justify-center">
-            <CreateFirstEntryDialog />
-          </div>
+// ------- Create First Entry Dialog -------
+function EmptyState({ user, toggleAuthModal }) {
+  return (
+    <div className="min-h-[60vh] flex justify-center items-center px-4">
+      <div className="text-center max-w-lg mx-auto">
+        <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <FiEdit className="text-white text-3xl" />
+        </div>
+        <h2 className="text-2xl text-foreground mb-4">Ready to Begin?</h2>
+        <p className="text-text-secondary text-base mb-8 leading-relaxed">
+          Your writing journey starts here. Create your first entry and let your thoughts flow onto the page.
+        </p>
+        <div className="flex justify-center">
+          <CreateFirstEntryDialog />
         </div>
       </div>
+    </div>
+  );
+}
+  // ------- Recen Entries -------
+  function RecentEntries({
+    entries, 
+    getEntryTypeLabel, 
+    getEntryTypeColor, 
+    getEntryLink
+  }) {
+    // ------- Recent Entries JSX -------
+    return (
+      // ---- Entries grid ----
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {entries.map((entry, index) => {
+        const entryLink = getEntryLink(entry, index);
+        const typeColor = getEntryTypeColor(entry.type);
+        return (
+          <div key={entry.id || entry.timestamp} className="group h-full">
+
+            {/* ---- Locke Overlay ---- */}
+            <LockOverlay entryType={entry.type} className="h-full">
+              <div
+                className={`rounded-xl p-4 h-full transition-all group-hover:translate-y-[-1px] bg-bg-overlay backdrop-blur-[10px] shadow-sm border border-border-primary hover:shadow-md`}
+              >
+                {/* ---- Entry Link ---- */}
+                <Link href={entryLink} className="block h-full">
+                  <div className="flex items-start flex-col h-full">
+                    <div className="flex w-full items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${typeColor}`}></span>
+                        <span className="text-sm uppercase tracking-wider font-medium text-text-secondary">
+                          {getEntryTypeLabel(entry.type)}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-sm text-text-secondary">
+                        <FiClock size={12} className="mr-1" />
+                        <span>
+                          {entry.date && `${entry.date}`}
+                          {entry.time && ` | ${entry.time}`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {entry.title ? (
+                      <h3 className="text-base font-semibold mb-3 text-text-secondary group-hover:text-primary transition-colors line-clamp-2">
+                        {entry.title}
+                      </h3>
+                    ) : (
+                      <div className="h-6 mb-2"></div>
+                    )}
+
+                    <p className="italic text-sm line-clamp-3 mb-4 flex-grow text-text-secondary">
+                      {entry.preview}
+                    </p>
+
+                    <div className="flex items-center gap-1 text-primary text-sm group-hover:underline">
+                      <span>Read more</span>
+                      <FiChevronRight
+                        size={14}
+                        className="transition-transform group-hover:translate-x-1"
+                      />
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            </LockOverlay>
+          </div>
+        );
+      })}
+    </div>
     );
   }
 
-  // If we have entries, show the entries section
+  // Show loading while data is being loaded
+  if (loading) {
+    return <Loading />;
+  }
+
+
+  // ------- Main JSX (Recent Entries) -------
   return (
     <div className="w-full min-h-[75vh] flex flex-col">
       {/* Heading (always visible) */}
-      <ScrollButton />
+      <ScrollButton 
+      currentState={
+        !user ? 'Start Your Writing Journey' : 
+        entries.length === 0 ? 'Create Your First Entry' : 
+        'Your Recent Entries'
+      }
+      hasEntries={entries.length > 0}
+      userLoggedIn={!!user}
+    />
 
       {/* Entries Grid */}
       <div className="max-w-7xl py-10 mx-auto px-4 sm:px-6 md:px-8">
-        {entries.length === 0 ? (
-          // Empty state
-          <EmptyState user={user} toggleAuthModal={toggleAuthModal} />
-        ) : (
-          // Entries grid
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {entries.map((entry, index) => {
-              const entryLink = getEntryLink(entry, index);
-              const typeColor = getEntryTypeColor(entry.type);
-              return (
-                <div key={entry.id || entry.timestamp} className="group h-full">
-                  <LockOverlay entryType={entry.type} className="h-full">
-                    <div
-                      className={`rounded-xl p-4 h-full transition-all group-hover:translate-y-[-1px] bg-bg-overlay backdrop-blur-[10px] shadow-sm border border-border-primary hover:shadow-md`}
-                    >
-                      <Link href={entryLink} className="block h-full">
-                        <div className="flex items-start flex-col h-full">
-                          <div className="flex w-full items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <span className={`w-2 h-2 rounded-full ${typeColor}`}></span>
-                              <span className="text-sm uppercase tracking-wider font-medium text-text-secondary">
-                                {getEntryTypeLabel(entry.type)}
-                              </span>
-                            </div>
-                            <div className="flex items-center text-sm text-text-secondary">
-                              <FiClock size={12} className="mr-1" />
-                              <span>
-                                {entry.date && `${entry.date}`}
-                                {entry.time && ` | ${entry.time}`}
-                              </span>
-                            </div>
-                          </div>
 
-                          {entry.title ? (
-                            <h3 className="text-base font-semibold mb-3 text-text-secondary group-hover:text-primary transition-colors line-clamp-2">
-                              {entry.title}
-                            </h3>
-                          ) : (
-                            <div className="h-6 mb-2"></div>
-                          )}
-
-                          <p className="italic text-sm line-clamp-3 mb-4 flex-grow text-text-secondary">
-                            {entry.preview}
-                          </p>
-
-                          <div className="flex items-center gap-1 text-primary text-sm group-hover:underline">
-                            <span>Read more</span>
-                            <FiChevronRight
-                              size={14}
-                              className="transition-transform group-hover:translate-x-1"
-                            />
-                          </div>
-                        </div>
-                      </Link>
-                    </div>
-                  </LockOverlay>
-                </div>
-              );
-            })}
-          </div>
+      {!user? (
+        <NoUserState toggleAuthModal={toggleAuthModal} />
+        ):(
+          entries.length === 0 ? (
+            // Empty state
+            <EmptyState user={user} toggleAuthModal={toggleAuthModal} />
+          ) : (
+            <RecentEntries 
+              entries={entries} 
+              getEntryTypeLabel={getEntryTypeLabel} 
+              getEntryTypeColor={getEntryTypeColor} 
+              getEntryLink={getEntryLink} 
+            />
+          )
         )}
       </div>
     </div>
   );
 }
+

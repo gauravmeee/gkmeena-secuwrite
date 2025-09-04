@@ -24,7 +24,7 @@ export default function HeroSection() {
   // Hero Section
   return (
     <section className={`flex flex-col bg-gradient-to-r from-primary/10 to-secondary/30 transition-all duration-500 ease-in-out ${
-        (user && !loading) 
+        (!loading) 
           ? "h-[calc(100vh-20vh)] min-h-[calc(100vh-20vh)]" 
           :"h-[calc(100vh-10vh)] min-h-[calc(100vh-10vh)]" }`}>
       {/* Top Section */}
