@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { FiBook, FiEdit, FiHome, FiUser, FiLogOut, FiMenu, FiX, FiChevronDown } from "react-icons/fi";
@@ -42,10 +43,12 @@ export default function Navbar() {
       }`}>
       <div className="max-w-[var(--content-width)] mx-auto flex items-center justify-between">
       <Link href="/" className="flex items-center gap-2 text-2xl font-bold">
-        <img
+        <Image
           src={isDark ? "/favicon-dark.png" : "/favicon-light.png"}
           alt="Secuwrite Logo"
           className="w-12 h-12"
+          width={48} // 12 * 4px (Tailwind w-12)
+          height={48} // 12 * 4px (Tailwind h-12)
         />
         <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
           Secuwrite

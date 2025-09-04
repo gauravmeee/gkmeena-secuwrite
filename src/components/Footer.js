@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { FiMessageSquare, FiX } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import emailjs from '@emailjs/browser';
@@ -64,10 +65,12 @@ export default function Footer() {
             {/* Brand */}
             {/* Brand */}
           <div className="flex items-center gap-2">
-            <img
+            <Image
               src={isDark ? "/assets/icons/Secuwrite-logo-light.png" : "/assets/icons/Secuwrite-logo-dark.png"}
               alt="Secuwrite Logo"
               className="w-20 h-6"
+              width={80} // 20 * 4px (Tailwind w-12)
+              height={24} // 6 * 4px (Tailwind h-12)
             />
             <span className="text-xs">© {currentYear}</span>
           </div>

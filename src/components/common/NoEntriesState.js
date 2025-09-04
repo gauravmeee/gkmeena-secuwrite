@@ -45,7 +45,7 @@ export default function NoEntriesState({ type }) {
     <div className="min-h-screen bg-background text-foreground">
       <main className="max-w-4xl mx-auto pt-8 px-4 pb-20">
         {/* Hero Section */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-6 md:mb-12">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full mb-6">
             {isJournal ? (
               <FiBook className="w-10 h-10 text-primary" />
@@ -87,17 +87,17 @@ export default function NoEntriesState({ type }) {
         </div>
 
         {/* Features Section */}
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
+        <div className="grid md:grid-cols-3 gap-4 md:gap-8 mb:8 md:mb-12">
           {features.map((feature, index) => (
             <div 
               key={index}
-              className="writing-card p-6 text-center group hover:shadow-lg transition-all duration-300"
+              className="writing-card p-4 md:p-6 flex flex-col items-center text-center group hover:shadow-lg transition-all duration-300"
             >
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/20 rounded-lg mb-4 text-primary group-hover:bg-primary/30 group-hover:scale-110 transition-all duration-300">
+              <div className="inline-flex items-center justify-center w-8 h-8 md:w-12 md:h-12 bg-primary/20 rounded-lg text-primary mb-2 md:mb-4 group-hover:bg-primary/30 group-hover:scale-110 transition-all duration-300">
                 {feature.icon}
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
-              <p className="text-muted-text text-sm leading-relaxed">{feature.description}</p>
+              <h3 className="text-sm md:text-lg font-semibold text-foreground mb-1">{feature.title}</h3>
+              <p className="text-muted-text text-xs md:text-sm leading-relaxed">{feature.description}</p>
             </div>
           ))}
         </div>

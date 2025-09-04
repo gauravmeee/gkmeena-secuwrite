@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { FiSave, FiUpload, FiX} from "react-icons/fi";
+import Image from "next/image";
 
 import Loading from "@/components/common/Loading";
 import { BackButton } from "@/components/common/LinkButtons";
@@ -451,7 +452,7 @@ export default function EditDiaryEntry() {
                 ) : (
                   // -- Text Entry -- 
                   <div className="relative w-full">
-                    <img
+                    <Image
                       src={imagePreview}
                       alt="Diary entry"
                       className="max-w-full h-auto rounded-lg shadow-lg mx-auto"

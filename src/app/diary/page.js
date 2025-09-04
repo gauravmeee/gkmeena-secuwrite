@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 import Pagination from "@/components/common/Pagination";
 import Loading from "@/components/common/Loading";
@@ -350,7 +351,7 @@ return (
 
                             // ---- Image Entry Preview----
                             <div className="space-y-4">
-                              <img
+                              <Image
                                 src={entry.content}
                                 alt="Diary entry"
                                                            className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"

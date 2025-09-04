@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import Image from "next/image";
 
 import Loading from "@/components/common/Loading";
 import { BackButton, ToggleImageButton } from "@/components/common/LinkButtons";
@@ -536,7 +537,7 @@ function NewDiaryEntryContent() {
                   <div className="relative w-full">
 
                     {/* -- Image Preview -- */}
-                    <img
+                    <Image
                       src={imagePreview}
                       alt="Diary entry"
                       className="max-w-full h-auto rounded-lg shadow-lg mx-auto"

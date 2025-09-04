@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import Loading from "@/components/common/Loading";
 import { BackButton, EditDeleteButton } from "@/components/common/LinkButtons";
@@ -359,7 +360,7 @@ export default function DiaryEntryPage() {
                 {entryType === 'image' ? (
                   // -- Text Entry -- 
                   <div className="mt-6">
-                    <img
+                    <Image
                       src={entry.content}
                       alt="Diary entry"
                       className="max-w-full h-auto rounded-lg shadow-lg mx-auto"

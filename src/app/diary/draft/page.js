@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 import Loading from "@/components/common/Loading";
 import { BackButton, EditSaveDeleteButton } from "@/components/common/LinkButtons";
@@ -205,7 +206,7 @@ export default function DraftDiaryPage() {
 
                     // ---- Image Entry Preview----
                     <div className="space-y-4">
-                      <img
+                      <Image
                         src={draft.content}
                         alt="Diary entry"
                         className="w-full max-h-48 object-cover object-top rounded-lg shadow-sm"

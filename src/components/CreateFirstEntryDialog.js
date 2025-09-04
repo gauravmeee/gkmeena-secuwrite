@@ -127,4 +127,5 @@ const CreateFirstEntryDialog = forwardRef((props,ref)=> {
   );
 });
 
+CreateFirstEntryDialog.displayName = "CreateFirstEntryDialog"; // prevent build error: "Component missing display name."
 export default CreateFirstEntryDialog
