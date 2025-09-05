@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://secuwrite.vercel.app/
+
+# Sitemaps
+Sitemap: https://secuwrite.vercel.app/sitemap.xml

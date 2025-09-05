@@ -31,6 +31,12 @@ const homemadeApple = Homemade_Apple({
   preload: false, // Only load when needed
 });
 
+export function generateViewport() {
+  return {
+    themeColor: "#059669",
+  };
+}
+
 export const metadata = {
   title: "Secuwrite - Think. Write. Protect",
   description:
@@ -38,7 +44,6 @@ export const metadata = {
   keywords:
     "private writing, private journal, secure diary, encrypted journal, encrypted diary, secure notes, online journal, notes app",
   manifest: "/manifest.json", // android icons + more
-  themeColor: "#059669",
   icons: {
     icon: "/favicon.png", // favicon for browsers
     apple: "/assets/icons/sw-icon-180x180.png", //  iOS icon

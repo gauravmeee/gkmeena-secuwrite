@@ -145,7 +145,7 @@ useEffect(() => {
     }
 
     loadData();
-  }, [user, formatEntry]);
+  }, [user, formatEntry, setLoading]);
 
   // // Check for any entries
   // const hasAnyEntries = Object.values(entryCounts).some(count => count > 0);

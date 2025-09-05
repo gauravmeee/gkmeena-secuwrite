@@ -122,7 +122,9 @@ export default function DraftDiaryPage() {
 
   // ------- No Draft Found -------
   if (drafts.length === 0) {
-    <NoDraftsFound EntryType={"diary"}/>
+    return(
+      <NoDraftsFound EntryType={"diary"}/>
+    )
   }
 
   {/* ------------------------------ Main JSX -------------------------- */}

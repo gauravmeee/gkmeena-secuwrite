@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+<url><loc>https://secuwrite.vercel.app/auth/callback</loc><lastmod>2025-09-05T06:54:28.398Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://secuwrite.vercel.app/diary/new</loc><lastmod>2025-09-05T06:54:28.399Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://secuwrite.vercel.app/journal/draft</loc><lastmod>2025-09-05T06:54:28.399Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://secuwrite.vercel.app/diary</loc><lastmod>2025-09-05T06:54:28.399Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://secuwrite.vercel.app/journal/new</loc><lastmod>2025-09-05T06:54:28.399Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://secuwrite.vercel.app/privacy</loc><lastmod>2025-09-05T06:54:28.399Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://secuwrite.vercel.app/diary/draft</loc><lastmod>2025-09-05T06:54:28.399Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://secuwrite.vercel.app/journal</loc><lastmod>2025-09-05T06:54:28.399Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://secuwrite.vercel.app/terms</loc><lastmod>2025-09-05T06:54:28.399Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://secuwrite.vercel.app</loc><lastmod>2025-09-05T06:54:28.399Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://secuwrite.vercel.app/about</loc><lastmod>2025-09-05T06:54:28.399Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+</urlset>

@@ -220,4 +220,5 @@ class LockService {
   }
 }
 
-export default new LockService(); 
+const lockService = new LockService();
+export default lockService;

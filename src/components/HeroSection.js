@@ -14,12 +14,15 @@ export default function HeroSection() {
     { name: "Diary", icon: <FiEdit3 /> },
   ];
 
+
   useEffect(() => {
+    const length = contentTypes.length;
     const interval = setInterval(() => {
-      setCurrentTypeIndex((prev) => (prev + 1) % contentTypes.length);
+      setCurrentTypeIndex((prev) => (prev + 1) % length);
     }, 3000);
+  
     return () => clearInterval(interval);
-  }, []);
+  }, [contentTypes.length]);
 
   // Hero Section
   return (

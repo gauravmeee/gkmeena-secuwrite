@@ -31,15 +31,12 @@ export default function JournalDraftPage() {
 
   useEffect(() => {
     if (user && authChecked) {
-      loadDrafts();
-    }
-  }, [user, authChecked]);
-
-  const loadDrafts = () => {
     const storedDrafts = JSON.parse(localStorage.getItem(`journal_drafts_${user?.id}`) || '[]');
     setDrafts(storedDrafts);
     setLoading(false);
-  };
+    }
+  }, [user, authChecked]);
+
 
   const handleEdit = (draft) => {
     // Navigate to new page for editing with editDraft parameter
@@ -117,7 +114,9 @@ export default function JournalDraftPage() {
 
   // ------- No Draft Found -------
   if (drafts.length === 0) {
-    <NoDraftsFound EntryType={"journal"}/>
+    return(
+      <NoDraftsFound EntryType={"journal"}/>
+    );
   }
 
   {/* ------------------------------ Main JSX -------------------------- */}
