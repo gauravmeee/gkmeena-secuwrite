@@ -43,15 +43,39 @@ export const metadata = {
     "Secuwrite is a privacy-first journaling app with end-to-end encryption, password lock. Keep your thoughts safe and private.",
   keywords:
     "private writing, private journal, secure diary, encrypted journal, encrypted diary, secure notes, online journal, notes app",
-  manifest: "/manifest.json", // android icons + more
+  manifest: "/manifest.json", // Android Icon / PWA manifest
   icons: {
-    icon: "/favicon.png", // favicon for browsers
-    apple: "/assets/icons/sw-icon-180x180.png", //  iOS icon
+    icon: "/favicon.png", // Favicon for browsers (desktop / tab icon)
+    apple: "/assets/icons/sw-icon-180x180.png", //  Apple touch icon (iOS home screen / PWA install) 
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Secuwrite - Think. Write. Protect",
+  },
+  openGraph: {
+    title: "Secuwrite - Think. Write. Protect",
+    description:
+      "Secuwrite is a privacy-first journaling app with end-to-end encryption, password lock. Keep your thoughts safe and private.",
+    url: "https://secuwrite.vercel.app",
+    siteName: "Secuwrite",
+    images: [
+      {
+        url: "https://secuwrite.vercel.app/assets/icons/secuwrite-og.png",
+        width: 1200,
+        height: 630,
+        alt: "Secuwrite Logo",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Secuwrite - Think. Write. Protect",
+    description:
+      "Secuwrite is a privacy-first journaling app with end-to-end encryption, password lock. Keep your thoughts safe and private.",
+    images: ["https://secuwrite.vercel.app/assets/icons/secuwrite-og.png"],
+    site: "@YourTwitterHandle", // optional
   },
 };
 
