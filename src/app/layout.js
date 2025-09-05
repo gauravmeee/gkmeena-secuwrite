@@ -8,7 +8,6 @@ import { ThemeProvider } from '../context/ThemeContext';
 import AuthModal from '../components/AuthModal';
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import { metadata } from './metadata';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,38 +31,50 @@ const homemadeApple = Homemade_Apple({
   preload: false, // Only load when needed
 });
 
+export const metadata = {
+  title: "Secuwrite - Think. Write. Protect",
+  description:
+    "Secuwrite is a privacy-first journaling app with end-to-end encryption, password lock. Keep your thoughts safe and private.",
+  keywords:
+    "private writing, private journal, secure diary, encrypted journal, encrypted diary, secure notes, online journal, notes app",
+  manifest: "/manifest.json", // android icons + more
+  themeColor: "#059669",
+  icons: {
+    icon: "/favicon.png", // favicon for browsers
+    apple: "/assets/icons/sw-icon-180x180.png", //  iOS icon
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Secuwrite - Think. Write. Protect",
+  },
+};
+
+{/*
+  
+Titles
+1. Safe, Private, Yours.
+2. Think. Write. Protect.
+3. Your thoughts stay yours.
+4. Write Freely, Stay Private
+5. Private Writing Made Simple
+6. A Secure Space for Your Thoughts
+7. Secure Writing App with End-to-End Encryption
+8. Privacy-First Writing Platform
+9. Safe and Secure Writing Online
+
+Taglines for Page
+1. A Private and Encrypted Space for Your Writing
+2. Think Freely. Write Securely.
+3. Your Thoughts. Your Words. Protected.
+
+*/}
+
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#059669" />
-        <title>{metadata.title}</title>
-        <meta name="description" content={metadata.description} />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Unseen Stories" />
-        <link rel="icon" type="image/png" href="/favicon.png" />
-        {/* Preload critical resources */}
-        <link rel="preload" href="/manifest.json" as="fetch" crossOrigin="anonymous" />
-        {/* Theme script - runs before React to prevent FOUC */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var theme = localStorage.getItem('theme') || 'light';
-                  document.documentElement.classList.remove('light', 'dark');
-                  document.documentElement.classList.add(theme);
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
-      </head>
+      
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${homemadeApple.variable} antialiased bg-background text-foreground`}
         suppressHydrationWarning

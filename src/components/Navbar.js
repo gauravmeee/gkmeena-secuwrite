@@ -44,7 +44,7 @@ export default function Navbar() {
       <div className="max-w-[var(--content-width)] mx-auto flex items-center justify-between">
       <Link href="/" className="flex items-center gap-2 text-2xl font-bold">
         <Image
-          src={isDark ? "/favicon-dark.png" : "/favicon-light.png"}
+          src={isDark ? "/assets/icons/sw-icon-dark.png" : "/assets/icons/sw-icon-light.png"}
           alt="Secuwrite Logo"
           className="w-12 h-12"
           width={48} // 12 * 4px (Tailwind w-12)
