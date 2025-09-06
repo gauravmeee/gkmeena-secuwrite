@@ -103,7 +103,34 @@ Taglines for Page
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const theme = localStorage.getItem('theme') || 'light';
+                  document.documentElement.classList.remove('light', 'dark');
+                  document.documentElement.classList.add(theme);
+                } catch (e) {
+                  // Fallback to light theme if localStorage is not available
+                  document.documentElement.classList.add('light');
+                }
+              })();
+            `,
+          }}
+        />
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              /* Prevent theme flashing */
+              html { color-scheme: light; }
+              html.dark { color-scheme: dark; }
+              body { background: var(--background); color: var(--foreground); }
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${homemadeApple.variable} antialiased bg-background text-foreground`}
         suppressHydrationWarning

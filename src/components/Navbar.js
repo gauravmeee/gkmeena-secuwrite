@@ -13,9 +13,19 @@ import ThemeToggle from "./ThemeToggle";
 export default function Navbar() {
   const pathname = usePathname();
   const { user, signOut, toggleAuthModal } = useAuth();
-  const { isDark } = useTheme();
+  const { isDark, mounted } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // Get the initial theme from the DOM to avoid hydration mismatch
+  const getInitialTheme = () => {
+    if (typeof window !== 'undefined') {
+      return document.documentElement.classList.contains('dark');
+    }
+    return false;
+  };
+
+  const currentTheme = mounted ? isDark : getInitialTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,7 +54,7 @@ export default function Navbar() {
       <div className="max-w-[var(--content-width)] mx-auto flex items-center justify-between">
       <Link href="/" className="flex items-center gap-2 text-2xl font-bold">
         <Image
-          src={isDark ? "/assets/icons/sw-icon-dark.png" : "/assets/icons/sw-icon-light.png"}
+          src={currentTheme ? "/assets/icons/sw-icon-dark.png" : "/assets/icons/sw-icon-light.png"}
           alt="Secuwrite Logo"
           className="w-12 h-12"
           width={48} // 12 * 4px (Tailwind w-12)

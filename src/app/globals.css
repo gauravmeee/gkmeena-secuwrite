@@ -17,6 +17,15 @@
   --color-scheme: light dark;
 }
 
+/* Prevent theme flashing by setting initial state */
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
 /* Ensure dark mode classes work properly */
 .dark {
   color-scheme: dark;

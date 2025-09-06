@@ -5,7 +5,13 @@ import { createContext, useContext, useEffect, useState } from 'react';
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('light');
+  // Initialize theme based on what's already applied to the document
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    }
+    return 'light';
+  });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -14,10 +20,14 @@ export function ThemeProvider({ children }) {
     const savedTheme = localStorage.getItem('theme') || 'light';
     setTheme(savedTheme);
     
-    // Apply theme to document (script might have already done this)
+    // The theme should already be applied by the blocking script in layout.js
+    // Just ensure it's consistent
     if (document.documentElement) {
-      document.documentElement.classList.remove('light', 'dark');
-      document.documentElement.classList.add(savedTheme);
+      const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      if (currentTheme !== savedTheme) {
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(savedTheme);
+      }
     }
   }, []);
 
